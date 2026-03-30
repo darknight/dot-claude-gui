@@ -13,7 +13,7 @@
     "allow": ["Bash(git:*)", "Read(**)", "Write(src/**)"],
     "deny": ["Bash(rm:-rf *)"],
     "ask": ["Bash(curl:*)"],
-    "defaultMode": "allowEdits"
+    "defaultMode": "acceptEdits"
   },
   "hooks": {
     "PreToolUse": [
