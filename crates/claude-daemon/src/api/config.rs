@@ -149,6 +149,100 @@ pub async fn get_project_config(
 }
 
 // ---------------------------------------------------------------------------
+// PUT /api/v1/config/project/{project_id}
+// ---------------------------------------------------------------------------
+
+/// Updates the project config: merge → validate → atomic write → return response.
+pub async fn put_project_config(
+    Extension(state): Extension<AppState>,
+    Path(project_id): Path<String>,
+    Json(body): Json<UpdateConfigRequest>,
+) -> Result<Json<ConfigResponse>, (StatusCode, Json<ErrorResponse>)> {
+    // Look up the project by ID.
+    let project_path = {
+        let projects = state.inner.projects.read().await;
+        projects
+            .iter()
+            .find(|p| p.id == project_id)
+            .map(|p| p.path.clone())
+    };
+
+    let project_path = project_path.ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                code: "PROJECT_NOT_FOUND".to_string(),
+                message: format!("Project '{}' not found", project_id),
+                validation_errors: vec![],
+            }),
+        )
+    })?;
+
+    // Read current project settings from <project>/.claude/settings.json.
+    let settings_path = project_path.join(".claude").join("settings.json");
+    let current = read_settings(&settings_path).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                code: "READ_ERROR".to_string(),
+                message: format!("Failed to read project settings: {}", e),
+                validation_errors: vec![],
+            }),
+        )
+    })?;
+
+    // Merge current settings with the incoming update (update wins).
+    let merged = merge_layers(&[
+        ConfigLayer { source: ConfigSource::Project, settings: current },
+        ConfigLayer { source: ConfigSource::Project, settings: body.settings },
+    ]);
+
+    // Validate the merged result.
+    let errors = validate_settings(&merged.settings);
+    if !errors.is_empty() {
+        return Err((
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(ErrorResponse {
+                code: "VALIDATION_ERROR".to_string(),
+                message: "Settings validation failed".to_string(),
+                validation_errors: errors,
+            }),
+        ));
+    }
+
+    // Ensure the .claude directory exists.
+    let claude_dir = project_path.join(".claude");
+    std::fs::create_dir_all(&claude_dir).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                code: "WRITE_ERROR".to_string(),
+                message: format!("Failed to create .claude directory: {}", e),
+                validation_errors: vec![],
+            }),
+        )
+    })?;
+
+    // Write atomically to disk.
+    write_settings(&settings_path, &merged.settings).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                code: "WRITE_ERROR".to_string(),
+                message: format!("Failed to write project settings: {}", e),
+                validation_errors: vec![],
+            }),
+        )
+    })?;
+
+    Ok(Json(ConfigResponse {
+        settings: merged.settings,
+        last_modified: None,
+        version: None,
+    }))
+}
+
+// ---------------------------------------------------------------------------
 // GET /api/v1/config/effective/{project_id}
 // ---------------------------------------------------------------------------
 

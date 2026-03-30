@@ -168,7 +168,71 @@ async fn update_config_with_invalid_mode_returns_422() {
 }
 
 // ---------------------------------------------------------------------------
-// 6. Project CRUD lifecycle
+// 6. Update project config
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn update_project_config() {
+    let (_dir, token, port, _handle) = start_test_daemon().await;
+
+    let client = reqwest::Client::new();
+    let base_url = format!("http://127.0.0.1:{port}");
+
+    // Create a temp project directory with .claude/settings.json
+    let project_dir = TempDir::new().unwrap();
+    let claude_dir = project_dir.path().join(".claude");
+    std::fs::create_dir_all(&claude_dir).unwrap();
+    std::fs::write(
+        claude_dir.join("settings.json"),
+        r#"{"language": "en-US"}"#,
+    )
+    .unwrap();
+
+    // Register the project via POST /api/v1/projects
+    let payload = serde_json::json!({
+        "name": "test-project",
+        "path": project_dir.path().to_string_lossy()
+    });
+    let resp = client
+        .post(format!("{base_url}/api/v1/projects"))
+        .bearer_auth(&token)
+        .json(&payload)
+        .send()
+        .await
+        .expect("register request should succeed");
+    assert_eq!(resp.status(), 201);
+    let created: serde_json::Value = resp.json().await.expect("body should be JSON");
+    let project_id = created["id"].as_str().expect("id should be a string").to_string();
+
+    // PUT /api/v1/config/project/{id} with { settings: { language: "zh-CN" } }
+    let update_payload = serde_json::json!({
+        "settings": {
+            "language": "zh-CN"
+        }
+    });
+    let resp = client
+        .put(format!("{base_url}/api/v1/config/project/{project_id}"))
+        .bearer_auth(&token)
+        .json(&update_payload)
+        .send()
+        .await
+        .expect("put project config request should succeed");
+    assert_eq!(resp.status(), 200);
+
+    let body: serde_json::Value = resp.json().await.expect("body should be JSON");
+    assert_eq!(body["settings"]["language"], "zh-CN");
+
+    // Read the file from disk and verify it contains the update
+    let on_disk: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(claude_dir.join("settings.json"))
+            .expect("settings file should exist"),
+    )
+    .expect("settings file should be valid JSON");
+    assert_eq!(on_disk["language"], "zh-CN");
+}
+
+// ---------------------------------------------------------------------------
+// 7. Project CRUD lifecycle
 // ---------------------------------------------------------------------------
 
 #[tokio::test]

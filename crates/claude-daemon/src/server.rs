@@ -8,7 +8,8 @@ use tower_http::cors::{Any, CorsLayer};
 use crate::{
     api::{
         config::{
-            get_effective_config, get_project_config, get_user_config, put_user_config,
+            get_effective_config, get_project_config, get_user_config, put_project_config,
+            put_user_config,
         },
         health::health_handler,
         projects::{delete_project, list_projects, register_project},
@@ -39,7 +40,10 @@ pub fn build_router(state: AppState) -> Router {
     let protected_routes = Router::new()
         .route("/api/v1/config/user", get(get_user_config))
         .route("/api/v1/config/user", put(put_user_config))
-        .route("/api/v1/config/project/{project_id}", get(get_project_config))
+        .route(
+            "/api/v1/config/project/{project_id}",
+            get(get_project_config).put(put_project_config),
+        )
         .route("/api/v1/config/effective/{project_id}", get(get_effective_config))
         .route("/api/v1/projects", get(list_projects))
         .route("/api/v1/projects", post(register_project))
