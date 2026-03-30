@@ -51,15 +51,18 @@
     "command": "echo ready",
     "padding": 1
   },
-  "enabledPlugins": ["my-plugin", "another-plugin"],
-  "extraKnownMarketplaces": [
-    {
+  "enabledPlugins": {
+    "my-plugin": true,
+    "another-plugin": false
+  },
+  "extraKnownMarketplaces": {
+    "test-market": {
       "source": {
-        "type": "npm",
-        "url": "https://registry.npmjs.org"
+        "source": "github",
+        "repo": "owner/test-repo"
       }
     }
-  ],
+  },
   "sandbox": {
     "allowRead": ["/home/user/project"],
     "denyRead": ["/etc/passwd"],

@@ -31,10 +31,10 @@ pub struct Settings {
     pub status_line: Option<StatusLine>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub enabled_plugins: Option<Vec<String>>,
+    pub enabled_plugins: Option<HashMap<String, bool>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub extra_known_marketplaces: Option<Vec<MarketplaceSource>>,
+    pub extra_known_marketplaces: Option<HashMap<String, MarketplaceSource>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub language: Option<String>,
@@ -188,11 +188,11 @@ pub struct MarketplaceSource {
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct MarketplaceSourceInfo {
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub source_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
+    pub repo: Option<String>,
 
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,

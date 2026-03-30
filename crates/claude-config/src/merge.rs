@@ -117,17 +117,23 @@ pub fn merge_layers(layers: &[ConfigLayer]) -> MergedConfig {
             field_sources.insert("statusLine".to_string(), src.clone());
         }
 
-        // ---- enabledPlugins: concatenate -----------------------------------
+        // ---- enabledPlugins: merge key by key --------------------------------
         if let Some(plugins) = &s.enabled_plugins {
-            let merged = settings.enabled_plugins.get_or_insert_with(Vec::new);
-            merged.extend(plugins.iter().cloned());
+            let merged = settings.enabled_plugins.get_or_insert_with(HashMap::new);
+            for (k, v) in plugins {
+                merged.insert(k.clone(), *v);
+                field_sources.insert(format!("enabledPlugins.{}", k), src.clone());
+            }
             field_sources.insert("enabledPlugins".to_string(), src.clone());
         }
 
-        // ---- extraKnownMarketplaces: concatenate ---------------------------
+        // ---- extraKnownMarketplaces: merge key by key -----------------------
         if let Some(marketplaces) = &s.extra_known_marketplaces {
-            let merged = settings.extra_known_marketplaces.get_or_insert_with(Vec::new);
-            merged.extend(marketplaces.iter().cloned());
+            let merged = settings.extra_known_marketplaces.get_or_insert_with(HashMap::new);
+            for (k, v) in marketplaces {
+                merged.insert(k.clone(), v.clone());
+                field_sources.insert(format!("extraKnownMarketplaces.{}", k), src.clone());
+            }
             field_sources.insert("extraKnownMarketplaces".to_string(), src.clone());
         }
 
@@ -384,24 +390,28 @@ mod tests {
         let user_layer = make_layer(
             ConfigSource::User,
             Settings {
-                enabled_plugins: Some(vec!["plugin-a".to_string()]),
+                enabled_plugins: Some(HashMap::from([
+                    ("plugin-a".to_string(), true),
+                    ("plugin-b".to_string(), true),
+                ])),
                 ..Default::default()
             },
         );
         let project_layer = make_layer(
             ConfigSource::Project,
             Settings {
-                enabled_plugins: Some(vec!["plugin-b".to_string()]),
+                enabled_plugins: Some(HashMap::from([
+                    ("plugin-b".to_string(), false),
+                ])),
                 ..Default::default()
             },
         );
         let result = merge_layers(&[user_layer, project_layer]);
         let plugins = result.settings.enabled_plugins.expect("enabledPlugins should be present");
-        assert!(plugins.contains(&"plugin-a".to_string()));
-        assert!(plugins.contains(&"plugin-b".to_string()));
-        // The field_sources for enabledPlugins should be Project (last layer that set it)
+        assert_eq!(plugins.get("plugin-a"), Some(&true));
+        assert_eq!(plugins.get("plugin-b"), Some(&false)); // overridden by project
         assert_eq!(
-            result.field_sources.get("enabledPlugins"),
+            result.field_sources.get("enabledPlugins.plugin-b"),
             Some(&ConfigSource::Project)
         );
     }
