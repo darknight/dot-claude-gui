@@ -1,0 +1,75 @@
+{
+  "env": {
+    "NODE_ENV": "production",
+    "DEBUG": "0"
+  },
+  "includeCoAuthoredBy": true,
+  "language": "en",
+  "alwaysThinkingEnabled": false,
+  "autoUpdatesChannel": "stable",
+  "minimumVersion": "1.0.0",
+  "skipDangerousModePermissionPrompt": false,
+  "permissions": {
+    "allow": ["Bash(git:*)", "Read(**)", "Write(src/**)"],
+    "deny": ["Bash(rm:-rf *)"],
+    "ask": ["Bash(curl:*)"],
+    "defaultMode": "allowEdits"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo pre-tool-use",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx prettier --write $CLAUDE_TOOL_OUTPUT_FILE",
+            "allowedEnvVars": ["CLAUDE_TOOL_OUTPUT_FILE"]
+          }
+        ]
+      }
+    ]
+  },
+  "deniedMcpServers": [
+    {
+      "serverName": "untrusted-server"
+    }
+  ],
+  "statusLine": {
+    "type": "command",
+    "command": "echo ready",
+    "padding": 1
+  },
+  "enabledPlugins": ["my-plugin", "another-plugin"],
+  "extraKnownMarketplaces": [
+    {
+      "source": {
+        "type": "npm",
+        "url": "https://registry.npmjs.org"
+      }
+    }
+  ],
+  "sandbox": {
+    "allowRead": ["/home/user/project"],
+    "denyRead": ["/etc/passwd"],
+    "allowWrite": ["/tmp"],
+    "excludedCommands": ["rm"],
+    "failIfUnavailable": true,
+    "enableWeakerNetworkIsolation": false
+  },
+  "modelOverrides": {
+    "default": "claude-opus-4",
+    "background": "claude-haiku-3"
+  }
+}

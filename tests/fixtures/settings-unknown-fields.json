@@ -1,0 +1,11 @@
+{
+  "language": "en",
+  "permissions": {
+    "allow": ["Read(**)"]
+  },
+  "futureFeatureFlag": true,
+  "experimentalSettings": {
+    "newBehavior": "enabled",
+    "retryCount": 3
+  }
+}
