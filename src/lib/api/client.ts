@@ -110,8 +110,15 @@ export class DaemonClient {
     );
   }
 
-  updateUserConfig(settings: Settings): Promise<ConfigResponse> {
+  updateUserConfig(settings: Partial<Settings>): Promise<ConfigResponse> {
     return this.fetch<ConfigResponse>("/api/v1/config/user", {
+      method: "PUT",
+      body: JSON.stringify({ settings }),
+    });
+  }
+
+  async updateProjectConfig(projectId: string, settings: Partial<Settings>): Promise<ConfigResponse> {
+    return this.fetch(`/api/v1/config/project/${projectId}`, {
       method: "PUT",
       body: JSON.stringify({ settings }),
     });
