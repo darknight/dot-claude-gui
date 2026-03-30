@@ -57,8 +57,12 @@ async fn main() -> Result<()> {
         }
     };
 
-    // Persist the token so clients can read it.
-    let token_path = claude_home.join("daemon-token");
+    // Persist the token in the app's own data directory (not in ~/.claude/).
+    let app_data_dir = dirs_next::data_dir()
+        .expect("cannot determine app data directory")
+        .join("com.dotclaude.gui");
+    std::fs::create_dir_all(&app_data_dir)?;
+    let token_path = app_data_dir.join("daemon-token");
     std::fs::write(&token_path, &auth_token)?;
     info!("auth token written to {}", token_path.display());
 

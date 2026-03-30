@@ -5,8 +5,8 @@ fn get_daemon_url() -> String {
 
 #[tauri::command]
 fn get_daemon_token() -> Result<String, String> {
-    let home = dirs_next::home_dir().ok_or("cannot find home directory")?;
-    let token_path = home.join(".claude").join("daemon-token");
+    let data_dir = dirs_next::data_dir().ok_or("cannot find app data directory")?;
+    let token_path = data_dir.join("com.dotclaude.gui").join("daemon-token");
     std::fs::read_to_string(&token_path)
         .map_err(|e| format!("failed to read daemon token: {}", e))
 }
