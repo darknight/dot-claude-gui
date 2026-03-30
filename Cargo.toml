@@ -4,7 +4,7 @@ members = [
     "crates/claude-types",
     "crates/claude-config",
     "crates/claude-daemon",
-    # "src-tauri",              # added in Task 4
+    "src-tauri",
 ]
 
 [workspace.package]

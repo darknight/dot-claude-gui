@@ -1,0 +1,19 @@
+[package]
+name = "dot-claude-gui"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "dot_claude_gui_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+claude-types = { path = "../crates/claude-types" }
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde.workspace = true
+serde_json.workspace = true
+dirs-next = "2"

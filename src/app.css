@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+:root {
+  --sidebar-width: 56px;
+  --subpanel-width: 240px;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
