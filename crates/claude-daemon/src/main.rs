@@ -7,7 +7,7 @@ use clap::Parser;
 use rand::RngCore;
 use tracing::info;
 
-use claude_daemon::{server::build_router, state::AppState};
+use claude_daemon::{server::build_router, state::AppState, watcher};
 
 #[derive(Parser, Debug)]
 #[command(name = "claude-daemon", about = "Claude Code GUI daemon")]
@@ -67,6 +67,9 @@ async fn main() -> Result<()> {
     if let Err(e) = state.load_user_settings().await {
         tracing::warn!("could not load user settings: {e}");
     }
+
+    // Start the file watcher to broadcast config changes over WebSocket.
+    watcher::start_watcher(state.clone())?;
 
     // Build the router.
     let router = build_router(state);
