@@ -1,5 +1,21 @@
 <script lang="ts">
-  // Svelte 5 runes
+  import { onMount } from "svelte";
+  import { connectionStore } from "$lib/stores/connection.svelte";
+  import { configStore } from "$lib/stores/config.svelte";
+  import { projectsStore } from "$lib/stores/projects.svelte";
+  import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
+
+  // ---------------------------------------------------------------------------
+  // Constants (dev defaults — swap for real config/env later)
+  // ---------------------------------------------------------------------------
+
+  const DAEMON_BASE_URL = "http://localhost:7890";
+  const DAEMON_TOKEN = "dev-token";
+
+  // ---------------------------------------------------------------------------
+  // Navigation state
+  // ---------------------------------------------------------------------------
+
   let activeNav = $state("S");
   let activeItem = $state(0);
 
@@ -19,71 +35,177 @@
     P: ["Project Alpha", "Project Beta"],
     K: ["pre-tool", "post-tool", "pre-compact"],
     M: ["filesystem", "github", "postgres"],
-    C: ["Global Config", "Project Config"],
+    C: ["User Config", "Project Config"],
     E: ["Variables", "Secrets"],
     L: ["daemon.log", "tauri.log"],
     A: ["Version", "License"],
   };
+
+  // ---------------------------------------------------------------------------
+  // Derived: active project options for header dropdown
+  // ---------------------------------------------------------------------------
+
+  let selectedProjectId = $state<string>("");
+
+  // ---------------------------------------------------------------------------
+  // Mount: connect + load initial data
+  // ---------------------------------------------------------------------------
+
+  onMount(() => {
+    void (async () => {
+      await connectionStore.connect(DAEMON_BASE_URL, DAEMON_TOKEN);
+
+      if (connectionStore.status === "connected") {
+        await Promise.all([
+          configStore.loadUserConfig(),
+          projectsStore.loadProjects(),
+        ]);
+      }
+
+      // Subscribe to WS events for config_changed → reload config
+      if (connectionStore.wsClient) {
+        connectionStore.wsClient.onEvent((event) => {
+          if (event.type === "configChanged") {
+            void configStore.loadUserConfig();
+          }
+        });
+      }
+    })();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  function isConfigModule(): boolean {
+    return activeNav === "C" && subItems["C"][activeItem] === "User Config";
+  }
 </script>
 
-<div class="flex h-screen w-screen overflow-hidden bg-gray-950 text-gray-100">
-  <!-- Sidebar: icon nav -->
-  <nav
-    class="flex flex-col items-center gap-1 border-r border-gray-800 bg-gray-900 py-3"
-    style="width: var(--sidebar-width)"
-  >
-    {#each navButtons as btn}
-      <button
-        class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors
-          {activeNav === btn.id
-          ? 'bg-blue-600 text-white'
-          : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'}"
-        title={btn.label}
-        onclick={() => { activeNav = btn.id; activeItem = 0; }}
+<!-- ===== Root container ===== -->
+<div class="flex h-screen w-screen flex-col overflow-hidden bg-gray-950 text-gray-100">
+
+  <!-- ===== Header ===== -->
+  <header class="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-4 py-2">
+    <div class="flex items-center gap-3">
+      <span class="text-sm font-semibold text-gray-100">dot-claude</span>
+
+      <!-- Project selector -->
+      {#if projectsStore.projects.length > 0}
+        <select
+          class="rounded bg-gray-800 px-2 py-1 text-xs text-gray-300 focus:outline-none"
+          bind:value={selectedProjectId}
+          onchange={() => projectsStore.selectProject(selectedProjectId || null)}
+        >
+          <option value="">No project</option>
+          {#each projectsStore.projects as project}
+            <option value={project.id}>{project.name}</option>
+          {/each}
+        </select>
+      {:else}
+        <span class="text-xs text-gray-600">No projects</span>
+      {/if}
+    </div>
+
+    <ConnectionStatus />
+  </header>
+
+  <!-- ===== Body (three-panel layout) ===== -->
+  <div class="flex flex-1 overflow-hidden">
+
+    {#if connectionStore.status === "disconnected" && connectionStore.error}
+      <!-- Not connected — full-width message -->
+      <div class="flex flex-1 items-center justify-center">
+        <div class="text-center">
+          <p class="text-sm font-medium text-gray-300">Not connected</p>
+          {#if connectionStore.error}
+            <p class="mt-1 text-xs text-red-400">{connectionStore.error}</p>
+          {/if}
+        </div>
+      </div>
+    {:else}
+
+      <!-- Sidebar: icon nav -->
+      <nav
+        class="flex flex-col items-center gap-1 border-r border-gray-800 bg-gray-900 py-3"
+        style="width: var(--sidebar-width, 3.5rem)"
       >
-        {btn.id}
-      </button>
-    {/each}
-  </nav>
-
-  <!-- Sub-panel: list -->
-  <aside
-    class="flex flex-col border-r border-gray-800 bg-gray-900"
-    style="width: var(--subpanel-width)"
-  >
-    <div class="border-b border-gray-800 px-4 py-3">
-      <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">
-        {navButtons.find((b) => b.id === activeNav)?.label ?? ""}
-      </h2>
-    </div>
-    <ul class="flex-1 overflow-y-auto py-2">
-      {#each (subItems[activeNav] ?? []) as item, i}
-        <li>
+        {#each navButtons as btn}
           <button
-            class="w-full px-4 py-2 text-left text-sm transition-colors
-              {activeItem === i
-              ? 'bg-gray-800 text-white'
-              : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-            onclick={() => { activeItem = i; }}
+            class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors
+              {activeNav === btn.id
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'}"
+            title={btn.label}
+            onclick={() => { activeNav = btn.id; activeItem = 0; }}
           >
-            {item}
+            {btn.id}
           </button>
-        </li>
-      {/each}
-    </ul>
-  </aside>
+        {/each}
+      </nav>
 
-  <!-- Detail panel -->
-  <main class="flex flex-1 flex-col overflow-hidden">
-    <div class="border-b border-gray-800 px-6 py-3">
-      <h1 class="text-sm font-medium text-gray-200">
-        {subItems[activeNav]?.[activeItem] ?? "—"}
-      </h1>
-    </div>
-    <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm text-gray-600">
-        Select an item to view details
-      </p>
-    </div>
-  </main>
+      <!-- Sub-panel: list -->
+      <aside
+        class="flex flex-col border-r border-gray-800 bg-gray-900"
+        style="width: var(--subpanel-width, 14rem)"
+      >
+        <div class="border-b border-gray-800 px-4 py-3">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            {navButtons.find((b) => b.id === activeNav)?.label ?? ""}
+          </h2>
+        </div>
+        <ul class="flex-1 overflow-y-auto py-2">
+          {#each (subItems[activeNav] ?? []) as item, i}
+            <li>
+              <button
+                class="w-full px-4 py-2 text-left text-sm transition-colors
+                  {activeItem === i
+                  ? 'bg-gray-800 text-white'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
+                onclick={() => { activeItem = i; }}
+              >
+                {item}
+              </button>
+            </li>
+          {/each}
+        </ul>
+      </aside>
+
+      <!-- Detail panel -->
+      <main class="flex flex-1 flex-col overflow-hidden">
+        <div class="border-b border-gray-800 px-6 py-3">
+          <h1 class="text-sm font-medium text-gray-200">
+            {subItems[activeNav]?.[activeItem] ?? "—"}
+          </h1>
+        </div>
+
+        <div class="flex-1 overflow-auto p-6">
+          {#if connectionStore.status === "connecting"}
+            <p class="text-sm text-gray-500">Connecting to daemon...</p>
+
+          {:else if connectionStore.status === "disconnected"}
+            <div class="flex h-full items-center justify-center">
+              <p class="text-sm text-gray-500">Not connected</p>
+            </div>
+
+          {:else if isConfigModule()}
+            <!-- User Config detail: show JSON -->
+            {#if configStore.loading}
+              <p class="text-sm text-gray-500">Loading config...</p>
+            {:else if configStore.error}
+              <p class="text-sm text-red-400">{configStore.error}</p>
+            {:else}
+              <pre class="overflow-auto rounded bg-gray-900 p-4 text-xs text-gray-300">{JSON.stringify(configStore.userSettings, null, 2)}</pre>
+            {/if}
+
+          {:else}
+            <div class="flex h-full items-center justify-center">
+              <p class="text-sm text-gray-600">Select an item to view details</p>
+            </div>
+          {/if}
+        </div>
+      </main>
+
+    {/if}
+  </div>
 </div>
