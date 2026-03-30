@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "crates/claude-types",
     "crates/claude-config",
-    # "crates/claude-daemon",   # added in Task 3
+    "crates/claude-daemon",
     # "src-tauri",              # added in Task 4
 ]
 
