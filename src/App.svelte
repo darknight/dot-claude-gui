@@ -4,6 +4,7 @@
   import { configStore } from "$lib/stores/config.svelte";
   import { projectsStore } from "$lib/stores/projects.svelte";
   import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
+  import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
 
   // ---------------------------------------------------------------------------
   // Constants (dev defaults — swap for real config/env later)
@@ -35,11 +36,25 @@
     P: ["Project Alpha", "Project Beta"],
     K: ["pre-tool", "post-tool", "pre-compact"],
     M: ["filesystem", "github", "postgres"],
-    C: ["User Config", "Project Config"],
     E: ["Variables", "Secrets"],
     L: ["daemon.log", "tauri.log"],
     A: ["Version", "License"],
   };
+
+  // ---------------------------------------------------------------------------
+  // Settings sub-navigation
+  // ---------------------------------------------------------------------------
+
+  const settingsSections = [
+    { id: "general", label: "General" },
+    { id: "permissions", label: "Permissions" },
+    { id: "hooks", label: "Hooks" },
+    { id: "sandbox", label: "Sandbox" },
+    { id: "environment", label: "Environment" },
+    { id: "statusline", label: "Status Line" },
+  ];
+
+  let settingsSection = $state("general");
 
   // ---------------------------------------------------------------------------
   // Derived: active project options for header dropdown
@@ -77,8 +92,8 @@
   // Helpers
   // ---------------------------------------------------------------------------
 
-  function isConfigModule(): boolean {
-    return activeNav === "C" && subItems["C"][activeItem] === "User Config";
+  function isSettingsModule(): boolean {
+    return activeNav === "C";
   }
 </script>
 
@@ -154,52 +169,77 @@
             {navButtons.find((b) => b.id === activeNav)?.label ?? ""}
           </h2>
         </div>
-        <ul class="flex-1 overflow-y-auto py-2">
-          {#each (subItems[activeNav] ?? []) as item, i}
-            <li>
-              <button
-                class="w-full px-4 py-2 text-left text-sm transition-colors
-                  {activeItem === i
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-                onclick={() => { activeItem = i; }}
-              >
-                {item}
-              </button>
-            </li>
-          {/each}
-        </ul>
+
+        {#if isSettingsModule()}
+          <!-- Settings sub-navigation -->
+          <ul class="flex-1 overflow-y-auto py-2">
+            {#each settingsSections as section}
+              <li>
+                <button
+                  class="w-full px-4 py-2 text-left text-sm transition-colors
+                    {settingsSection === section.id
+                    ? 'bg-gray-800 text-white'
+                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
+                  onclick={() => { settingsSection = section.id; }}
+                >
+                  {section.label}
+                </button>
+              </li>
+            {/each}
+          </ul>
+        {:else}
+          <!-- Generic sub-item list -->
+          <ul class="flex-1 overflow-y-auto py-2">
+            {#each (subItems[activeNav] ?? []) as item, i}
+              <li>
+                <button
+                  class="w-full px-4 py-2 text-left text-sm transition-colors
+                    {activeItem === i
+                    ? 'bg-gray-800 text-white'
+                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
+                  onclick={() => { activeItem = i; }}
+                >
+                  {item}
+                </button>
+              </li>
+            {/each}
+          </ul>
+        {/if}
       </aside>
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
-        <div class="border-b border-gray-800 px-6 py-3">
-          <h1 class="text-sm font-medium text-gray-200">
-            {subItems[activeNav]?.[activeItem] ?? "—"}
-          </h1>
-        </div>
+        {#if !isSettingsModule()}
+          <div class="border-b border-gray-800 px-6 py-3">
+            <h1 class="text-sm font-medium text-gray-200">
+              {subItems[activeNav]?.[activeItem] ?? "—"}
+            </h1>
+          </div>
+        {/if}
 
-        <div class="flex-1 overflow-auto p-6">
+        <div class="flex flex-1 flex-col overflow-hidden">
           {#if connectionStore.status === "connecting"}
-            <p class="text-sm text-gray-500">Connecting to daemon...</p>
+            <div class="flex-1 overflow-auto p-6">
+              <p class="text-sm text-gray-500">Connecting to daemon...</p>
+            </div>
 
           {:else if connectionStore.status === "disconnected"}
-            <div class="flex h-full items-center justify-center">
+            <div class="flex flex-1 items-center justify-center">
               <p class="text-sm text-gray-500">Not connected</p>
             </div>
 
-          {:else if isConfigModule()}
-            <!-- User Config detail: show JSON -->
+          {:else if isSettingsModule()}
+            <!-- Settings module: SettingsEditor orchestrator -->
             {#if configStore.loading}
-              <p class="text-sm text-gray-500">Loading config...</p>
-            {:else if configStore.error}
-              <p class="text-sm text-red-400">{configStore.error}</p>
+              <div class="flex-1 overflow-auto p-6">
+                <p class="text-sm text-gray-500">Loading config...</p>
+              </div>
             {:else}
-              <pre class="overflow-auto rounded bg-gray-900 p-4 text-xs text-gray-300">{JSON.stringify(configStore.userSettings, null, 2)}</pre>
+              <SettingsEditor activeSection={settingsSection} />
             {/if}
 
           {:else}
-            <div class="flex h-full items-center justify-center">
+            <div class="flex flex-1 items-center justify-center">
               <p class="text-sm text-gray-600">Select an item to view details</p>
             </div>
           {/if}
