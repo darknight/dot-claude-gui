@@ -8,7 +8,10 @@
   import { memoryStore } from "$lib/stores/memory.svelte";
   import { mcpStore } from "$lib/stores/mcp.svelte";
   import { appSettingsStore } from "$lib/stores/appsettings.svelte";
+  import { connectionsStore } from "$lib/stores/connections.svelte";
   import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
+  import EnvironmentSelector from "$lib/components/shared/EnvironmentSelector.svelte";
+  import ScopeSelector from "$lib/components/shared/ScopeSelector.svelte";
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
   import PluginsModule from "$lib/components/plugins/PluginsModule.svelte";
   import SkillsModule from "$lib/components/skills/SkillsModule.svelte";
@@ -58,6 +61,8 @@
   // App Settings is kept separate (bottom of sidebar)
   const appSettingsButton = { id: "A", label: "App Settings" };
 
+  // App Settings sub-navigation
+  let appSettingsSub = $state("appearance");
 
   // ---------------------------------------------------------------------------
   // Settings sub-navigation
@@ -99,43 +104,51 @@
   let mcpSection = $state("servers");
 
   // ---------------------------------------------------------------------------
-  // Derived: active project options for header dropdown
-  // ---------------------------------------------------------------------------
-
-  let selectedProjectId = $state<string>("");
-
-  // ---------------------------------------------------------------------------
-  // Mount: connect + load initial data
+  // Mount: load connections, connect to active daemon
   // ---------------------------------------------------------------------------
 
   onMount(() => {
     void (async () => {
-      appSettingsStore.load();
-      await connectionStore.connect(
-        appSettingsStore.preferences.daemonUrl,
-        appSettingsStore.preferences.daemonToken,
-      );
+      await appSettingsStore.load();
+      await connectionsStore.load();
 
-      if (connectionStore.status === "connected") {
-        await Promise.all([
-          configStore.loadUserConfig(),
-          projectsStore.loadProjects(),
-          pluginsStore.loadPlugins(),
-          skillsStore.loadSkills(),
-          memoryStore.loadProjects(),
-          mcpStore.loadServers(),
-        ]);
-      }
-
-      // Subscribe to WS events for config_changed → reload config
-      if (connectionStore.wsClient) {
-        connectionStore.wsClient.onEvent((event) => {
-          if (event.type === "configChanged") {
-            void configStore.loadUserConfig();
-          }
-        });
+      const active = connectionsStore.activeConnection;
+      if (active) {
+        await connectionStore.connect(active.url, active.token);
       }
     })();
+
+    // Listen for navigation events from EnvironmentSelector
+    const handleNavigate = (e: Event) => {
+      const detail = (e as CustomEvent<{ nav: string; sub?: string }>).detail;
+      activeNav = detail.nav;
+      if (detail.sub) {
+        appSettingsSub = detail.sub;
+      }
+    };
+    window.addEventListener("navigate", handleNavigate);
+    return () => window.removeEventListener("navigate", handleNavigate);
+  });
+
+  // Load data when connection becomes active
+  $effect(() => {
+    if (connectionStore.status === "connected" && connectionStore.client) {
+      configStore.loadUserConfig();
+      projectsStore.loadProjects();
+      pluginsStore.loadPlugins();
+      skillsStore.loadSkills();
+      memoryStore.loadProjects();
+      mcpStore.loadServers();
+
+      connectionStore.wsClient?.onEvent((event) => {
+        if (event.type === "configChanged") {
+          void configStore.loadUserConfig();
+          if (projectsStore.activeProjectId) {
+            void configStore.loadProjectConfig(projectsStore.activeProjectId);
+          }
+        }
+      });
+    }
   });
 
   // ---------------------------------------------------------------------------
@@ -180,24 +193,12 @@
 
   <!-- ===== Header ===== -->
   <header class="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-4 py-2">
-    <div class="flex items-center gap-3">
-      <span class="text-sm font-semibold text-gray-100">dot-claude</span>
+    <span class="text-sm font-semibold text-gray-100">dot-claude</span>
 
-      <!-- Project selector -->
-      {#if projectsStore.projects.length > 0}
-        <select
-          class="rounded bg-gray-800 px-2 py-1 text-xs text-gray-300 focus:outline-none"
-          bind:value={selectedProjectId}
-          onchange={() => projectsStore.selectProject(selectedProjectId || null)}
-        >
-          <option value="">No project</option>
-          {#each projectsStore.projects as project}
-            <option value={project.id}>{project.name}</option>
-          {/each}
-        </select>
-      {:else}
-        <span class="text-xs text-gray-600">No projects</span>
-      {/if}
+    <div class="flex items-center gap-2">
+      <EnvironmentSelector />
+      <span class="text-gray-600">→</span>
+      <ScopeSelector />
     </div>
 
     <ConnectionStatus />
@@ -358,10 +359,31 @@
             <p class="px-4 py-2 text-xs text-gray-600">Select a project and launch</p>
           </div>
         {:else if isAppSettingsModule()}
-          <!-- App Settings: no sub-navigation needed -->
-          <div class="flex-1 overflow-y-auto py-2">
-            <p class="px-4 py-2 text-xs text-gray-600">GUI preferences</p>
-          </div>
+          <!-- App Settings sub-navigation -->
+          <ul class="flex-1 overflow-y-auto py-2">
+            <li>
+              <button
+                class="w-full px-4 py-2 text-left text-sm transition-colors
+                  {appSettingsSub === 'appearance'
+                  ? 'bg-gray-800 text-white'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
+                onclick={() => { appSettingsSub = "appearance"; }}
+              >
+                外观
+              </button>
+            </li>
+            <li>
+              <button
+                class="w-full px-4 py-2 text-left text-sm transition-colors
+                  {appSettingsSub === 'connections'
+                  ? 'bg-gray-800 text-white'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
+                onclick={() => { appSettingsSub = "connections"; }}
+              >
+                连接
+              </button>
+            </li>
+          </ul>
         {/if}
       </aside>
 
@@ -370,7 +392,7 @@
         <div class="flex flex-1 flex-col overflow-hidden">
           {#if isAppSettingsModule()}
             <!-- App Settings module: always accessible, regardless of connection -->
-            <AppSettingsView />
+            <AppSettingsView activeSub={appSettingsSub} />
 
           {:else if connectionStore.status === "connecting"}
             <div class="flex-1 overflow-auto p-6">
