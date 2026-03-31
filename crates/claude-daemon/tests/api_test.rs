@@ -585,3 +585,49 @@ async fn memory_crud() {
     let files_arr = files.as_array().unwrap();
     assert_eq!(files_arr.len(), 0);
 }
+
+// ---------------------------------------------------------------------------
+// 15. list_mcp_servers_returns_array
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn list_mcp_servers_returns_array() {
+    let (_dir, token, port, _handle) = start_test_daemon().await;
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(format!("http://127.0.0.1:{port}/api/v1/mcp/servers"))
+        .bearer_auth(&token)
+        .send()
+        .await
+        .expect("request should succeed");
+
+    assert_eq!(resp.status(), 200);
+    // Handler returns empty array when `claude` CLI is not available — just
+    // verify the body is a JSON array regardless of its length.
+    let body: Vec<serde_json::Value> = resp.json().await.expect("body should be a JSON array");
+    let _ = body; // may be empty or populated depending on environment
+}
+
+// ---------------------------------------------------------------------------
+// 16. launch_endpoint_exists
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn launch_endpoint_exists() {
+    let (_dir, token, port, _handle) = start_test_daemon().await;
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .post(format!("http://127.0.0.1:{port}/api/v1/launch"))
+        .bearer_auth(&token)
+        .json(&serde_json::json!({ "projectPath": "/tmp", "env": {} }))
+        .send()
+        .await
+        .expect("request should succeed");
+
+    // May be 200 (claude in PATH) or 500 (claude not in PATH).
+    // We only assert the endpoint exists (not 404) and auth is accepted (not 401).
+    assert_ne!(resp.status(), 404u16);
+    assert_ne!(resp.status(), 401u16);
+}
