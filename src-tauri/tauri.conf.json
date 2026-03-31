@@ -31,10 +31,5 @@
       "icons/icon.ico"
     ],
     "externalBin": ["binaries/claude-daemon"]
-  },
-  "plugins": {
-    "shell": {
-      "sidecar": true
-    }
   }
 }
