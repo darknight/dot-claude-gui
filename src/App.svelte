@@ -14,6 +14,7 @@
   import MemoryList from "$lib/components/memory/MemoryList.svelte";
   import MemoryModule from "$lib/components/memory/MemoryModule.svelte";
   import McpModule from "$lib/components/mcp/McpModule.svelte";
+  import EffectiveConfigView from "$lib/components/effective/EffectiveConfigView.svelte";
 
   // ---------------------------------------------------------------------------
   // Constants (dev defaults — swap for real config/env later)
@@ -150,6 +151,10 @@
 
   function isMcpModule(): boolean {
     return activeNav === "M";
+  }
+
+  function isEffectiveConfigModule(): boolean {
+    return activeNav === "E";
   }
 </script>
 
@@ -308,6 +313,11 @@
               </li>
             {/each}
           </ul>
+        {:else if isEffectiveConfigModule()}
+          <!-- Effective Config: no sub-navigation needed -->
+          <div class="flex-1 overflow-y-auto py-2">
+            <p class="px-4 py-2 text-xs text-gray-600">Merged config for active project</p>
+          </div>
         {:else}
           <!-- Generic sub-item list -->
           <ul class="flex-1 overflow-y-auto py-2">
@@ -330,7 +340,7 @@
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
-        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule() && !isMcpModule()}
+        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule() && !isMcpModule() && !isEffectiveConfigModule()}
           <div class="border-b border-gray-800 px-6 py-3">
             <h1 class="text-sm font-medium text-gray-200">
               {subItems[activeNav]?.[activeItem] ?? "—"}
@@ -374,6 +384,10 @@
           {:else if isMcpModule()}
             <!-- MCP module: McpModule orchestrator -->
             <McpModule activeSection={mcpSection} />
+
+          {:else if isEffectiveConfigModule()}
+            <!-- Effective Config module -->
+            <EffectiveConfigView />
 
           {:else}
             <div class="flex flex-1 items-center justify-center">
