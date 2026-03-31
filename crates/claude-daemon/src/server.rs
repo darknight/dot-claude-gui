@@ -12,6 +12,10 @@ use crate::{
             put_user_config,
         },
         health::health_handler,
+        memory::{
+            delete_memory_file, get_memory_file, list_memory_files, list_memory_projects,
+            put_memory_file,
+        },
         plugins::{
             add_marketplace, browse_marketplace_plugins, install_plugin, list_marketplaces,
             list_plugins, remove_marketplace, toggle_plugin, uninstall_plugin,
@@ -64,6 +68,13 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/v1/marketplaces/{id}", delete(remove_marketplace))
         // Skills routes
         .route("/api/v1/skills", get(list_skills))
+        // Memory routes
+        .route("/api/v1/memory", get(list_memory_projects))
+        .route("/api/v1/memory/{project_id}", get(list_memory_files))
+        .route(
+            "/api/v1/memory/{project_id}/{filename}",
+            get(get_memory_file).put(put_memory_file).delete(delete_memory_file),
+        )
         .layer(middleware::from_fn(require_auth));
 
     Router::new()
