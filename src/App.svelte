@@ -6,50 +6,58 @@
   import { pluginsStore } from "$lib/stores/plugins.svelte";
   import { skillsStore } from "$lib/stores/skills.svelte";
   import { memoryStore } from "$lib/stores/memory.svelte";
+  import { mcpStore } from "$lib/stores/mcp.svelte";
+  import { appSettingsStore } from "$lib/stores/appsettings.svelte";
   import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
   import PluginsModule from "$lib/components/plugins/PluginsModule.svelte";
   import SkillsModule from "$lib/components/skills/SkillsModule.svelte";
   import MemoryList from "$lib/components/memory/MemoryList.svelte";
   import MemoryModule from "$lib/components/memory/MemoryModule.svelte";
+  import McpModule from "$lib/components/mcp/McpModule.svelte";
+  import EffectiveConfigView from "$lib/components/effective/EffectiveConfigView.svelte";
+  import LauncherView from "$lib/components/launcher/LauncherView.svelte";
+  import AppSettingsView from "$lib/components/appsettings/AppSettingsView.svelte";
 
   // ---------------------------------------------------------------------------
-  // Constants (dev defaults — swap for real config/env later)
+  // Theme effect
   // ---------------------------------------------------------------------------
 
-  const DAEMON_BASE_URL = "http://localhost:7890";
-  const DAEMON_TOKEN = "dev-token";
+  $effect(() => {
+    const theme = appSettingsStore.preferences.theme;
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else if (theme === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      // system
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+  });
 
   // ---------------------------------------------------------------------------
   // Navigation state
   // ---------------------------------------------------------------------------
 
   let activeNav = $state("S");
-  let activeItem = $state(0);
 
   const navButtons = [
-    { id: "S", label: "Sessions" },
-    { id: "P", label: "Projects" },
-    { id: "K", label: "Hooks" },
-    { id: "M", label: "MCP" },
-    { id: "C", label: "Config" },
-    { id: "G", label: "Plugins" },
-    { id: "I", label: "Skills" },
-    { id: "R", label: "Memory" },
-    { id: "E", label: "Environment" },
-    { id: "L", label: "Logs" },
-    { id: "A", label: "About" },
+    { id: "S", label: "Settings" },
+    { id: "P", label: "Plugins" },
+    { id: "K", label: "Skills" },
+    { id: "M", label: "Memory" },
+    { id: "C", label: "MCP Servers" },
+    { id: "E", label: "Effective Config" },
+    { id: "L", label: "Launcher" },
   ];
 
-  const subItems: Record<string, string[]> = {
-    S: ["Session 1", "Session 2", "Session 3"],
-    P: ["Project Alpha", "Project Beta"],
-    K: ["pre-tool", "post-tool", "pre-compact"],
-    M: ["filesystem", "github", "postgres"],
-    E: ["Variables", "Secrets"],
-    L: ["daemon.log", "tauri.log"],
-    A: ["Version", "License"],
-  };
+  // App Settings is kept separate (bottom of sidebar)
+  const appSettingsButton = { id: "A", label: "App Settings" };
+
 
   // ---------------------------------------------------------------------------
   // Settings sub-navigation
@@ -80,6 +88,17 @@
   let pluginsSection = $state("installed");
 
   // ---------------------------------------------------------------------------
+  // MCP sub-navigation
+  // ---------------------------------------------------------------------------
+
+  const mcpSections = [
+    { id: "servers", label: "Servers" },
+    { id: "add", label: "Add Server" },
+  ];
+
+  let mcpSection = $state("servers");
+
+  // ---------------------------------------------------------------------------
   // Derived: active project options for header dropdown
   // ---------------------------------------------------------------------------
 
@@ -91,7 +110,11 @@
 
   onMount(() => {
     void (async () => {
-      await connectionStore.connect(DAEMON_BASE_URL, DAEMON_TOKEN);
+      appSettingsStore.load();
+      await connectionStore.connect(
+        appSettingsStore.preferences.daemonUrl,
+        appSettingsStore.preferences.daemonToken,
+      );
 
       if (connectionStore.status === "connected") {
         await Promise.all([
@@ -100,6 +123,7 @@
           pluginsStore.loadPlugins(),
           skillsStore.loadSkills(),
           memoryStore.loadProjects(),
+          mcpStore.loadServers(),
         ]);
       }
 
@@ -119,19 +143,35 @@
   // ---------------------------------------------------------------------------
 
   function isSettingsModule(): boolean {
-    return activeNav === "C";
+    return activeNav === "S";
   }
 
   function isPluginsModule(): boolean {
-    return activeNav === "G";
+    return activeNav === "P";
   }
 
   function isSkillsModule(): boolean {
-    return activeNav === "I";
+    return activeNav === "K";
   }
 
   function isMemoryModule(): boolean {
-    return activeNav === "R";
+    return activeNav === "M";
+  }
+
+  function isMcpModule(): boolean {
+    return activeNav === "C";
+  }
+
+  function isEffectiveConfigModule(): boolean {
+    return activeNav === "E";
+  }
+
+  function isLauncherModule(): boolean {
+    return activeNav === "L";
+  }
+
+  function isAppSettingsModule(): boolean {
+    return activeNav === "A";
   }
 </script>
 
@@ -180,21 +220,38 @@
 
       <!-- Sidebar: icon nav -->
       <nav
-        class="flex flex-col items-center gap-1 border-r border-gray-800 bg-gray-900 py-3"
+        class="flex flex-col items-center border-r border-gray-800 bg-gray-900 py-3"
         style="width: var(--sidebar-width, 3.5rem)"
       >
-        {#each navButtons as btn}
+        <!-- Main nav buttons -->
+        <div class="flex flex-col items-center gap-1 flex-1">
+          {#each navButtons as btn}
+            <button
+              class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors
+                {activeNav === btn.id
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'}"
+              title={btn.label}
+              onclick={() => { activeNav = btn.id; }}
+            >
+              {btn.id}
+            </button>
+          {/each}
+        </div>
+
+        <!-- App Settings button (separated at bottom) -->
+        <div class="mt-2 border-t border-gray-800 pt-2">
           <button
             class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors
-              {activeNav === btn.id
+              {activeNav === appSettingsButton.id
               ? 'bg-blue-600 text-white'
               : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'}"
-            title={btn.label}
-            onclick={() => { activeNav = btn.id; activeItem = 0; }}
+            title={appSettingsButton.label}
+            onclick={() => { activeNav = appSettingsButton.id; }}
           >
-            {btn.id}
+            {appSettingsButton.id}
           </button>
-        {/each}
+        </div>
       </nav>
 
       <!-- Sub-panel: list -->
@@ -204,7 +261,7 @@
       >
         <div class="border-b border-gray-800 px-4 py-3">
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            {navButtons.find((b) => b.id === activeNav)?.label ?? ""}
+            {navButtons.find((b) => b.id === activeNav)?.label ?? (activeNav === appSettingsButton.id ? appSettingsButton.label : "")}
           </h2>
         </div>
 
@@ -273,38 +330,49 @@
         {:else if isMemoryModule()}
           <!-- Memory sub-panel: project selector + file list -->
           <MemoryList />
-        {:else}
-          <!-- Generic sub-item list -->
+        {:else if isMcpModule()}
+          <!-- MCP sub-navigation -->
           <ul class="flex-1 overflow-y-auto py-2">
-            {#each (subItems[activeNav] ?? []) as item, i}
+            {#each mcpSections as section}
               <li>
                 <button
                   class="w-full px-4 py-2 text-left text-sm transition-colors
-                    {activeItem === i
+                    {mcpSection === section.id
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-                  onclick={() => { activeItem = i; }}
+                  onclick={() => { mcpSection = section.id; }}
                 >
-                  {item}
+                  {section.label}
                 </button>
               </li>
             {/each}
           </ul>
+        {:else if isEffectiveConfigModule()}
+          <!-- Effective Config: no sub-navigation needed -->
+          <div class="flex-1 overflow-y-auto py-2">
+            <p class="px-4 py-2 text-xs text-gray-600">Merged config for active project</p>
+          </div>
+        {:else if isLauncherModule()}
+          <!-- Launcher: no sub-navigation needed -->
+          <div class="flex-1 overflow-y-auto py-2">
+            <p class="px-4 py-2 text-xs text-gray-600">Select a project and launch</p>
+          </div>
+        {:else if isAppSettingsModule()}
+          <!-- App Settings: no sub-navigation needed -->
+          <div class="flex-1 overflow-y-auto py-2">
+            <p class="px-4 py-2 text-xs text-gray-600">GUI preferences</p>
+          </div>
         {/if}
       </aside>
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
-        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule()}
-          <div class="border-b border-gray-800 px-6 py-3">
-            <h1 class="text-sm font-medium text-gray-200">
-              {subItems[activeNav]?.[activeItem] ?? "—"}
-            </h1>
-          </div>
-        {/if}
-
         <div class="flex flex-1 flex-col overflow-hidden">
-          {#if connectionStore.status === "connecting"}
+          {#if isAppSettingsModule()}
+            <!-- App Settings module: always accessible, regardless of connection -->
+            <AppSettingsView />
+
+          {:else if connectionStore.status === "connecting"}
             <div class="flex-1 overflow-auto p-6">
               <p class="text-sm text-gray-500">Connecting to daemon...</p>
             </div>
@@ -335,6 +403,18 @@
           {:else if isMemoryModule()}
             <!-- Memory module: MemoryModule orchestrator -->
             <MemoryModule />
+
+          {:else if isMcpModule()}
+            <!-- MCP module: McpModule orchestrator -->
+            <McpModule activeSection={mcpSection} />
+
+          {:else if isEffectiveConfigModule()}
+            <!-- Effective Config module -->
+            <EffectiveConfigView />
+
+          {:else if isLauncherModule()}
+            <!-- Launcher module -->
+            <LauncherView />
 
           {:else}
             <div class="flex flex-1 items-center justify-center">
