@@ -44,34 +44,20 @@
   // ---------------------------------------------------------------------------
 
   let activeNav = $state("S");
-  let activeItem = $state(0);
 
   const navButtons = [
-    { id: "S", label: "Sessions" },
-    { id: "P", label: "Projects" },
-    { id: "K", label: "Hooks" },
-    { id: "M", label: "MCP" },
-    { id: "C", label: "Config" },
-    { id: "G", label: "Plugins" },
-    { id: "I", label: "Skills" },
-    { id: "R", label: "Memory" },
-    { id: "E", label: "Environment" },
-    { id: "L", label: "Logs" },
-    { id: "N", label: "Launcher" },
+    { id: "S", label: "Settings" },
+    { id: "P", label: "Plugins" },
+    { id: "K", label: "Skills" },
+    { id: "M", label: "Memory" },
+    { id: "C", label: "MCP Servers" },
+    { id: "E", label: "Effective Config" },
+    { id: "L", label: "Launcher" },
   ];
 
   // App Settings is kept separate (bottom of sidebar)
   const appSettingsButton = { id: "A", label: "App Settings" };
 
-  const subItems: Record<string, string[]> = {
-    S: ["Session 1", "Session 2", "Session 3"],
-    P: ["Project Alpha", "Project Beta"],
-    K: ["pre-tool", "post-tool", "pre-compact"],
-    M: ["filesystem", "github", "postgres"],
-    E: ["Variables", "Secrets"],
-    L: ["daemon.log", "tauri.log"],
-    A: ["Version", "License"],
-  };
 
   // ---------------------------------------------------------------------------
   // Settings sub-navigation
@@ -157,23 +143,23 @@
   // ---------------------------------------------------------------------------
 
   function isSettingsModule(): boolean {
-    return activeNav === "C";
+    return activeNav === "S";
   }
 
   function isPluginsModule(): boolean {
-    return activeNav === "G";
+    return activeNav === "P";
   }
 
   function isSkillsModule(): boolean {
-    return activeNav === "I";
+    return activeNav === "K";
   }
 
   function isMemoryModule(): boolean {
-    return activeNav === "R";
+    return activeNav === "M";
   }
 
   function isMcpModule(): boolean {
-    return activeNav === "M";
+    return activeNav === "C";
   }
 
   function isEffectiveConfigModule(): boolean {
@@ -181,7 +167,7 @@
   }
 
   function isLauncherModule(): boolean {
-    return activeNav === "N";
+    return activeNav === "L";
   }
 
   function isAppSettingsModule(): boolean {
@@ -246,7 +232,7 @@
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'}"
               title={btn.label}
-              onclick={() => { activeNav = btn.id; activeItem = 0; }}
+              onclick={() => { activeNav = btn.id; }}
             >
               {btn.id}
             </button>
@@ -261,7 +247,7 @@
               ? 'bg-blue-600 text-white'
               : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'}"
             title={appSettingsButton.label}
-            onclick={() => { activeNav = appSettingsButton.id; activeItem = 0; }}
+            onclick={() => { activeNav = appSettingsButton.id; }}
           >
             {appSettingsButton.id}
           </button>
@@ -275,7 +261,7 @@
       >
         <div class="border-b border-gray-800 px-4 py-3">
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            {navButtons.find((b) => b.id === activeNav)?.label ?? ""}
+            {navButtons.find((b) => b.id === activeNav)?.label ?? (activeNav === appSettingsButton.id ? appSettingsButton.label : "")}
           </h2>
         </div>
 
@@ -376,36 +362,11 @@
           <div class="flex-1 overflow-y-auto py-2">
             <p class="px-4 py-2 text-xs text-gray-600">GUI preferences</p>
           </div>
-        {:else}
-          <!-- Generic sub-item list -->
-          <ul class="flex-1 overflow-y-auto py-2">
-            {#each (subItems[activeNav] ?? []) as item, i}
-              <li>
-                <button
-                  class="w-full px-4 py-2 text-left text-sm transition-colors
-                    {activeItem === i
-                    ? 'bg-gray-800 text-white'
-                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-                  onclick={() => { activeItem = i; }}
-                >
-                  {item}
-                </button>
-              </li>
-            {/each}
-          </ul>
         {/if}
       </aside>
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
-        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule() && !isMcpModule() && !isEffectiveConfigModule() && !isLauncherModule() && !isAppSettingsModule()}
-          <div class="border-b border-gray-800 px-6 py-3">
-            <h1 class="text-sm font-medium text-gray-200">
-              {subItems[activeNav]?.[activeItem] ?? "—"}
-            </h1>
-          </div>
-        {/if}
-
         <div class="flex flex-1 flex-col overflow-hidden">
           {#if isAppSettingsModule()}
             <!-- App Settings module: always accessible, regardless of connection -->
