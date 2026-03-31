@@ -5,10 +5,13 @@
   import { projectsStore } from "$lib/stores/projects.svelte";
   import { pluginsStore } from "$lib/stores/plugins.svelte";
   import { skillsStore } from "$lib/stores/skills.svelte";
+  import { memoryStore } from "$lib/stores/memory.svelte";
   import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
   import PluginsModule from "$lib/components/plugins/PluginsModule.svelte";
   import SkillsModule from "$lib/components/skills/SkillsModule.svelte";
+  import MemoryList from "$lib/components/memory/MemoryList.svelte";
+  import MemoryModule from "$lib/components/memory/MemoryModule.svelte";
 
   // ---------------------------------------------------------------------------
   // Constants (dev defaults — swap for real config/env later)
@@ -32,6 +35,7 @@
     { id: "C", label: "Config" },
     { id: "G", label: "Plugins" },
     { id: "I", label: "Skills" },
+    { id: "R", label: "Memory" },
     { id: "E", label: "Environment" },
     { id: "L", label: "Logs" },
     { id: "A", label: "About" },
@@ -95,6 +99,7 @@
           projectsStore.loadProjects(),
           pluginsStore.loadPlugins(),
           skillsStore.loadSkills(),
+          memoryStore.loadProjects(),
         ]);
       }
 
@@ -123,6 +128,10 @@
 
   function isSkillsModule(): boolean {
     return activeNav === "I";
+  }
+
+  function isMemoryModule(): boolean {
+    return activeNav === "R";
   }
 </script>
 
@@ -261,6 +270,9 @@
               {/each}
             {/if}
           </ul>
+        {:else if isMemoryModule()}
+          <!-- Memory sub-panel: project selector + file list -->
+          <MemoryList />
         {:else}
           <!-- Generic sub-item list -->
           <ul class="flex-1 overflow-y-auto py-2">
@@ -283,7 +295,7 @@
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
-        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule()}
+        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule()}
           <div class="border-b border-gray-800 px-6 py-3">
             <h1 class="text-sm font-medium text-gray-200">
               {subItems[activeNav]?.[activeItem] ?? "—"}
@@ -319,6 +331,10 @@
           {:else if isSkillsModule()}
             <!-- Skills module: SkillsModule orchestrator -->
             <SkillsModule />
+
+          {:else if isMemoryModule()}
+            <!-- Memory module: MemoryModule orchestrator -->
+            <MemoryModule />
 
           {:else}
             <div class="flex flex-1 items-center justify-center">
