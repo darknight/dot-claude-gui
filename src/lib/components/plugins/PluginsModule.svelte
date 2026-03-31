@@ -2,6 +2,7 @@
   import InstalledPlugins from "./InstalledPlugins.svelte";
   import MarketplaceBrowser from "./MarketplaceBrowser.svelte";
   import MarketplaceManager from "./MarketplaceManager.svelte";
+  import ProjectActivation from "./ProjectActivation.svelte";
 
   let { activeSection = "installed" }: { activeSection: string } = $props();
 </script>
@@ -16,9 +17,7 @@
   {:else if activeSection === "manage-marketplaces"}
     <MarketplaceManager />
   {:else if activeSection === "per-project"}
-    <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm text-gray-600">Per-Project activation — coming in Task 10</p>
-    </div>
+    <ProjectActivation />
   {:else}
     <div class="flex flex-1 items-center justify-center">
       <p class="text-sm text-gray-600">Unknown section: {activeSection}</p>
