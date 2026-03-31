@@ -6,12 +6,14 @@
   import { pluginsStore } from "$lib/stores/plugins.svelte";
   import { skillsStore } from "$lib/stores/skills.svelte";
   import { memoryStore } from "$lib/stores/memory.svelte";
+  import { mcpStore } from "$lib/stores/mcp.svelte";
   import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
   import PluginsModule from "$lib/components/plugins/PluginsModule.svelte";
   import SkillsModule from "$lib/components/skills/SkillsModule.svelte";
   import MemoryList from "$lib/components/memory/MemoryList.svelte";
   import MemoryModule from "$lib/components/memory/MemoryModule.svelte";
+  import McpModule from "$lib/components/mcp/McpModule.svelte";
 
   // ---------------------------------------------------------------------------
   // Constants (dev defaults — swap for real config/env later)
@@ -80,6 +82,17 @@
   let pluginsSection = $state("installed");
 
   // ---------------------------------------------------------------------------
+  // MCP sub-navigation
+  // ---------------------------------------------------------------------------
+
+  const mcpSections = [
+    { id: "servers", label: "Servers" },
+    { id: "add", label: "Add Server" },
+  ];
+
+  let mcpSection = $state("servers");
+
+  // ---------------------------------------------------------------------------
   // Derived: active project options for header dropdown
   // ---------------------------------------------------------------------------
 
@@ -100,6 +113,7 @@
           pluginsStore.loadPlugins(),
           skillsStore.loadSkills(),
           memoryStore.loadProjects(),
+          mcpStore.loadServers(),
         ]);
       }
 
@@ -132,6 +146,10 @@
 
   function isMemoryModule(): boolean {
     return activeNav === "R";
+  }
+
+  function isMcpModule(): boolean {
+    return activeNav === "M";
   }
 </script>
 
@@ -273,6 +291,23 @@
         {:else if isMemoryModule()}
           <!-- Memory sub-panel: project selector + file list -->
           <MemoryList />
+        {:else if isMcpModule()}
+          <!-- MCP sub-navigation -->
+          <ul class="flex-1 overflow-y-auto py-2">
+            {#each mcpSections as section}
+              <li>
+                <button
+                  class="w-full px-4 py-2 text-left text-sm transition-colors
+                    {mcpSection === section.id
+                    ? 'bg-gray-800 text-white'
+                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
+                  onclick={() => { mcpSection = section.id; }}
+                >
+                  {section.label}
+                </button>
+              </li>
+            {/each}
+          </ul>
         {:else}
           <!-- Generic sub-item list -->
           <ul class="flex-1 overflow-y-auto py-2">
@@ -295,7 +330,7 @@
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
-        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule()}
+        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule() && !isMcpModule()}
           <div class="border-b border-gray-800 px-6 py-3">
             <h1 class="text-sm font-medium text-gray-200">
               {subItems[activeNav]?.[activeItem] ?? "—"}
@@ -335,6 +370,10 @@
           {:else if isMemoryModule()}
             <!-- Memory module: MemoryModule orchestrator -->
             <MemoryModule />
+
+          {:else if isMcpModule()}
+            <!-- MCP module: McpModule orchestrator -->
+            <McpModule activeSection={mcpSection} />
 
           {:else}
             <div class="flex flex-1 items-center justify-center">
