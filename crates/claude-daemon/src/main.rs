@@ -16,6 +16,10 @@ struct Args {
     #[arg(long, default_value_t = 7890)]
     port: u16,
 
+    /// Address to bind to.
+    #[arg(long, default_value = "127.0.0.1")]
+    bind: String,
+
     /// Path to the Claude home directory.
     #[arg(long)]
     claude_home: Option<PathBuf>,
@@ -57,15 +61,6 @@ async fn main() -> Result<()> {
         }
     };
 
-    // Persist the token in the app's own data directory (not in ~/.claude/).
-    let app_data_dir = dirs_next::data_dir()
-        .expect("cannot determine app data directory")
-        .join("com.dotclaude.gui");
-    std::fs::create_dir_all(&app_data_dir)?;
-    let token_path = app_data_dir.join("daemon-token");
-    std::fs::write(&token_path, &auth_token)?;
-    info!("auth token written to {}", token_path.display());
-
     // Build state and load settings from disk.
     let state = AppState::new(claude_home.clone(), auth_token.clone());
     if let Err(e) = state.load_user_settings().await {
@@ -78,7 +73,9 @@ async fn main() -> Result<()> {
     // Build the router.
     let router = build_router(state);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
+    let addr: SocketAddr = format!("{}:{}", args.bind, args.port)
+        .parse()
+        .expect("invalid bind address");
     info!("claude-daemon listening on http://{addr}");
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
