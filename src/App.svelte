@@ -3,8 +3,10 @@
   import { connectionStore } from "$lib/stores/connection.svelte";
   import { configStore } from "$lib/stores/config.svelte";
   import { projectsStore } from "$lib/stores/projects.svelte";
+  import { pluginsStore } from "$lib/stores/plugins.svelte";
   import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
+  import PluginsModule from "$lib/components/plugins/PluginsModule.svelte";
 
   // ---------------------------------------------------------------------------
   // Constants (dev defaults — swap for real config/env later)
@@ -26,6 +28,7 @@
     { id: "K", label: "Hooks" },
     { id: "M", label: "MCP" },
     { id: "C", label: "Config" },
+    { id: "G", label: "Plugins" },
     { id: "E", label: "Environment" },
     { id: "L", label: "Logs" },
     { id: "A", label: "About" },
@@ -57,6 +60,19 @@
   let settingsSection = $state("general");
 
   // ---------------------------------------------------------------------------
+  // Plugins sub-navigation
+  // ---------------------------------------------------------------------------
+
+  const pluginsSections = [
+    { id: "installed", label: "Installed" },
+    { id: "marketplace", label: "Marketplace" },
+    { id: "manage-marketplaces", label: "Manage Marketplaces" },
+    { id: "per-project", label: "Per-Project" },
+  ];
+
+  let pluginsSection = $state("installed");
+
+  // ---------------------------------------------------------------------------
   // Derived: active project options for header dropdown
   // ---------------------------------------------------------------------------
 
@@ -74,6 +90,7 @@
         await Promise.all([
           configStore.loadUserConfig(),
           projectsStore.loadProjects(),
+          pluginsStore.loadPlugins(),
         ]);
       }
 
@@ -94,6 +111,10 @@
 
   function isSettingsModule(): boolean {
     return activeNav === "C";
+  }
+
+  function isPluginsModule(): boolean {
+    return activeNav === "G";
   }
 </script>
 
@@ -187,6 +208,23 @@
               </li>
             {/each}
           </ul>
+        {:else if isPluginsModule()}
+          <!-- Plugins sub-navigation -->
+          <ul class="flex-1 overflow-y-auto py-2">
+            {#each pluginsSections as section}
+              <li>
+                <button
+                  class="w-full px-4 py-2 text-left text-sm transition-colors
+                    {pluginsSection === section.id
+                    ? 'bg-gray-800 text-white'
+                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
+                  onclick={() => { pluginsSection = section.id; }}
+                >
+                  {section.label}
+                </button>
+              </li>
+            {/each}
+          </ul>
         {:else}
           <!-- Generic sub-item list -->
           <ul class="flex-1 overflow-y-auto py-2">
@@ -209,7 +247,7 @@
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
-        {#if !isSettingsModule()}
+        {#if !isSettingsModule() && !isPluginsModule()}
           <div class="border-b border-gray-800 px-6 py-3">
             <h1 class="text-sm font-medium text-gray-200">
               {subItems[activeNav]?.[activeItem] ?? "—"}
@@ -237,6 +275,10 @@
             {:else}
               <SettingsEditor activeSection={settingsSection} />
             {/if}
+
+          {:else if isPluginsModule()}
+            <!-- Plugins module: PluginsModule orchestrator -->
+            <PluginsModule activeSection={pluginsSection} />
 
           {:else}
             <div class="flex flex-1 items-center justify-center">
