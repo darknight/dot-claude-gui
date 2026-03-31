@@ -33,7 +33,14 @@ pub struct AppConfig {
     pub theme: String,
     pub language: String,
     pub font_size: u32,
+    #[serde(default = "default_sidebar_width")]
+    pub sidebar_width: u32,
+    #[serde(default = "default_subpanel_width")]
+    pub subpanel_width: u32,
 }
+
+fn default_sidebar_width() -> u32 { 56 }
+fn default_subpanel_width() -> u32 { 240 }
 
 // ── Config-dir helpers ────────────────────────────────────────────────────────
 
@@ -68,6 +75,8 @@ fn default_app_config() -> AppConfig {
         theme: "system".to_string(),
         language: "zh-CN".to_string(),
         font_size: 14,
+        sidebar_width: 56,
+        subpanel_width: 240,
     }
 }
 

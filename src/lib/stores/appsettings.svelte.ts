@@ -6,6 +6,8 @@ class AppSettingsStore {
     theme: "system",
     language: "zh-CN",
     fontSize: 14,
+    sidebarWidth: 56,
+    subpanelWidth: 240,
   });
 
   async load(): Promise<void> {

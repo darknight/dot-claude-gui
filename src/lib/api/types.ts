@@ -330,4 +330,6 @@ export interface AppConfig {
   theme: "light" | "dark" | "system";
   language: string;
   fontSize: number;
+  sidebarWidth: number;
+  subpanelWidth: number;
 }

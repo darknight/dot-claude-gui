@@ -36,6 +36,18 @@
           oninput={(e) => appSettingsStore.update({ fontSize: parseInt((e.target as HTMLInputElement).value) })}
         />
       </div>
+
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">语言</label>
+        <select
+          class="bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200"
+          value={appSettingsStore.preferences.language}
+          onchange={(e) => appSettingsStore.update({ language: (e.target as HTMLSelectElement).value })}
+        >
+          <option value="zh-CN">简体中文</option>
+          <option value="en-US">English</option>
+        </select>
+      </div>
     </section>
   {/if}
 </div>
