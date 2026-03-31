@@ -12,6 +12,10 @@ use crate::{
             put_user_config,
         },
         health::health_handler,
+        plugins::{
+            add_marketplace, browse_marketplace_plugins, install_plugin, list_marketplaces,
+            list_plugins, remove_marketplace, toggle_plugin, uninstall_plugin,
+        },
         projects::{delete_project, list_projects, register_project},
         ws::ws_handler,
     },
@@ -48,6 +52,15 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/v1/projects", get(list_projects))
         .route("/api/v1/projects", post(register_project))
         .route("/api/v1/projects/{id}", delete(delete_project))
+        // Plugin routes
+        .route("/api/v1/plugins", get(list_plugins))
+        .route("/api/v1/plugins/install", post(install_plugin))
+        .route("/api/v1/plugins/{id}/toggle", post(toggle_plugin))
+        .route("/api/v1/plugins/{id}/uninstall", post(uninstall_plugin))
+        // Marketplace routes
+        .route("/api/v1/marketplaces", get(list_marketplaces).post(add_marketplace))
+        .route("/api/v1/marketplaces/{id}/plugins", get(browse_marketplace_plugins))
+        .route("/api/v1/marketplaces/{id}", delete(remove_marketplace))
         .layer(middleware::from_fn(require_auth));
 
     Router::new()
