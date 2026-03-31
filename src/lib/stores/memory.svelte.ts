@@ -97,6 +97,16 @@ class MemoryStore {
       void this.loadFile(this.activeProjectId, filename);
     }
   }
+
+  reset(): void {
+    this.projects = [];
+    this.activeProjectId = null;
+    this.files = [];
+    this.activeFile = null;
+    this.loading = false;
+    this.saving = false;
+    this.error = "";
+  }
 }
 
 export const memoryStore = new MemoryStore();

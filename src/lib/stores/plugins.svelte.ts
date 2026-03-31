@@ -92,6 +92,14 @@ class PluginsStore {
       this.error = e instanceof Error ? e.message : "Failed to remove marketplace";
     }
   }
+
+  reset(): void {
+    this.plugins = [];
+    this.marketplaces = [];
+    this.availablePlugins = [];
+    this.loading = false;
+    this.error = "";
+  }
 }
 
 export const pluginsStore = new PluginsStore();

@@ -38,6 +38,12 @@ class ProjectsStore {
   selectProject(id: string | null): void {
     this.activeProjectId = id;
   }
+
+  reset(): void {
+    this.projects = [];
+    this.activeProjectId = null;
+    this.loading = false;
+  }
 }
 
 export const projectsStore = new ProjectsStore();

@@ -27,6 +27,13 @@ class SkillsStore {
   selectSkill(id: string | null) {
     this.selectedSkillId = id;
   }
+
+  reset(): void {
+    this.skills = [];
+    this.selectedSkillId = null;
+    this.loading = false;
+    this.error = "";
+  }
 }
 
 export const skillsStore = new SkillsStore();

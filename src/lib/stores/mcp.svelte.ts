@@ -39,6 +39,12 @@ class McpStore {
       this.error = e instanceof Error ? e.message : "Failed";
     }
   }
+
+  reset(): void {
+    this.servers = [];
+    this.loading = false;
+    this.error = "";
+  }
 }
 
 export const mcpStore = new McpStore();

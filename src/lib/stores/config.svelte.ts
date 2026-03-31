@@ -82,6 +82,16 @@ class ConfigStore {
     // Trigger re-render by re-loading from cache
     // The sub-editors will re-sync from activeSettings via $effect
   }
+
+  reset(): void {
+    this.userSettings = {} as Settings;
+    this.projectSettings = {} as Settings;
+    this.loading = false;
+    this.saving = false;
+    this.error = "";
+    this.activeScope = "user";
+    this.isDirty = false;
+  }
 }
 
 export const configStore = new ConfigStore();
