@@ -14,3 +14,6 @@ src-tauri/target/
 
 # Worktrees
 .worktrees/
+
+# Sidecar binaries (built from source)
+src-tauri/binaries/
