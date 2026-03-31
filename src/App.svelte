@@ -15,6 +15,7 @@
   import MemoryModule from "$lib/components/memory/MemoryModule.svelte";
   import McpModule from "$lib/components/mcp/McpModule.svelte";
   import EffectiveConfigView from "$lib/components/effective/EffectiveConfigView.svelte";
+  import LauncherView from "$lib/components/launcher/LauncherView.svelte";
 
   // ---------------------------------------------------------------------------
   // Constants (dev defaults — swap for real config/env later)
@@ -41,6 +42,7 @@
     { id: "R", label: "Memory" },
     { id: "E", label: "Environment" },
     { id: "L", label: "Logs" },
+    { id: "N", label: "Launcher" },
     { id: "A", label: "About" },
   ];
 
@@ -155,6 +157,10 @@
 
   function isEffectiveConfigModule(): boolean {
     return activeNav === "E";
+  }
+
+  function isLauncherModule(): boolean {
+    return activeNav === "N";
   }
 </script>
 
@@ -318,6 +324,11 @@
           <div class="flex-1 overflow-y-auto py-2">
             <p class="px-4 py-2 text-xs text-gray-600">Merged config for active project</p>
           </div>
+        {:else if isLauncherModule()}
+          <!-- Launcher: no sub-navigation needed -->
+          <div class="flex-1 overflow-y-auto py-2">
+            <p class="px-4 py-2 text-xs text-gray-600">Select a project and launch</p>
+          </div>
         {:else}
           <!-- Generic sub-item list -->
           <ul class="flex-1 overflow-y-auto py-2">
@@ -340,7 +351,7 @@
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
-        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule() && !isMcpModule() && !isEffectiveConfigModule()}
+        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule() && !isMcpModule() && !isEffectiveConfigModule() && !isLauncherModule()}
           <div class="border-b border-gray-800 px-6 py-3">
             <h1 class="text-sm font-medium text-gray-200">
               {subItems[activeNav]?.[activeItem] ?? "—"}
@@ -388,6 +399,10 @@
           {:else if isEffectiveConfigModule()}
             <!-- Effective Config module -->
             <EffectiveConfigView />
+
+          {:else if isLauncherModule()}
+            <!-- Launcher module -->
+            <LauncherView />
 
           {:else}
             <div class="flex flex-1 items-center justify-center">
