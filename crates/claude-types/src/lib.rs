@@ -1,5 +1,6 @@
 pub mod api;
 pub mod events;
+pub mod mcp;
 pub mod memory;
 pub mod plugins;
 pub mod settings;
