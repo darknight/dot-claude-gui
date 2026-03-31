@@ -201,3 +201,74 @@ export interface WsValidationError {
 export type WsClientMessage =
   | { type: "subscribe"; topics: string[] }
   | { type: "unsubscribe"; topics: string[] };
+
+// ---------------------------------------------------------------------------
+// Plugins
+// ---------------------------------------------------------------------------
+
+export interface PluginInfo {
+  id: string;
+  name: string;
+  marketplace: string;
+  version: string;
+  enabled: boolean;
+  blocked: boolean;
+  installedAt: string;
+  description?: string;
+}
+
+export interface MarketplaceInfo {
+  id: string;
+  repo: string;
+  pluginCount: number;
+  description?: string;
+  lastUpdated?: string;
+}
+
+export interface AvailablePlugin {
+  name: string;
+  marketplace: string;
+  installed: boolean;
+  description?: string;
+  version?: string;
+  category?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Skills
+// ---------------------------------------------------------------------------
+
+export interface SkillInfo {
+  id: string;
+  name: string;
+  description?: string;
+  source: string;
+  path: string;
+  valid: boolean;
+  validationError?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Memory
+// ---------------------------------------------------------------------------
+
+export interface MemoryProject {
+  id: string;
+  projectPath: string;
+  fileCount: number;
+}
+
+export interface MemoryFile {
+  filename: string;
+  name?: string;
+  description?: string;
+  memoryType?: string;
+}
+
+export interface MemoryFileDetail {
+  filename: string;
+  content: string;
+  name?: string;
+  description?: string;
+  memoryType?: string;
+}
