@@ -307,3 +307,27 @@ export interface LaunchRequest {
   projectPath: string;
   env?: Record<string, string>;
 }
+
+// ---------------------------------------------------------------------------
+// Application Config (persisted to ~/.dot-claude-gui/)
+// ---------------------------------------------------------------------------
+
+export interface ConnectionEntry {
+  id: string;
+  name: string;
+  type: "local" | "remote";
+  url: string;
+  token: string;
+  managed: boolean;
+}
+
+export interface ConnectionsFile {
+  activeConnectionId: string;
+  connections: ConnectionEntry[];
+}
+
+export interface AppConfig {
+  theme: "light" | "dark" | "system";
+  language: string;
+  fontSize: number;
+}
