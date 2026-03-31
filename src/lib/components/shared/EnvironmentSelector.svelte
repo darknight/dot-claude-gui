@@ -31,7 +31,7 @@
     class="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-gray-800 text-sm"
     onclick={() => (open = !open)}
   >
-    <span class="w-2 h-2 rounded-full {statusColor(connectionsStore.activeConnection!)}"></span>
+    <span class="w-2 h-2 rounded-full {connectionsStore.activeConnection ? statusColor(connectionsStore.activeConnection) : 'bg-gray-500'}"></span>
     <span class="text-gray-200">{connectionsStore.activeConnection?.name ?? "Local"}</span>
     <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
