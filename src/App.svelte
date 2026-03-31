@@ -7,6 +7,7 @@
   import { skillsStore } from "$lib/stores/skills.svelte";
   import { memoryStore } from "$lib/stores/memory.svelte";
   import { mcpStore } from "$lib/stores/mcp.svelte";
+  import { appSettingsStore } from "$lib/stores/appsettings.svelte";
   import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
   import PluginsModule from "$lib/components/plugins/PluginsModule.svelte";
@@ -16,13 +17,27 @@
   import McpModule from "$lib/components/mcp/McpModule.svelte";
   import EffectiveConfigView from "$lib/components/effective/EffectiveConfigView.svelte";
   import LauncherView from "$lib/components/launcher/LauncherView.svelte";
+  import AppSettingsView from "$lib/components/appsettings/AppSettingsView.svelte";
 
   // ---------------------------------------------------------------------------
-  // Constants (dev defaults — swap for real config/env later)
+  // Theme effect
   // ---------------------------------------------------------------------------
 
-  const DAEMON_BASE_URL = "http://localhost:7890";
-  const DAEMON_TOKEN = "dev-token";
+  $effect(() => {
+    const theme = appSettingsStore.preferences.theme;
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else if (theme === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      // system
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+  });
 
   // ---------------------------------------------------------------------------
   // Navigation state
@@ -43,8 +58,10 @@
     { id: "E", label: "Environment" },
     { id: "L", label: "Logs" },
     { id: "N", label: "Launcher" },
-    { id: "A", label: "About" },
   ];
+
+  // App Settings is kept separate (bottom of sidebar)
+  const appSettingsButton = { id: "A", label: "App Settings" };
 
   const subItems: Record<string, string[]> = {
     S: ["Session 1", "Session 2", "Session 3"],
@@ -107,7 +124,11 @@
 
   onMount(() => {
     void (async () => {
-      await connectionStore.connect(DAEMON_BASE_URL, DAEMON_TOKEN);
+      appSettingsStore.load();
+      await connectionStore.connect(
+        appSettingsStore.preferences.daemonUrl,
+        appSettingsStore.preferences.daemonToken,
+      );
 
       if (connectionStore.status === "connected") {
         await Promise.all([
@@ -162,6 +183,10 @@
   function isLauncherModule(): boolean {
     return activeNav === "N";
   }
+
+  function isAppSettingsModule(): boolean {
+    return activeNav === "A";
+  }
 </script>
 
 <!-- ===== Root container ===== -->
@@ -209,21 +234,38 @@
 
       <!-- Sidebar: icon nav -->
       <nav
-        class="flex flex-col items-center gap-1 border-r border-gray-800 bg-gray-900 py-3"
+        class="flex flex-col items-center border-r border-gray-800 bg-gray-900 py-3"
         style="width: var(--sidebar-width, 3.5rem)"
       >
-        {#each navButtons as btn}
+        <!-- Main nav buttons -->
+        <div class="flex flex-col items-center gap-1 flex-1">
+          {#each navButtons as btn}
+            <button
+              class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors
+                {activeNav === btn.id
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'}"
+              title={btn.label}
+              onclick={() => { activeNav = btn.id; activeItem = 0; }}
+            >
+              {btn.id}
+            </button>
+          {/each}
+        </div>
+
+        <!-- App Settings button (separated at bottom) -->
+        <div class="mt-2 border-t border-gray-800 pt-2">
           <button
             class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors
-              {activeNav === btn.id
+              {activeNav === appSettingsButton.id
               ? 'bg-blue-600 text-white'
               : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'}"
-            title={btn.label}
-            onclick={() => { activeNav = btn.id; activeItem = 0; }}
+            title={appSettingsButton.label}
+            onclick={() => { activeNav = appSettingsButton.id; activeItem = 0; }}
           >
-            {btn.id}
+            {appSettingsButton.id}
           </button>
-        {/each}
+        </div>
       </nav>
 
       <!-- Sub-panel: list -->
@@ -329,6 +371,11 @@
           <div class="flex-1 overflow-y-auto py-2">
             <p class="px-4 py-2 text-xs text-gray-600">Select a project and launch</p>
           </div>
+        {:else if isAppSettingsModule()}
+          <!-- App Settings: no sub-navigation needed -->
+          <div class="flex-1 overflow-y-auto py-2">
+            <p class="px-4 py-2 text-xs text-gray-600">GUI preferences</p>
+          </div>
         {:else}
           <!-- Generic sub-item list -->
           <ul class="flex-1 overflow-y-auto py-2">
@@ -351,7 +398,7 @@
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
-        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule() && !isMcpModule() && !isEffectiveConfigModule() && !isLauncherModule()}
+        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule() && !isMemoryModule() && !isMcpModule() && !isEffectiveConfigModule() && !isLauncherModule() && !isAppSettingsModule()}
           <div class="border-b border-gray-800 px-6 py-3">
             <h1 class="text-sm font-medium text-gray-200">
               {subItems[activeNav]?.[activeItem] ?? "—"}
@@ -360,7 +407,11 @@
         {/if}
 
         <div class="flex flex-1 flex-col overflow-hidden">
-          {#if connectionStore.status === "connecting"}
+          {#if isAppSettingsModule()}
+            <!-- App Settings module: always accessible, regardless of connection -->
+            <AppSettingsView />
+
+          {:else if connectionStore.status === "connecting"}
             <div class="flex-1 overflow-auto p-6">
               <p class="text-sm text-gray-500">Connecting to daemon...</p>
             </div>
