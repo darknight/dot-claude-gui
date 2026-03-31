@@ -12,6 +12,7 @@
   import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
   import EnvironmentSelector from "$lib/components/shared/EnvironmentSelector.svelte";
   import ScopeSelector from "$lib/components/shared/ScopeSelector.svelte";
+import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
   import PluginsModule from "$lib/components/plugins/PluginsModule.svelte";
   import SkillsModule from "$lib/components/skills/SkillsModule.svelte";
@@ -42,6 +43,19 @@
     }
   });
 
+  // Font size effect
+  $effect(() => {
+    document.documentElement.style.setProperty("--app-font-size", appSettingsStore.preferences.fontSize + "px");
+  });
+
+  // Panel width effects
+  $effect(() => {
+    document.documentElement.style.setProperty("--sidebar-width", appSettingsStore.preferences.sidebarWidth + "px");
+  });
+  $effect(() => {
+    document.documentElement.style.setProperty("--subpanel-width", appSettingsStore.preferences.subpanelWidth + "px");
+  });
+
   // ---------------------------------------------------------------------------
   // Navigation state
   // ---------------------------------------------------------------------------
@@ -49,17 +63,17 @@
   let activeNav = $state("S");
 
   const navButtons = [
-    { id: "S", label: "Settings" },
-    { id: "P", label: "Plugins" },
-    { id: "K", label: "Skills" },
-    { id: "M", label: "Memory" },
-    { id: "C", label: "MCP Servers" },
-    { id: "E", label: "Effective Config" },
-    { id: "L", label: "Launcher" },
+    { id: "S", label: "设置", icon: "M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" },
+    { id: "P", label: "插件", icon: "M14.25 6.087c0-.355.186-.676.401-.959.221-.29.349-.634.349-1.003 0-1.036-1.007-1.875-2.25-1.875s-2.25.84-2.25 1.875c0 .369.128.713.349 1.003.215.283.401.604.401.959v0a.64.64 0 0 1-.657.643 48.39 48.39 0 0 1-4.163-.3c.186 1.613.293 3.25.315 4.907a.656.656 0 0 1-.658.663v0c-.355 0-.676-.186-.959-.401a1.647 1.647 0 0 0-1.003-.349c-1.036 0-1.875 1.007-1.875 2.25s.84 2.25 1.875 2.25c.369 0 .713-.128 1.003-.349.283-.215.604-.401.959-.401v0c.31 0 .555.26.532.57a48.039 48.039 0 0 1-.642 5.056c1.518.19 3.058.309 4.616.354a.64.64 0 0 0 .657-.643v0c0-.355-.186-.676-.401-.959a1.647 1.647 0 0 1-.349-1.003c0-1.035 1.008-1.875 2.25-1.875 1.243 0 2.25.84 2.25 1.875 0 .369-.128.713-.349 1.003-.215.283-.4.604-.4.959v0c0 .333.277.599.61.58a48.1 48.1 0 0 0 5.427-.63 48.05 48.05 0 0 0 .582-4.717.532.532 0 0 0-.533-.57v0c-.355 0-.676.186-.959.401-.29.221-.634.349-1.003.349-1.035 0-1.875-1.007-1.875-2.25s.84-2.25 1.875-2.25c.37 0 .713.128 1.003.349.283.215.604.401.96.401v0a.656.656 0 0 0 .657-.663 47.703 47.703 0 0 0-.31-4.82 47.872 47.872 0 0 1-4.164.3.64.64 0 0 1-.657-.643v0Z" },
+    { id: "K", label: "技能", icon: "m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" },
+    { id: "M", label: "记忆", icon: "M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" },
+    { id: "C", label: "MCP", icon: "M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 0 6h13.5a3 3 0 1 0 0-6m-16.5-3a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3m-19.5 0a4.5 4.5 0 0 1 .9-2.7L5.737 5.1a3.375 3.375 0 0 1 2.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 0 1 .9 2.7m0 0h.375a2.625 2.625 0 0 1 0 5.25H17.25m-13.5-5.25H3.375a2.625 2.625 0 0 0 0 5.25H6.75m0-5.25v5.25m11.25-5.25v5.25" },
+    { id: "E", label: "配置", icon: "M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" },
+    { id: "L", label: "启动", icon: "M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" },
   ];
 
   // App Settings is kept separate (bottom of sidebar)
-  const appSettingsButton = { id: "A", label: "App Settings" };
+  const appSettingsButton = { id: "A", label: "设置", icon: "M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l5.653-4.655m5.976-.833a3 3 0 0 1-4.243-4.243M11.42 15.17l1.434-1.74" };
 
   // App Settings sub-navigation
   let appSettingsSub = $state("appearance");
@@ -189,10 +203,10 @@
 </script>
 
 <!-- ===== Root container ===== -->
-<div class="flex h-screen w-screen flex-col overflow-hidden bg-gray-950 text-gray-100">
+<div class="flex h-screen w-screen flex-col overflow-hidden" style="background-color: var(--bg-primary); color: var(--text-primary)">
 
   <!-- ===== Header ===== -->
-  <header class="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-4 py-2">
+  <header class="flex items-center justify-between px-4 py-2" style="background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-color)">
     <span class="text-sm font-semibold text-gray-100">dot-claude</span>
 
     <div class="flex items-center gap-2">
@@ -219,49 +233,62 @@
       </div>
     {:else}
 
-      <!-- Sidebar: icon nav -->
+      <!-- Sidebar: icon + text nav -->
       <nav
-        class="flex flex-col items-center border-r border-gray-800 bg-gray-900 py-3"
-        style="width: var(--sidebar-width, 3.5rem)"
+        class="flex flex-col overflow-hidden py-3"
+        style="width: var(--sidebar-width); flex-shrink: 0; background-color: var(--bg-secondary); border-right: 1px solid var(--border-color)"
       >
-        <!-- Main nav buttons -->
-        <div class="flex flex-col items-center gap-1 flex-1">
+        <div class="flex flex-col gap-1 flex-1 px-2">
           {#each navButtons as btn}
             <button
-              class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors
+              class="flex items-center gap-2 h-9 px-2 rounded-lg text-sm transition-colors overflow-hidden whitespace-nowrap
                 {activeNav === btn.id
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'}"
+                ? 'text-white'
+                : 'hover:text-[var(--text-primary)]'}"
+              style="{activeNav === btn.id ? 'background-color: var(--nav-active-bg)' : ''} color: {activeNav === btn.id ? 'var(--nav-active-text)' : 'var(--text-secondary)'}"
               title={btn.label}
               onclick={() => { activeNav = btn.id; }}
             >
-              {btn.id}
+              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d={btn.icon} />
+              </svg>
+              <span class="truncate">{btn.label}</span>
             </button>
           {/each}
         </div>
 
-        <!-- App Settings button (separated at bottom) -->
-        <div class="mt-2 border-t border-gray-800 pt-2">
+        <div class="mt-2 pt-2 px-2" style="border-top: 1px solid var(--border-color)">
           <button
-            class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors
+            class="flex items-center gap-2 h-9 px-2 rounded-lg text-sm transition-colors overflow-hidden whitespace-nowrap w-full
               {activeNav === appSettingsButton.id
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'}"
+              ? 'text-white'
+              : 'hover:text-[var(--text-primary)]'}"
+            style="{activeNav === appSettingsButton.id ? 'background-color: var(--nav-active-bg)' : ''} color: {activeNav === appSettingsButton.id ? 'var(--nav-active-text)' : 'var(--text-secondary)'}"
             title={appSettingsButton.label}
             onclick={() => { activeNav = appSettingsButton.id; }}
           >
-            {appSettingsButton.id}
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d={appSettingsButton.icon} />
+            </svg>
+            <span class="truncate">{appSettingsButton.label}</span>
           </button>
         </div>
       </nav>
 
+      <!-- Sidebar resize handle -->
+      <ResizeHandle
+        min={56}
+        max={180}
+        onResize={(w) => appSettingsStore.update({ sidebarWidth: w })}
+      />
+
       <!-- Sub-panel: list -->
       <aside
-        class="flex flex-col border-r border-gray-800 bg-gray-900"
-        style="width: var(--subpanel-width, 14rem)"
+        class="flex flex-col"
+        style="width: var(--subpanel-width); flex-shrink: 0; background-color: var(--bg-secondary); border-right: 1px solid var(--border-color)"
       >
-        <div class="border-b border-gray-800 px-4 py-3">
-          <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <div class="px-4 py-3" style="border-bottom: 1px solid var(--border-color)">
+          <h2 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">
             {navButtons.find((b) => b.id === activeNav)?.label ?? (activeNav === appSettingsButton.id ? appSettingsButton.label : "")}
           </h2>
         </div>
@@ -386,6 +413,13 @@
           </ul>
         {/if}
       </aside>
+
+      <!-- Sub-panel resize handle -->
+      <ResizeHandle
+        min={160}
+        max={400}
+        onResize={(w) => appSettingsStore.update({ subpanelWidth: w })}
+      />
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
