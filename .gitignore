@@ -11,3 +11,6 @@ src-tauri/target/
 # Editor
 .DS_Store
 *.swp
+
+# Worktrees
+.worktrees/
