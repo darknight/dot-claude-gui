@@ -1,10 +1,13 @@
 import type {
+  AddMcpServerRequest,
   AvailablePlugin,
   ConfigResponse,
   EffectiveConfig,
   ErrorResponse,
   HealthResponse,
+  LaunchRequest,
   MarketplaceInfo,
+  McpServerInfo,
   MemoryFile,
   MemoryFileDetail,
   MemoryProject,
@@ -250,5 +253,38 @@ export class DaemonClient {
       `/api/v1/memory/${encodeURIComponent(projectId)}/${encodeURIComponent(filename)}`,
       { method: "DELETE" }
     );
+  }
+
+  // -------------------------------------------------------------------------
+  // MCP Server endpoints
+  // -------------------------------------------------------------------------
+
+  async listMcpServers(): Promise<McpServerInfo[]> {
+    return this.fetch("/api/v1/mcp/servers");
+  }
+
+  async addMcpServer(req: AddMcpServerRequest): Promise<{ requestId: string }> {
+    return this.fetch("/api/v1/mcp/servers", {
+      method: "POST",
+      body: JSON.stringify(req),
+    });
+  }
+
+  async removeMcpServer(name: string, scope?: string): Promise<{ requestId: string }> {
+    const params = scope ? `?scope=${encodeURIComponent(scope)}` : "";
+    return this.fetch(`/api/v1/mcp/servers/${encodeURIComponent(name)}${params}`, {
+      method: "DELETE",
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Launcher endpoints
+  // -------------------------------------------------------------------------
+
+  async launchClaude(req: LaunchRequest): Promise<{ status: string }> {
+    return this.fetch("/api/v1/launch", {
+      method: "POST",
+      body: JSON.stringify(req),
+    });
   }
 }

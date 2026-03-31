@@ -272,3 +272,38 @@ export interface MemoryFileDetail {
   description?: string;
   memoryType?: string;
 }
+
+// ---------------------------------------------------------------------------
+// MCP Servers
+// ---------------------------------------------------------------------------
+
+export interface McpServerInfo {
+  name: string;
+  scope: string;
+  transport: string;
+  command?: string;
+  args?: string[];
+  url?: string;
+  env?: Record<string, string>;
+  headers?: Record<string, string>;
+  status?: string;
+}
+
+export interface AddMcpServerRequest {
+  name: string;
+  transport: string;
+  commandOrUrl?: string;
+  args?: string[];
+  scope?: string;
+  env?: Record<string, string>;
+  headers?: Record<string, string>;
+}
+
+// ---------------------------------------------------------------------------
+// Launcher
+// ---------------------------------------------------------------------------
+
+export interface LaunchRequest {
+  projectPath: string;
+  env?: Record<string, string>;
+}
