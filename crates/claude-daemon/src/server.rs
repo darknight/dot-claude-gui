@@ -21,6 +21,7 @@ use crate::{
             list_plugins, remove_marketplace, toggle_plugin, uninstall_plugin,
         },
         projects::{delete_project, list_projects, register_project},
+        mcp::{add_mcp_server, list_mcp_servers, remove_mcp_server},
         skills::list_skills,
         ws::ws_handler,
     },
@@ -66,6 +67,9 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/v1/marketplaces", get(list_marketplaces).post(add_marketplace))
         .route("/api/v1/marketplaces/{id}/plugins", get(browse_marketplace_plugins))
         .route("/api/v1/marketplaces/{id}", delete(remove_marketplace))
+        // MCP routes
+        .route("/api/v1/mcp/servers", get(list_mcp_servers).post(add_mcp_server))
+        .route("/api/v1/mcp/servers/{name}", delete(remove_mcp_server))
         // Skills routes
         .route("/api/v1/skills", get(list_skills))
         // Memory routes

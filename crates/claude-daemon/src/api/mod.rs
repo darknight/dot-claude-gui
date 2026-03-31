@@ -1,5 +1,6 @@
 pub mod config;
 pub mod health;
+pub mod mcp;
 pub mod memory;
 pub mod plugins;
 pub mod projects;
