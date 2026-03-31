@@ -911,6 +911,8 @@ impl TestFixture {
 | **Connection recovery** | Disconnection shown to user; auto-reconnect with backoff; write ops disabled during disconnect |
 | **macOS bundle** | .dmg < 15 MB |
 | **Test coverage** | Rust: > 80% for claude-config, > 70% for claude-daemon; Frontend: key components covered |
+| **Local run** | Daemon and GUI must start locally without panic; every phase must pass local run verification before considered complete |
+| **No pollution** | App's own data (tokens, preferences) must NOT be written to `~/.claude/`; only Claude Code config goes there |
 
 ### 10.3 Acceptance Phases
 

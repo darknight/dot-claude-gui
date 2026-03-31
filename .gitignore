@@ -1,0 +1,13 @@
+# Node
+node_modules/
+dist/
+
+# Rust / Cargo
+target/
+
+# Tauri
+src-tauri/target/
+
+# Editor
+.DS_Store
+*.swp
