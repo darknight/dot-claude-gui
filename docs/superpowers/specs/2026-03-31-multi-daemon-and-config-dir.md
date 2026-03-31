@@ -466,7 +466,37 @@ Project selector:
 
 ---
 
-## 8. Scope Exclusions
+## 8. Acceptance Criteria
+
+### 8.1 Build
+
+- [ ] `cargo build --workspace` succeeds without errors
+- [ ] `pnpm build` (frontend) succeeds without errors
+- [ ] `pnpm tauri build` produces a working `.app` bundle
+
+### 8.2 Tests
+
+关键路径单元测试覆盖且通过：
+
+- [ ] `cargo test --workspace` all pass
+- [ ] Config directory: `~/.dot-claude-gui/` creation, `config.json` and `connections.json` read/write/default-creation
+- [ ] Connections store: add/delete/switch connections, local connection immutable
+- [ ] Daemon `--bind` parameter: binds to specified address
+- [ ] Daemon token: `--token` flag works, no token file written to disk
+- [ ] Sidecar spawn: port allocation, health check, process cleanup
+
+### 8.3 Runtime
+
+- [ ] 打包后的 `.app` 双击启动无 panic
+- [ ] Sidecar daemon 自动启动，health check 通过
+- [ ] 本地 `~/.claude/` 目录下的数据正常加载并显示（settings、plugins、skills、memory、MCP servers）
+- [ ] 添加远程连接 → 测试连接 → 保存 → 切换到该连接（或显示连接失败）
+- [ ] 切换环境后项目选择器重置为 User Scope，数据正确刷新
+- [ ] 关闭应用后 sidecar daemon 进程被正确终止
+
+---
+
+## 9. Scope Exclusions
 
 Not in this iteration:
 - TLS support for remote connections (future: `--tls-cert`, `--tls-key`)
