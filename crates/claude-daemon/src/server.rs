@@ -12,6 +12,7 @@ use crate::{
             put_user_config,
         },
         health::health_handler,
+        launcher::launch_claude,
         memory::{
             delete_memory_file, get_memory_file, list_memory_files, list_memory_projects,
             put_memory_file,
@@ -70,6 +71,8 @@ pub fn build_router(state: AppState) -> Router {
         // MCP routes
         .route("/api/v1/mcp/servers", get(list_mcp_servers).post(add_mcp_server))
         .route("/api/v1/mcp/servers/{name}", delete(remove_mcp_server))
+        // Launcher route
+        .route("/api/v1/launch", post(launch_claude))
         // Skills routes
         .route("/api/v1/skills", get(list_skills))
         // Memory routes
