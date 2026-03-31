@@ -17,6 +17,7 @@ use crate::{
             list_plugins, remove_marketplace, toggle_plugin, uninstall_plugin,
         },
         projects::{delete_project, list_projects, register_project},
+        skills::list_skills,
         ws::ws_handler,
     },
     auth::require_auth,
@@ -61,6 +62,8 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/v1/marketplaces", get(list_marketplaces).post(add_marketplace))
         .route("/api/v1/marketplaces/{id}/plugins", get(browse_marketplace_plugins))
         .route("/api/v1/marketplaces/{id}", delete(remove_marketplace))
+        // Skills routes
+        .route("/api/v1/skills", get(list_skills))
         .layer(middleware::from_fn(require_auth));
 
     Router::new()
