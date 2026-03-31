@@ -4,9 +4,11 @@
   import { configStore } from "$lib/stores/config.svelte";
   import { projectsStore } from "$lib/stores/projects.svelte";
   import { pluginsStore } from "$lib/stores/plugins.svelte";
+  import { skillsStore } from "$lib/stores/skills.svelte";
   import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
   import PluginsModule from "$lib/components/plugins/PluginsModule.svelte";
+  import SkillsModule from "$lib/components/skills/SkillsModule.svelte";
 
   // ---------------------------------------------------------------------------
   // Constants (dev defaults — swap for real config/env later)
@@ -29,6 +31,7 @@
     { id: "M", label: "MCP" },
     { id: "C", label: "Config" },
     { id: "G", label: "Plugins" },
+    { id: "I", label: "Skills" },
     { id: "E", label: "Environment" },
     { id: "L", label: "Logs" },
     { id: "A", label: "About" },
@@ -91,6 +94,7 @@
           configStore.loadUserConfig(),
           projectsStore.loadProjects(),
           pluginsStore.loadPlugins(),
+          skillsStore.loadSkills(),
         ]);
       }
 
@@ -115,6 +119,10 @@
 
   function isPluginsModule(): boolean {
     return activeNav === "G";
+  }
+
+  function isSkillsModule(): boolean {
+    return activeNav === "I";
   }
 </script>
 
@@ -225,6 +233,34 @@
               </li>
             {/each}
           </ul>
+        {:else if isSkillsModule()}
+          <!-- Skills sub-navigation: list skill names -->
+          <ul class="flex-1 overflow-y-auto py-2">
+            {#if skillsStore.loading}
+              <li class="px-4 py-2 text-xs text-gray-500">Loading...</li>
+            {:else if skillsStore.skills.length === 0}
+              <li class="px-4 py-2 text-xs text-gray-600">No skills found</li>
+            {:else}
+              {#each skillsStore.skills as skill (skill.id)}
+                <li>
+                  <button
+                    class="flex w-full items-center justify-between px-4 py-2 text-left text-sm transition-colors
+                      {skillsStore.selectedSkillId === skill.id
+                      ? 'bg-gray-800 text-white'
+                      : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
+                    onclick={() => skillsStore.selectSkill(skill.id)}
+                  >
+                    <span class="truncate">{skill.name}</span>
+                    {#if skill.valid}
+                      <span class="ml-1 flex-shrink-0 text-xs text-green-400">✓</span>
+                    {:else}
+                      <span class="ml-1 flex-shrink-0 text-xs text-red-400">✗</span>
+                    {/if}
+                  </button>
+                </li>
+              {/each}
+            {/if}
+          </ul>
         {:else}
           <!-- Generic sub-item list -->
           <ul class="flex-1 overflow-y-auto py-2">
@@ -247,7 +283,7 @@
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
-        {#if !isSettingsModule() && !isPluginsModule()}
+        {#if !isSettingsModule() && !isPluginsModule() && !isSkillsModule()}
           <div class="border-b border-gray-800 px-6 py-3">
             <h1 class="text-sm font-medium text-gray-200">
               {subItems[activeNav]?.[activeItem] ?? "—"}
@@ -279,6 +315,10 @@
           {:else if isPluginsModule()}
             <!-- Plugins module: PluginsModule orchestrator -->
             <PluginsModule activeSection={pluginsSection} />
+
+          {:else if isSkillsModule()}
+            <!-- Skills module: SkillsModule orchestrator -->
+            <SkillsModule />
 
           {:else}
             <div class="flex flex-1 items-center justify-center">
