@@ -72,6 +72,26 @@ class PluginsStore {
       this.error = e instanceof Error ? e.message : "Failed";
     }
   }
+
+  async addMarketplace(repo: string) {
+    const client = connectionStore.client;
+    if (!client) return;
+    try {
+      return await client.addMarketplace(repo);
+    } catch (e) {
+      this.error = e instanceof Error ? e.message : "Failed to add marketplace";
+    }
+  }
+
+  async removeMarketplace(id: string) {
+    const client = connectionStore.client;
+    if (!client) return;
+    try {
+      return await client.removeMarketplace(id);
+    } catch (e) {
+      this.error = e instanceof Error ? e.message : "Failed to remove marketplace";
+    }
+  }
 }
 
 export const pluginsStore = new PluginsStore();
