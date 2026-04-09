@@ -1,4 +1,5 @@
 pub mod api;
+pub mod claudemd;
 pub mod events;
 pub mod mcp;
 pub mod memory;
