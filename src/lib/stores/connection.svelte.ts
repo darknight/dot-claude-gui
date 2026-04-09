@@ -7,6 +7,7 @@ import { pluginsStore } from "./plugins.svelte.js";
 import { skillsStore } from "./skills.svelte.js";
 import { memoryStore } from "./memory.svelte.js";
 import { mcpStore } from "./mcp.svelte.js";
+import { claudeMdStore } from "./claudemd.svelte";
 import { connectionsStore } from "./connections.svelte.js";
 import type { ConnectionEntry } from "$lib/api/types.js";
 
@@ -65,6 +66,7 @@ class ConnectionStore {
     skillsStore.reset();
     memoryStore.reset();
     mcpStore.reset();
+    claudeMdStore.reset();
   }
 
   async switchConnection(entry: ConnectionEntry): Promise<void> {
