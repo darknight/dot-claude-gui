@@ -1,10 +1,11 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use axum::{Extension, Json};
+use axum::{Extension, Json, extract::Path as AxumPath, http::StatusCode};
 use claude_types::{
+    api::ErrorResponse,
     plugins::InstalledPluginsFile,
-    skills::SkillInfo,
+    skills::{SkillContentResponse, SkillInfo},
 };
 
 use crate::state::AppState;
@@ -173,6 +174,33 @@ fn scan_skills_dir(skills_dir: &Path, source: &str) -> Vec<SkillInfo> {
     skills
 }
 
+/// Find the filesystem path of a skill's SKILL.md file by its ID.
+fn find_skill_path(claude_home: &Path, skill_id: &str) -> Option<PathBuf> {
+    // 1. Check user skills
+    let user_skill = claude_home.join("skills").join(skill_id).join("SKILL.md");
+    if user_skill.exists() {
+        return Some(user_skill);
+    }
+
+    // 2. Check plugin skills
+    let plugins_dir = claude_home.join("plugins");
+    let installed = read_installed_plugins(&plugins_dir);
+
+    for (_marketplace_id, plugins) in &installed.plugins {
+        for plugin in plugins {
+            let plugin_skill = std::path::PathBuf::from(&plugin.install_path)
+                .join("skills")
+                .join(skill_id)
+                .join("SKILL.md");
+            if plugin_skill.exists() {
+                return Some(plugin_skill);
+            }
+        }
+    }
+
+    None
+}
+
 // ---------------------------------------------------------------------------
 // GET /api/v1/skills
 // ---------------------------------------------------------------------------
@@ -202,4 +230,39 @@ pub async fn list_skills(
     }
 
     Json(result)
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/v1/skills/{id}/content
+// ---------------------------------------------------------------------------
+
+pub async fn get_skill_content(
+    Extension(state): Extension<AppState>,
+    AxumPath(id): AxumPath<String>,
+) -> Result<Json<SkillContentResponse>, (StatusCode, Json<ErrorResponse>)> {
+    let claude_home = &state.inner.claude_home;
+
+    let skill_path = find_skill_path(claude_home, &id).ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                code: "SKILL_NOT_FOUND".to_string(),
+                message: format!("Skill '{}' not found", id),
+                validation_errors: vec![],
+            }),
+        )
+    })?;
+
+    let content = std::fs::read_to_string(&skill_path).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                code: "READ_ERROR".to_string(),
+                message: format!("Failed to read skill file: {}", e),
+                validation_errors: vec![],
+            }),
+        )
+    })?;
+
+    Ok(Json(SkillContentResponse { id, content }))
 }

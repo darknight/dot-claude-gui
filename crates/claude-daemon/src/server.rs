@@ -23,7 +23,7 @@ use crate::{
         },
         projects::{delete_project, list_projects, register_project},
         mcp::{add_mcp_server, list_mcp_servers, remove_mcp_server},
-        skills::list_skills,
+        skills::{get_skill_content, list_skills},
         ws::ws_handler,
     },
     auth::require_auth,
@@ -75,6 +75,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/v1/launch", post(launch_claude))
         // Skills routes
         .route("/api/v1/skills", get(list_skills))
+        .route("/api/v1/skills/{id}/content", get(get_skill_content))
         // Memory routes
         .route("/api/v1/memory", get(list_memory_projects))
         .route("/api/v1/memory/{project_id}", get(list_memory_files))

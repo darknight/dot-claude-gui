@@ -18,3 +18,11 @@ pub struct SkillInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub validation_error: Option<String>,
 }
+
+/// Response for GET /api/v1/skills/{id}/content
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkillContentResponse {
+    pub id: String,
+    pub content: String,
+}
