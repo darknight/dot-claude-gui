@@ -254,6 +254,29 @@ export interface SkillContentResponse {
 }
 
 // ---------------------------------------------------------------------------
+// CLAUDE.md
+// ---------------------------------------------------------------------------
+
+export interface ClaudeMdFile {
+  id: string;
+  scope: "global" | "project";
+  filename: string;
+  path: string;
+  projectId?: string;
+  projectName?: string;
+  exists: boolean;
+}
+
+export interface ClaudeMdFileDetail {
+  id: string;
+  scope: "global" | "project";
+  filename: string;
+  path: string;
+  content: string;
+  projectId?: string;
+}
+
+// ---------------------------------------------------------------------------
 // Memory
 // ---------------------------------------------------------------------------
 

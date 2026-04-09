@@ -1,6 +1,8 @@
 import type {
   AddMcpServerRequest,
   AvailablePlugin,
+  ClaudeMdFile,
+  ClaudeMdFileDetail,
   ConfigResponse,
   EffectiveConfig,
   ErrorResponse,
@@ -224,6 +226,37 @@ export class DaemonClient {
   getSkillContent(id: string): Promise<SkillContentResponse> {
     return this.fetch<SkillContentResponse>(
       `/api/v1/skills/${encodeURIComponent(id)}/content`
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // CLAUDE.md endpoints
+  // -------------------------------------------------------------------------
+
+  listClaudeMdFiles(): Promise<ClaudeMdFile[]> {
+    return this.fetch<ClaudeMdFile[]>("/api/v1/claudemd");
+  }
+
+  getClaudeMdFile(id: string): Promise<ClaudeMdFileDetail> {
+    return this.fetch<ClaudeMdFileDetail>(
+      `/api/v1/claudemd/${encodeURIComponent(id)}`
+    );
+  }
+
+  async updateClaudeMdFile(id: string, content: string): Promise<void> {
+    await this.fetch(
+      `/api/v1/claudemd/${encodeURIComponent(id)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ content }),
+      }
+    );
+  }
+
+  async deleteClaudeMdFile(id: string): Promise<void> {
+    await this.fetch(
+      `/api/v1/claudemd/${encodeURIComponent(id)}`,
+      { method: "DELETE" }
     );
   }
 
