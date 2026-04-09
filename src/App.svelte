@@ -22,6 +22,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   import EffectiveConfigView from "$lib/components/effective/EffectiveConfigView.svelte";
   import LauncherView from "$lib/components/launcher/LauncherView.svelte";
   import AppSettingsView from "$lib/components/appsettings/AppSettingsView.svelte";
+  import Toast from "$lib/components/shared/Toast.svelte";
 
   // ---------------------------------------------------------------------------
   // Theme effect
@@ -482,4 +483,5 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
 
     {/if}
   </div>
+  <Toast />
 </div>
