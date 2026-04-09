@@ -1,6 +1,7 @@
 import { connectionStore } from "./connection.svelte";
 import { projectsStore } from "./projects.svelte";
 import type { Settings } from "$lib/api/types";
+import { toastStore } from "./toast.svelte";
 
 class ConfigStore {
   userSettings = $state<Settings>({});
@@ -68,8 +69,10 @@ class ConfigStore {
         this.userSettings = res.settings;
       }
       this.isDirty = false;
+      toastStore.success("Settings saved");
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to save";
+      toastStore.error(this.error);
       throw e;
     } finally {
       this.saving = false;

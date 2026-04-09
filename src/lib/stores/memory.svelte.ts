@@ -1,5 +1,6 @@
 import { connectionStore } from "./connection.svelte";
 import type { MemoryProject, MemoryFile, MemoryFileDetail } from "$lib/api/types";
+import { toastStore } from "./toast.svelte";
 
 class MemoryStore {
   projects = $state<MemoryProject[]>([]);
@@ -62,9 +63,11 @@ class MemoryStore {
       // Update activeFile content to reflect saved state
       if (this.activeFile && this.activeFile.filename === filename) {
         this.activeFile = { ...this.activeFile, content };
+        toastStore.success("File saved");
       }
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to save memory file";
+      toastStore.error(this.error);
     } finally {
       this.saving = false;
     }
@@ -79,9 +82,11 @@ class MemoryStore {
       this.files = this.files.filter((f) => f.filename !== filename);
       if (this.activeFile?.filename === filename) {
         this.activeFile = null;
+        toastStore.success("File deleted");
       }
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to delete memory file";
+      toastStore.error(this.error);
     }
   }
 

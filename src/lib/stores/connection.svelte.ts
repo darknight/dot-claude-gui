@@ -1,6 +1,7 @@
 import { DaemonClient } from "$lib/api/client.js";
 import { DaemonWsClient } from "$lib/api/ws.js";
 import { configStore } from "./config.svelte.js";
+import { toastStore } from "./toast.svelte.js";
 import { projectsStore } from "./projects.svelte.js";
 import { pluginsStore } from "./plugins.svelte.js";
 import { skillsStore } from "./skills.svelte.js";
@@ -41,9 +42,11 @@ class ConnectionStore {
       this.wsClient = wsClient;
       this.daemonVersion = health.version;
       this.status = "connected";
+      toastStore.info("Connected to daemon");
     } catch (err) {
       this.status = "disconnected";
       this.error = err instanceof Error ? err.message : String(err);
+      toastStore.error("Connection failed: " + this.error);
     }
   }
 
