@@ -631,3 +631,53 @@ async fn launch_endpoint_exists() {
     assert_ne!(resp.status(), 404u16);
     assert_ne!(resp.status(), 401u16);
 }
+
+// ---------------------------------------------------------------------------
+// Skill content endpoint
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn get_skill_content_returns_file() {
+    let (dir, token, port, _handle) = start_test_daemon().await;
+
+    let skills_dir = dir.path().join("skills").join("my-test-skill");
+    std::fs::create_dir_all(&skills_dir).unwrap();
+    std::fs::write(
+        skills_dir.join("SKILL.md"),
+        "---\nname: my-test-skill\ndescription: A test skill\n---\n\n# My Test Skill\n\nThis is the content.",
+    )
+    .unwrap();
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(format!(
+            "http://127.0.0.1:{port}/api/v1/skills/my-test-skill/content"
+        ))
+        .header("Authorization", format!("Bearer {token}"))
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), 200);
+
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert_eq!(body["id"], "my-test-skill");
+    assert!(body["content"].as_str().unwrap().contains("# My Test Skill"));
+}
+
+#[tokio::test]
+async fn get_skill_content_not_found() {
+    let (_dir, token, port, _handle) = start_test_daemon().await;
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(format!(
+            "http://127.0.0.1:{port}/api/v1/skills/nonexistent-skill/content"
+        ))
+        .header("Authorization", format!("Bearer {token}"))
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), 404);
+}
