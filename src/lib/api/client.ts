@@ -14,6 +14,7 @@ import type {
   PluginInfo,
   ProjectEntry,
   Settings,
+  SkillContentResponse,
   SkillInfo,
   ValidationError,
 } from "./types.js";
@@ -218,6 +219,12 @@ export class DaemonClient {
 
   listSkills(): Promise<SkillInfo[]> {
     return this.fetch<SkillInfo[]>("/api/v1/skills");
+  }
+
+  getSkillContent(id: string): Promise<SkillContentResponse> {
+    return this.fetch<SkillContentResponse>(
+      `/api/v1/skills/${encodeURIComponent(id)}/content`
+    );
   }
 
   // -------------------------------------------------------------------------

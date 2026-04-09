@@ -63,16 +63,19 @@
         </dl>
       </div>
 
-      <!-- SKILL.md content placeholder -->
+      <!-- SKILL.md content -->
       <div>
         <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
           SKILL.md
         </h3>
         <div class="rounded-lg border border-gray-800 bg-gray-950">
-          <pre class="overflow-auto p-4 text-xs leading-relaxed text-gray-300 whitespace-pre-wrap">{skill.path}</pre>
-          <p class="border-t border-gray-800 px-4 py-2 text-xs text-gray-600">
-            Content preview requires daemon file-read support (not yet available).
-          </p>
+          {#if skillsStore.contentLoading}
+            <div class="p-4 text-xs text-gray-500">Loading...</div>
+          {:else if skillsStore.skillContent != null}
+            <pre class="overflow-auto p-4 text-xs leading-relaxed text-gray-300 whitespace-pre-wrap">{skillsStore.skillContent}</pre>
+          {:else}
+            <div class="p-4 text-xs text-gray-600">No content available</div>
+          {/if}
         </div>
       </div>
     </div>

@@ -248,6 +248,11 @@ export interface SkillInfo {
   validationError?: string;
 }
 
+export interface SkillContentResponse {
+  id: string;
+  content: string;
+}
+
 // ---------------------------------------------------------------------------
 // Memory
 // ---------------------------------------------------------------------------
