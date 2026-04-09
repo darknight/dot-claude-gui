@@ -17,3 +17,6 @@ src-tauri/target/
 
 # Sidecar binaries (built from source)
 src-tauri/binaries/
+
+# Superpowers brainstorm sessions
+.superpowers/
