@@ -12,6 +12,9 @@ use crate::{
             put_user_config,
         },
         health::health_handler,
+        claudemd::{
+            delete_claudemd_file, get_claudemd_file, list_claudemd_files, put_claudemd_file,
+        },
         launcher::launch_claude,
         memory::{
             delete_memory_file, get_memory_file, list_memory_files, list_memory_projects,
@@ -76,6 +79,12 @@ pub fn build_router(state: AppState) -> Router {
         // Skills routes
         .route("/api/v1/skills", get(list_skills))
         .route("/api/v1/skills/{id}/content", get(get_skill_content))
+        // CLAUDE.md routes
+        .route("/api/v1/claudemd", get(list_claudemd_files))
+        .route(
+            "/api/v1/claudemd/{id}",
+            get(get_claudemd_file).put(put_claudemd_file).delete(delete_claudemd_file),
+        )
         // Memory routes
         .route("/api/v1/memory", get(list_memory_projects))
         .route("/api/v1/memory/{project_id}", get(list_memory_files))
