@@ -681,3 +681,97 @@ async fn get_skill_content_not_found() {
 
     assert_eq!(resp.status(), 404);
 }
+
+// ---------------------------------------------------------------------------
+// CLAUDE.md endpoints
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn list_claudemd_includes_global() {
+    let (_dir, token, port, _handle) = start_test_daemon().await;
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(format!("http://127.0.0.1:{port}/api/v1/claudemd"))
+        .header("Authorization", format!("Bearer {token}"))
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), 200);
+
+    let body: Vec<serde_json::Value> = resp.json().await.unwrap();
+    assert!(body.iter().any(|f| f["id"] == "global"));
+    let global = body.iter().find(|f| f["id"] == "global").unwrap();
+    assert_eq!(global["exists"], false);
+}
+
+#[tokio::test]
+async fn claudemd_crud_lifecycle() {
+    let (dir, token, port, _handle) = start_test_daemon().await;
+
+    let client = reqwest::Client::new();
+    let base = format!("http://127.0.0.1:{port}/api/v1/claudemd");
+
+    // GET global — should 404 since file doesn't exist yet
+    let resp = client
+        .get(format!("{base}/global"))
+        .header("Authorization", format!("Bearer {token}"))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 404);
+
+    // PUT global — create the file
+    let resp = client
+        .put(format!("{base}/global"))
+        .header("Authorization", format!("Bearer {token}"))
+        .header("Content-Type", "application/json")
+        .body("{\"content\":\"# Test CLAUDE.md\\n\\nHello world.\"}")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 200);
+
+    // Verify file exists on disk
+    assert!(dir.path().join("CLAUDE.md").exists());
+
+    // GET global — should succeed
+    let resp = client
+        .get(format!("{base}/global"))
+        .header("Authorization", format!("Bearer {token}"))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 200);
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert!(body["content"].as_str().unwrap().contains("Test CLAUDE.md"));
+
+    // DELETE global
+    let resp = client
+        .delete(format!("{base}/global"))
+        .header("Authorization", format!("Bearer {token}"))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 204);
+
+    assert!(!dir.path().join("CLAUDE.md").exists());
+}
+
+#[tokio::test]
+async fn claudemd_invalid_id_returns_400() {
+    let (_dir, token, port, _handle) = start_test_daemon().await;
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(format!(
+            "http://127.0.0.1:{port}/api/v1/claudemd/invalid-format"
+        ))
+        .header("Authorization", format!("Bearer {token}"))
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), 400);
+}
