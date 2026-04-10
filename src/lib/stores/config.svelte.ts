@@ -1,4 +1,4 @@
-import { connectionStore } from "./connection.svelte";
+import { ipcClient } from "$lib/ipc/client.js";
 import { projectsStore } from "./projects.svelte";
 import type { Settings } from "$lib/api/types";
 import { toastStore } from "./toast.svelte";
@@ -18,12 +18,10 @@ class ConfigStore {
   }
 
   async loadUserConfig() {
-    const client = connectionStore.client;
-    if (!client) return;
     this.loading = true;
     this.error = "";
     try {
-      const res = await client.getUserConfig();
+      const res = await ipcClient.getUserConfig();
       this.userSettings = res.settings;
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load config";
@@ -33,12 +31,10 @@ class ConfigStore {
   }
 
   async loadProjectConfig(projectId: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     this.loading = true;
     this.error = "";
     try {
-      const res = await client.getProjectConfig(projectId);
+      const res = await ipcClient.getProjectConfig(projectId);
       this.projectSettings = res.settings;
     } catch {
       // Project may not have a .claude/settings.json yet
@@ -53,19 +49,17 @@ class ConfigStore {
   }
 
   async save(partialSettings: Partial<Settings>) {
-    const client = connectionStore.client;
-    if (!client) return;
     this.saving = true;
     this.error = "";
     try {
       if (this.activeScope === "project" && projectsStore.activeProjectId) {
-        const res = await client.updateProjectConfig(
+        const res = await ipcClient.updateProjectConfig(
           projectsStore.activeProjectId,
           partialSettings,
         );
         this.projectSettings = res.settings;
       } else {
-        const res = await client.updateUserConfig(partialSettings);
+        const res = await ipcClient.updateUserConfig(partialSettings);
         this.userSettings = res.settings;
       }
       this.isDirty = false;
@@ -77,6 +71,11 @@ class ConfigStore {
     } finally {
       this.saving = false;
     }
+  }
+
+  setUserConfig(settings: Settings): void {
+    this.userSettings = settings;
+    this.isDirty = false;
   }
 
   revert() {
