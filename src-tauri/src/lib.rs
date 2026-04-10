@@ -324,6 +324,9 @@ pub fn run() {
             commands::config::get_project_config,
             commands::config::update_project_config,
             commands::config::get_effective_config,
+            commands::projects::list_projects,
+            commands::projects::register_project,
+            commands::projects::unregister_project,
         ])
         .setup(|app| {
             let claude_home = dirs_next::home_dir()
