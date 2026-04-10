@@ -1,4 +1,4 @@
-import { connectionStore } from "./connection.svelte";
+import { ipcClient } from "$lib/ipc/client.js";
 import { toastStore } from "./toast.svelte";
 import type { ClaudeMdFile, ClaudeMdFileDetail } from "$lib/api/types";
 
@@ -10,12 +10,10 @@ class ClaudeMdStore {
   error = $state<string>("");
 
   async loadFiles() {
-    const client = connectionStore.client;
-    if (!client) return;
     this.loading = true;
     this.error = "";
     try {
-      this.files = await client.listClaudeMdFiles();
+      this.files = await ipcClient.listClaudeMdFiles();
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load CLAUDE.md files";
     } finally {
@@ -24,12 +22,10 @@ class ClaudeMdStore {
   }
 
   async loadFile(id: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     this.loading = true;
     this.error = "";
     try {
-      this.activeFile = await client.getClaudeMdFile(id);
+      this.activeFile = await ipcClient.getClaudeMdFile(id);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load CLAUDE.md";
       this.activeFile = null;
@@ -39,12 +35,10 @@ class ClaudeMdStore {
   }
 
   async saveFile(id: string, content: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     this.saving = true;
     this.error = "";
     try {
-      await client.updateClaudeMdFile(id, content);
+      await ipcClient.updateClaudeMdFile(id, content);
       if (this.activeFile && this.activeFile.id === id) {
         this.activeFile = { ...this.activeFile, content };
       }
@@ -61,11 +55,9 @@ class ClaudeMdStore {
   }
 
   async deleteFile(id: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     this.error = "";
     try {
-      await client.deleteClaudeMdFile(id);
+      await ipcClient.deleteClaudeMdFile(id);
       this.files = this.files.map((f) =>
         f.id === id ? { ...f, exists: false } : f
       );
