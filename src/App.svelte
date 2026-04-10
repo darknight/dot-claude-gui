@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { connectionStore } from "$lib/stores/connection.svelte";
+  import { onMount, onDestroy } from "svelte";
   import { configStore } from "$lib/stores/config.svelte";
   import { projectsStore } from "$lib/stores/projects.svelte";
   import { pluginsStore } from "$lib/stores/plugins.svelte";
@@ -8,9 +7,7 @@
   import { memoryStore } from "$lib/stores/memory.svelte";
   import { mcpStore } from "$lib/stores/mcp.svelte";
   import { appSettingsStore } from "$lib/stores/appsettings.svelte";
-  import { connectionsStore } from "$lib/stores/connections.svelte";
-  import ConnectionStatus from "$lib/components/shared/ConnectionStatus.svelte";
-  import EnvironmentSelector from "$lib/components/shared/EnvironmentSelector.svelte";
+  import { onConfigChanged } from "$lib/ipc/events.js";
   import ScopeSelector from "$lib/components/shared/ScopeSelector.svelte";
 import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
@@ -123,21 +120,39 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   let mcpSection = $state("servers");
 
   // ---------------------------------------------------------------------------
-  // Mount: load connections, connect to active daemon
+  // Mount: load all stores and subscribe to file-watcher events
   // ---------------------------------------------------------------------------
 
   onMount(() => {
     void (async () => {
+      // Load UI preferences first
       await appSettingsStore.load();
-      await connectionsStore.load();
 
-      const active = connectionsStore.activeConnection;
-      if (active) {
-        await connectionStore.connect(active.url, active.token);
-      }
+      // IPC is always available — load all data stores in parallel
+      await Promise.all([
+        configStore.loadUserConfig(),
+        projectsStore.loadProjects(),
+        pluginsStore.loadPlugins(),
+        skillsStore.loadSkills(),
+        memoryStore.loadProjects(),
+        mcpStore.loadServers(),
+        claudeMdStore.loadFiles(),
+      ]);
+
+      // Subscribe to config-changed events pushed from backend file watcher
+      const unlisten = await onConfigChanged((payload) => {
+        // Update user config cache when the file watcher detects a settings change
+        if (payload.source === "user" || !payload.source) {
+          configStore.setUserConfig(payload.settings);
+        }
+        // Project/local changes could also trigger reloads — keep it minimal for now
+      });
+
+      // Clean up the listener when the component unmounts
+      onDestroy(unlisten);
     })();
 
-    // Listen for navigation events from EnvironmentSelector
+    // Listen for navigation events
     const handleNavigate = (e: Event) => {
       const detail = (e as CustomEvent<{ nav: string; sub?: string }>).detail;
       activeNav = detail.nav;
@@ -147,28 +162,6 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
     };
     window.addEventListener("navigate", handleNavigate);
     return () => window.removeEventListener("navigate", handleNavigate);
-  });
-
-  // Load data when connection becomes active
-  $effect(() => {
-    if (connectionStore.status === "connected" && connectionStore.client) {
-      configStore.loadUserConfig();
-      projectsStore.loadProjects();
-      pluginsStore.loadPlugins();
-      skillsStore.loadSkills();
-      memoryStore.loadProjects();
-      mcpStore.loadServers();
-      claudeMdStore.loadFiles();
-
-      connectionStore.wsClient?.onEvent((event) => {
-        if (event.type === "configChanged") {
-          void configStore.loadUserConfig();
-          if (projectsStore.activeProjectId) {
-            void configStore.loadProjectConfig(projectsStore.activeProjectId);
-          }
-        }
-      });
-    }
   });
 
   // ---------------------------------------------------------------------------
@@ -220,30 +213,14 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
     <span class="text-sm font-semibold text-gray-100">dot-claude</span>
 
     <div class="flex items-center gap-2">
-      <EnvironmentSelector />
-      <span class="text-gray-600">→</span>
       <ScopeSelector />
     </div>
-
-    <ConnectionStatus />
   </header>
 
   <!-- ===== Body (three-panel layout) ===== -->
   <div class="flex flex-1 overflow-hidden">
 
-    {#if connectionStore.status === "disconnected" && connectionStore.error}
-      <!-- Not connected — full-width message -->
-      <div class="flex flex-1 items-center justify-center">
-        <div class="text-center">
-          <p class="text-sm font-medium text-gray-300">Not connected</p>
-          {#if connectionStore.error}
-            <p class="mt-1 text-xs text-red-400">{connectionStore.error}</p>
-          {/if}
-        </div>
-      </div>
-    {:else}
-
-      <!-- Sidebar: icon + text nav -->
+    <!-- Sidebar: icon + text nav -->
       <nav
         class="flex flex-col overflow-hidden py-3"
         style="width: var(--sidebar-width); flex-shrink: 0; background-color: var(--bg-secondary); border-right: 1px solid var(--border-color)"
@@ -437,18 +414,8 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
       <main class="flex flex-1 flex-col overflow-hidden">
         <div class="flex flex-1 flex-col overflow-hidden">
           {#if isAppSettingsModule()}
-            <!-- App Settings module: always accessible, regardless of connection -->
+            <!-- App Settings module -->
             <AppSettingsView activeSub={appSettingsSub} />
-
-          {:else if connectionStore.status === "connecting"}
-            <div class="flex-1 overflow-auto p-6">
-              <p class="text-sm text-gray-500">Connecting to daemon...</p>
-            </div>
-
-          {:else if connectionStore.status === "disconnected"}
-            <div class="flex flex-1 items-center justify-center">
-              <p class="text-sm text-gray-500">Not connected</p>
-            </div>
 
           {:else if isSettingsModule()}
             <!-- Settings module: SettingsEditor orchestrator -->
@@ -495,7 +462,6 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
         </div>
       </main>
 
-    {/if}
   </div>
   <Toast />
 </div>
