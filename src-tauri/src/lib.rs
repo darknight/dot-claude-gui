@@ -338,6 +338,7 @@ pub fn run() {
             commands::memory::get_memory_file,
             commands::memory::update_memory_file,
             commands::memory::delete_memory_file,
+            commands::launcher::launch_claude,
         ])
         .setup(|app| {
             let claude_home = dirs_next::home_dir()
