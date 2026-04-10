@@ -96,30 +96,78 @@ pub fn list_mcp_servers(_state: State<'_, AppState>) -> Result<Vec<McpServerInfo
 }
 
 // ---------------------------------------------------------------------------
-// add_mcp_server — STUB (Task 12 will wire to executor)
+// add_mcp_server — streams `claude mcp add` via executor
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
 pub async fn add_mcp_server(
-    _app: AppHandle,
+    app: AppHandle,
     _state: State<'_, AppState>,
-    _req: AddMcpServerRequest,
+    req: AddMcpServerRequest,
 ) -> Result<CommandRequest, String> {
-    Err("not_implemented: wait for executor (Task 12)".to_string())
+    let args = build_mcp_add_args(&req);
+    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    Ok(CommandRequest { request_id })
+}
+
+fn build_mcp_add_args(req: &AddMcpServerRequest) -> Vec<String> {
+    // Mirror daemon's add_mcp_server arg construction exactly:
+    // claude mcp add --transport <transport> --scope <scope>
+    //   [-e KEY=VAL]... [-H key: val]... <name> <commandOrUrl> [args...]
+    let scope = req.scope.as_deref().unwrap_or("local").to_string();
+    let command_or_url = req.command_or_url.clone().unwrap_or_default();
+
+    let mut args: Vec<String> = vec![
+        "mcp".to_string(),
+        "add".to_string(),
+        "--transport".to_string(),
+        req.transport.clone(),
+        "--scope".to_string(),
+        scope,
+    ];
+
+    for (key, val) in &req.env {
+        args.push("-e".to_string());
+        args.push(format!("{}={}", key, val));
+    }
+
+    for (key, val) in &req.headers {
+        args.push("-H".to_string());
+        args.push(format!("{}: {}", key, val));
+    }
+
+    args.push(req.name.clone());
+    args.push(command_or_url);
+
+    for arg in &req.args {
+        args.push(arg.clone());
+    }
+
+    args
 }
 
 // ---------------------------------------------------------------------------
-// remove_mcp_server — STUB (Task 12 will wire to executor)
+// remove_mcp_server — streams `claude mcp remove` via executor
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
 pub async fn remove_mcp_server(
-    _app: AppHandle,
+    app: AppHandle,
     _state: State<'_, AppState>,
-    _name: String,
-    _scope: Option<String>,
+    name: String,
+    scope: Option<String>,
 ) -> Result<CommandRequest, String> {
-    Err("not_implemented: wait for executor (Task 12)".to_string())
+    // Mirror daemon: claude mcp remove --scope <scope> <name>
+    let scope_val = scope.unwrap_or_else(|| "local".to_string());
+    let args = vec![
+        "mcp".to_string(),
+        "remove".to_string(),
+        "--scope".to_string(),
+        scope_val,
+        name,
+    ];
+    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    Ok(CommandRequest { request_id })
 }
 
 // ---------------------------------------------------------------------------

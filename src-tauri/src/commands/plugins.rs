@@ -280,56 +280,87 @@ pub async fn toggle_plugin(
 }
 
 // ---------------------------------------------------------------------------
-// install_plugin — STUB (Task 12 will wire to executor)
+// install_plugin — streams `claude plugin install` via executor
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
 pub async fn install_plugin(
-    _app: AppHandle,
+    app: AppHandle,
     _state: State<'_, AppState>,
-    _name: String,
-    _marketplace: String,
+    name: String,
+    marketplace: String,
 ) -> Result<CommandRequest, String> {
-    Err("not_implemented: wait for executor (Task 12)".to_string())
+    // Mirror daemon: claude plugin install <name> --marketplace <marketplace>
+    let args = vec![
+        "plugin".to_string(),
+        "install".to_string(),
+        name,
+        "--marketplace".to_string(),
+        marketplace,
+    ];
+    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    Ok(CommandRequest { request_id })
 }
 
 // ---------------------------------------------------------------------------
-// uninstall_plugin — STUB (Task 12 will wire to executor)
+// uninstall_plugin — streams `claude plugin uninstall` via executor
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
 pub async fn uninstall_plugin(
-    _app: AppHandle,
+    app: AppHandle,
     _state: State<'_, AppState>,
-    _id: String,
+    id: String,
 ) -> Result<CommandRequest, String> {
-    Err("not_implemented: wait for executor (Task 12)".to_string())
+    // Mirror daemon: claude plugin uninstall <id>
+    let args = vec!["plugin".to_string(), "uninstall".to_string(), id];
+    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    Ok(CommandRequest { request_id })
 }
 
 // ---------------------------------------------------------------------------
-// add_marketplace — STUB (Task 12 will wire to executor)
+// add_marketplace — streams `claude plugin marketplace add` via executor
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
 pub async fn add_marketplace(
-    _app: AppHandle,
+    app: AppHandle,
     _state: State<'_, AppState>,
-    _repo: String,
+    repo: String,
 ) -> Result<CommandRequest, String> {
-    Err("not_implemented: wait for executor (Task 12)".to_string())
+    // Mirror daemon: claude plugin marketplace add --source github --repo <repo>
+    let args = vec![
+        "plugin".to_string(),
+        "marketplace".to_string(),
+        "add".to_string(),
+        "--source".to_string(),
+        "github".to_string(),
+        "--repo".to_string(),
+        repo,
+    ];
+    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    Ok(CommandRequest { request_id })
 }
 
 // ---------------------------------------------------------------------------
-// remove_marketplace — STUB (Task 12 will wire to executor)
+// remove_marketplace — streams `claude plugin marketplace remove` via executor
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
 pub async fn remove_marketplace(
-    _app: AppHandle,
+    app: AppHandle,
     _state: State<'_, AppState>,
-    _id: String,
+    id: String,
 ) -> Result<CommandRequest, String> {
-    Err("not_implemented: wait for executor (Task 12)".to_string())
+    // Mirror daemon: claude plugin marketplace remove <id>
+    let args = vec![
+        "plugin".to_string(),
+        "marketplace".to_string(),
+        "remove".to_string(),
+        id,
+    ];
+    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    Ok(CommandRequest { request_id })
 }
 
 // ---------------------------------------------------------------------------

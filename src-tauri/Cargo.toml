@@ -24,7 +24,7 @@ serde_json.workspace = true
 dirs-next = "2"
 rand = "0.9"
 base64 = "0.22"
-tokio = { version = "1", features = ["net", "time"] }
+tokio = { version = "1", features = ["net", "time", "process", "io-util"] }
 tracing = "0.1"
 
 [dev-dependencies]
