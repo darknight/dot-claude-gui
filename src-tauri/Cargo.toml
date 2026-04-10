@@ -18,13 +18,10 @@ anyhow = "1"
 uuid = { version = "1", features = ["v4"] }
 futures-util = "0.3"
 tauri = { version = "2", features = [] }
-tauri-plugin-shell = "2"
 serde.workspace = true
 serde_json.workspace = true
 dirs-next = "2"
-rand = "0.9"
-base64 = "0.22"
-tokio = { version = "1", features = ["net", "time", "process", "io-util"] }
+tokio = { version = "1", features = ["process", "io-util"] }
 tracing = "0.1"
 
 [dev-dependencies]
