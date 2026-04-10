@@ -319,6 +319,11 @@ pub fn run() {
             read_app_config,
             write_app_config,
             commands::health::health,
+            commands::config::get_user_config,
+            commands::config::update_user_config,
+            commands::config::get_project_config,
+            commands::config::update_project_config,
+            commands::config::get_effective_config,
         ])
         .setup(|app| {
             let claude_home = dirs_next::home_dir()
