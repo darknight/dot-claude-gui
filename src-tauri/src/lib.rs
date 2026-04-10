@@ -342,6 +342,14 @@ pub fn run() {
             commands::mcp::list_mcp_servers,
             commands::mcp::add_mcp_server,
             commands::mcp::remove_mcp_server,
+            commands::plugins::list_plugins,
+            commands::plugins::list_marketplaces,
+            commands::plugins::get_marketplace_plugins,
+            commands::plugins::toggle_plugin,
+            commands::plugins::install_plugin,
+            commands::plugins::uninstall_plugin,
+            commands::plugins::add_marketplace,
+            commands::plugins::remove_marketplace,
         ])
         .setup(|app| {
             let claude_home = dirs_next::home_dir()
