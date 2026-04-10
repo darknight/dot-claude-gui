@@ -318,8 +318,15 @@ pub fn run() {
             write_connections,
             read_app_config,
             write_app_config,
+            commands::health::health,
         ])
         .setup(|app| {
+            let claude_home = dirs_next::home_dir()
+                .ok_or_else(|| "cannot determine home directory".to_string())?
+                .join(".claude");
+            let app_state = crate::state::AppState::new(claude_home);
+            app.manage(app_state);
+
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 start_sidecar(handle).await;
