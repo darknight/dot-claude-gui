@@ -327,6 +327,8 @@ pub fn run() {
             commands::projects::list_projects,
             commands::projects::register_project,
             commands::projects::unregister_project,
+            commands::skills::list_skills,
+            commands::skills::get_skill_content,
         ])
         .setup(|app| {
             let claude_home = dirs_next::home_dir()

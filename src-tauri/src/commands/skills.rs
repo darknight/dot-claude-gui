@@ -1,1 +1,320 @@
-// Stub — populated in Task 6
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+
+use claude_types::{
+    plugins::InstalledPluginsFile,
+    skills::{SkillContentResponse, SkillInfo},
+};
+use tauri::State;
+
+use crate::state::AppState;
+
+// ---------------------------------------------------------------------------
+// SKILL.md frontmatter parsing
+// ---------------------------------------------------------------------------
+
+struct FrontmatterResult {
+    name: Option<String>,
+    description: Option<String>,
+}
+
+/// Parse YAML frontmatter from a SKILL.md file's contents.
+///
+/// A valid frontmatter block:
+/// - Line 0 must be `---`
+/// - Subsequent lines are scanned for `name:` and `description:` until the
+///   closing `---` is found.
+fn parse_frontmatter(contents: &str) -> Option<FrontmatterResult> {
+    let mut lines = contents.lines();
+
+    // First line must be exactly `---`.
+    if lines.next()?.trim() != "---" {
+        return None;
+    }
+
+    let mut name: Option<String> = None;
+    let mut description: Option<String> = None;
+    let mut closed = false;
+
+    for line in lines {
+        if line.trim() == "---" {
+            closed = true;
+            break;
+        }
+        if let Some(rest) = line.strip_prefix("name:") {
+            name = Some(rest.trim().to_string());
+        } else if let Some(rest) = line.strip_prefix("description:") {
+            description = Some(rest.trim().to_string());
+        }
+    }
+
+    if !closed {
+        return None;
+    }
+
+    Some(FrontmatterResult { name, description })
+}
+
+/// Validate a parsed frontmatter result and return `(valid, validation_error)`.
+fn validate_frontmatter(
+    result: Option<FrontmatterResult>,
+) -> (Option<FrontmatterResult>, bool, Option<String>) {
+    match result {
+        None => (
+            None,
+            false,
+            Some("missing or malformed frontmatter block".to_string()),
+        ),
+        Some(fm) => {
+            let missing_name = fm.name.is_none();
+            let missing_desc = fm.description.is_none();
+
+            let (valid, error) = match (missing_name, missing_desc) {
+                (false, false) => (true, None),
+                (true, false) => (
+                    false,
+                    Some("missing 'name' field in frontmatter".to_string()),
+                ),
+                (false, true) => (
+                    false,
+                    Some("missing 'description' field in frontmatter".to_string()),
+                ),
+                (true, true) => (
+                    false,
+                    Some(
+                        "missing 'name' and 'description' fields in frontmatter".to_string(),
+                    ),
+                ),
+            };
+
+            (Some(fm), valid, error)
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Skill scanning helpers
+// ---------------------------------------------------------------------------
+
+/// Read and parse installed_plugins.json, returning an empty default on failure.
+fn read_installed_plugins(plugins_dir: &Path) -> InstalledPluginsFile {
+    let path = plugins_dir.join("installed_plugins.json");
+    let contents = match std::fs::read_to_string(&path) {
+        Ok(c) => c,
+        Err(_) => return InstalledPluginsFile { version: 1, plugins: HashMap::new() },
+    };
+    serde_json::from_str(&contents).unwrap_or_else(|_| InstalledPluginsFile {
+        version: 1,
+        plugins: HashMap::new(),
+    })
+}
+
+/// Scan a single `skills/` directory and return a list of `SkillInfo` entries.
+///
+/// `source` is the string that will be placed in `SkillInfo::source`
+/// (e.g. `"user"` or `"plugin:myplugin@marketplace"`).
+fn scan_skills_dir(skills_dir: &Path, source: &str) -> Vec<SkillInfo> {
+    let read_dir = match std::fs::read_dir(skills_dir) {
+        Ok(rd) => rd,
+        Err(_) => return vec![],
+    };
+
+    let mut skills = Vec::new();
+
+    for entry in read_dir.flatten() {
+        let entry_path = entry.path();
+        if !entry_path.is_dir() {
+            continue;
+        }
+
+        let id = match entry_path.file_name().and_then(|n| n.to_str()) {
+            Some(n) => n.to_string(),
+            None => continue,
+        };
+
+        let skill_md_path = entry_path.join("SKILL.md");
+        if !skill_md_path.exists() {
+            continue;
+        }
+
+        let path_str = skill_md_path.to_string_lossy().into_owned();
+
+        let (name, description, valid, validation_error) =
+            match std::fs::read_to_string(&skill_md_path) {
+                Err(_) => (
+                    id.clone(),
+                    None,
+                    false,
+                    Some("could not read SKILL.md".to_string()),
+                ),
+                Ok(contents) => {
+                    let parsed = parse_frontmatter(&contents);
+                    let (fm, valid, error) = validate_frontmatter(parsed);
+                    let name = fm
+                        .as_ref()
+                        .and_then(|f| f.name.clone())
+                        .unwrap_or_else(|| id.clone());
+                    let description = fm.and_then(|f| f.description);
+                    (name, description, valid, error)
+                }
+            };
+
+        skills.push(SkillInfo {
+            id,
+            name,
+            description,
+            source: source.to_string(),
+            path: path_str,
+            valid,
+            validation_error,
+        });
+    }
+
+    skills
+}
+
+/// Find the filesystem path of a skill's SKILL.md file by its ID.
+fn find_skill_path(claude_home: &Path, skill_id: &str) -> Option<PathBuf> {
+    // 1. Check user skills
+    let user_skill = claude_home.join("skills").join(skill_id).join("SKILL.md");
+    if user_skill.exists() {
+        return Some(user_skill);
+    }
+
+    // 2. Check plugin skills
+    let plugins_dir = claude_home.join("plugins");
+    let installed = read_installed_plugins(&plugins_dir);
+
+    for (_marketplace_id, plugins) in &installed.plugins {
+        for plugin in plugins {
+            let plugin_skill = std::path::PathBuf::from(&plugin.install_path)
+                .join("skills")
+                .join(skill_id)
+                .join("SKILL.md");
+            if plugin_skill.exists() {
+                return Some(plugin_skill);
+            }
+        }
+    }
+
+    None
+}
+
+// ---------------------------------------------------------------------------
+// Logic helpers (testable without Tauri State)
+// ---------------------------------------------------------------------------
+
+pub(crate) fn list_skills_logic(claude_home: &Path) -> Vec<SkillInfo> {
+    let mut result = Vec::new();
+
+    // 1. User skills: {claude_home}/skills/<subdirectory>/SKILL.md
+    let user_skills_dir = claude_home.join("skills");
+    result.extend(scan_skills_dir(&user_skills_dir, "user"));
+
+    // 2. Plugin skills: for each installed plugin, check {install_path}/skills/
+    let plugins_dir = claude_home.join("plugins");
+    let installed = read_installed_plugins(&plugins_dir);
+
+    for (marketplace_id, plugins) in &installed.plugins {
+        for plugin in plugins {
+            let plugin_id = format!("{}@{}", plugin.scope, marketplace_id);
+            let source = format!("plugin:{}", plugin_id);
+            let plugin_skills_dir =
+                std::path::PathBuf::from(&plugin.install_path).join("skills");
+            result.extend(scan_skills_dir(&plugin_skills_dir, &source));
+        }
+    }
+
+    result
+}
+
+pub(crate) fn get_skill_content_logic(
+    claude_home: &Path,
+    id: String,
+) -> Result<SkillContentResponse, String> {
+    let skill_path = find_skill_path(claude_home, &id)
+        .ok_or_else(|| format!("not_found: Skill '{}' not found", id))?;
+
+    let content = std::fs::read_to_string(&skill_path)
+        .map_err(|e| format!("read_error: Failed to read skill file: {}", e))?;
+
+    Ok(SkillContentResponse { id, content })
+}
+
+// ---------------------------------------------------------------------------
+// Tauri command shims
+// ---------------------------------------------------------------------------
+
+#[tauri::command]
+pub async fn list_skills(state: State<'_, AppState>) -> Result<Vec<SkillInfo>, String> {
+    let claude_home = state.inner.claude_home.clone();
+    Ok(list_skills_logic(&claude_home))
+}
+
+#[tauri::command]
+pub async fn get_skill_content(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<SkillContentResponse, String> {
+    let claude_home = state.inner.claude_home.clone();
+    get_skill_content_logic(&claude_home, id)
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::AppState;
+    use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn list_skills_returns_empty_when_no_skills_dir() {
+        let dir = tempdir().unwrap();
+        let state = AppState::new(dir.path().to_path_buf());
+        let result = list_skills_logic(&state.inner.claude_home);
+        assert!(result.is_empty(), "expected empty list when no skills dir exists");
+    }
+
+    #[tokio::test]
+    async fn list_skills_finds_user_skill_with_frontmatter() {
+        let dir = tempdir().unwrap();
+        // Create skills/<skill-name>/SKILL.md
+        let skill_dir = dir.path().join("skills").join("my-skill");
+        std::fs::create_dir_all(&skill_dir).unwrap();
+        std::fs::write(
+            skill_dir.join("SKILL.md"),
+            "---\nname: My Skill\ndescription: Does something useful\n---\n\n# Body\n",
+        )
+        .unwrap();
+
+        let state = AppState::new(dir.path().to_path_buf());
+        let result = list_skills_logic(&state.inner.claude_home);
+
+        assert_eq!(result.len(), 1);
+        let skill = &result[0];
+        assert_eq!(skill.id, "my-skill");
+        assert_eq!(skill.name, "My Skill");
+        assert_eq!(skill.description.as_deref(), Some("Does something useful"));
+        assert_eq!(skill.source, "user");
+        assert!(skill.valid);
+        assert!(skill.validation_error.is_none());
+    }
+
+    #[tokio::test]
+    async fn get_skill_content_returns_not_found_for_unknown_id() {
+        let dir = tempdir().unwrap();
+        let state = AppState::new(dir.path().to_path_buf());
+
+        let err = get_skill_content_logic(&state.inner.claude_home, "nonexistent-skill".to_string())
+            .unwrap_err();
+
+        assert!(
+            err.starts_with("not_found:"),
+            "expected error starting with 'not_found:', got: {}",
+            err
+        );
+    }
+}
