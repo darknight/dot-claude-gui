@@ -1,7 +1,6 @@
 <script lang="ts">
   import { pluginsStore } from "$lib/stores/plugins.svelte";
-  import { connectionStore } from "$lib/stores/connection.svelte";
-  import type { WsEvent } from "$lib/api/types";
+  import { onCommandOutput, onCommandCompleted } from "$lib/ipc/events.js";
 
   let selectedMarketplace = $state("");
   let installing = $state<string | null>(null); // plugin name being installed
@@ -23,16 +22,19 @@
     const result = await pluginsStore.installPlugin(name, marketplace);
     if (!result) return;
 
-    // Listen for output
-    const unsub = connectionStore.wsClient?.onEvent((event: WsEvent) => {
-      if (event.type === "commandOutput" && event.commandId === result.requestId) {
-        installOutput = [...installOutput, event.line];
+    // Listen for output via Tauri IPC events
+    const unsubOutput = await onCommandOutput((p) => {
+      if (p.commandId === result.requestId) {
+        installOutput = [...installOutput, p.line];
       }
-      if (event.type === "commandCompleted" && event.commandId === result.requestId) {
+    });
+    const unsubCompleted = await onCommandCompleted((p) => {
+      if (p.commandId === result.requestId) {
         installing = null;
         pluginsStore.loadPlugins();
         pluginsStore.loadMarketplacePlugins(selectedMarketplace);
-        unsub?.();
+        unsubOutput();
+        unsubCompleted();
       }
     });
   }

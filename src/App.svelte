@@ -415,7 +415,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
         <div class="flex flex-1 flex-col overflow-hidden">
           {#if isAppSettingsModule()}
             <!-- App Settings module -->
-            <AppSettingsView activeSub={appSettingsSub} />
+            <AppSettingsView />
 
           {:else if isSettingsModule()}
             <!-- Settings module: SettingsEditor orchestrator -->

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { connectionStore } from "$lib/stores/connection.svelte";
+  import { ipcClient } from "$lib/ipc/client.js";
   import { projectsStore } from "$lib/stores/projects.svelte";
   import type { EffectiveConfig } from "$lib/api/types";
 
@@ -20,12 +20,10 @@
   });
 
   async function loadEffective(projectId: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     loading = true;
     error = "";
     try {
-      effective = await client.getEffectiveConfig(projectId);
+      effective = await ipcClient.getEffectiveConfig(projectId);
     } catch (e) {
       error = e instanceof Error ? e.message : "Failed to load";
     } finally {

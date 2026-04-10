@@ -1,7 +1,6 @@
 <script lang="ts">
   import { pluginsStore } from "$lib/stores/plugins.svelte";
-  import { connectionStore } from "$lib/stores/connection.svelte";
-  import type { WsEvent } from "$lib/api/types";
+  import { onCommandOutput, onCommandCompleted } from "$lib/ipc/events.js";
 
   let newRepo = $state("");
   let adding = $state(false);
@@ -25,15 +24,19 @@
       return;
     }
 
-    const unsub = connectionStore.wsClient?.onEvent((event: WsEvent) => {
-      if (event.type === "commandOutput" && event.commandId === result.requestId) {
-        addOutput = [...addOutput, event.line];
+    // Listen for output via Tauri IPC events
+    const unsubOutput = await onCommandOutput((p) => {
+      if (p.commandId === result.requestId) {
+        addOutput = [...addOutput, p.line];
       }
-      if (event.type === "commandCompleted" && event.commandId === result.requestId) {
+    });
+    const unsubCompleted = await onCommandCompleted((p) => {
+      if (p.commandId === result.requestId) {
         adding = false;
         newRepo = "";
         pluginsStore.loadMarketplaces();
-        unsub?.();
+        unsubOutput();
+        unsubCompleted();
       }
     });
   }
@@ -49,14 +52,18 @@
       return;
     }
 
-    const unsub = connectionStore.wsClient?.onEvent((event: WsEvent) => {
-      if (event.type === "commandOutput" && event.commandId === result.requestId) {
-        removeOutput = [...removeOutput, event.line];
+    // Listen for output via Tauri IPC events
+    const unsubOutput = await onCommandOutput((p) => {
+      if (p.commandId === result.requestId) {
+        removeOutput = [...removeOutput, p.line];
       }
-      if (event.type === "commandCompleted" && event.commandId === result.requestId) {
+    });
+    const unsubCompleted = await onCommandCompleted((p) => {
+      if (p.commandId === result.requestId) {
         removingId = null;
         pluginsStore.loadMarketplaces();
-        unsub?.();
+        unsubOutput();
+        unsubCompleted();
       }
     });
   }

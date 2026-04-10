@@ -1,7 +1,7 @@
 <script lang="ts">
   import { pluginsStore } from "$lib/stores/plugins.svelte";
   import { projectsStore } from "$lib/stores/projects.svelte";
-  import { connectionStore } from "$lib/stores/connection.svelte";
+  import { ipcClient } from "$lib/ipc/client.js";
   import type { Settings } from "$lib/api/types";
 
   let projectSettings = $state<Settings>({});
@@ -19,11 +19,9 @@
   });
 
   async function loadProjectSettings(projectId: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     loading = true;
     try {
-      const res = await client.getProjectConfig(projectId);
+      const res = await ipcClient.getProjectConfig(projectId);
       projectSettings = res.settings ?? {};
     } catch {
       projectSettings = {};
@@ -53,8 +51,6 @@
 
   async function toggleProjectPlugin(pluginId: string, nextState: boolean | null) {
     if (!activeProject) return;
-    const client = connectionStore.client;
-    if (!client) return;
     saving = pluginId;
     try {
       let newEnabledPlugins: string[] | undefined;
@@ -78,7 +74,7 @@
         const current = projectSettings.enabledPlugins ?? [];
         newEnabledPlugins = current.filter((id) => id !== pluginId);
       }
-      const res = await client.updateProjectConfig(activeProject.id, {
+      const res = await ipcClient.updateProjectConfig(activeProject.id, {
         enabledPlugins: newEnabledPlugins,
       });
       projectSettings = res.settings ?? {};

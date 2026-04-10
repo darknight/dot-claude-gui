@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { connectionStore } from "$lib/stores/connection.svelte";
+  import { ipcClient } from "$lib/ipc/client.js";
   import { projectsStore } from "$lib/stores/projects.svelte";
   import { configStore } from "$lib/stores/config.svelte";
   import { pluginsStore } from "$lib/stores/plugins.svelte";
@@ -60,7 +60,7 @@
       for (const cv of customEnv) {
         if (cv.enabled && cv.key) env[cv.key] = cv.value;
       }
-      await connectionStore.client!.launchClaude({
+      await ipcClient.launchClaude({
         projectPath: selectedProject.path,
         env,
       });
