@@ -329,6 +329,10 @@ pub fn run() {
             commands::projects::unregister_project,
             commands::skills::list_skills,
             commands::skills::get_skill_content,
+            commands::claudemd::list_claudemd_files,
+            commands::claudemd::get_claudemd_file,
+            commands::claudemd::update_claudemd_file,
+            commands::claudemd::delete_claudemd_file,
         ])
         .setup(|app| {
             let claude_home = dirs_next::home_dir()
