@@ -1,4 +1,4 @@
-import { connectionStore } from "./connection.svelte";
+import { ipcClient } from "$lib/ipc/client.js";
 import type { McpServerInfo, AddMcpServerRequest } from "$lib/api/types";
 
 class McpStore {
@@ -7,12 +7,10 @@ class McpStore {
   error = $state<string>("");
 
   async loadServers() {
-    const client = connectionStore.client;
-    if (!client) return;
     this.loading = true;
     this.error = "";
     try {
-      this.servers = await client.listMcpServers();
+      this.servers = await ipcClient.listMcpServers();
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed";
     } finally {
@@ -21,20 +19,16 @@ class McpStore {
   }
 
   async addServer(req: AddMcpServerRequest) {
-    const client = connectionStore.client;
-    if (!client) return;
     try {
-      return await client.addMcpServer(req);
+      return await ipcClient.addMcpServer(req);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed";
     }
   }
 
   async removeServer(name: string, scope?: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     try {
-      return await client.removeMcpServer(name, scope);
+      return await ipcClient.removeMcpServer(name, scope);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed";
     }
