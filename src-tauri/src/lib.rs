@@ -339,6 +339,9 @@ pub fn run() {
             commands::memory::update_memory_file,
             commands::memory::delete_memory_file,
             commands::launcher::launch_claude,
+            commands::mcp::list_mcp_servers,
+            commands::mcp::add_mcp_server,
+            commands::mcp::remove_mcp_server,
         ])
         .setup(|app| {
             let claude_home = dirs_next::home_dir()
