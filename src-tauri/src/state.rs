@@ -66,6 +66,7 @@ mod tests {
         let state = AppState::new(dir.path().to_path_buf());
 
         assert_eq!(state.inner.claude_home, dir.path());
+        assert!(state.inner.user_settings.read().await.env.is_none());
         assert!(state.inner.project_settings.read().await.is_empty());
         assert!(state.inner.projects.read().await.is_empty());
     }
