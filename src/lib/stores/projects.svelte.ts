@@ -1,5 +1,5 @@
 import type { ProjectEntry } from "$lib/api/types";
-import { connectionStore } from "./connection.svelte";
+import { ipcClient } from "$lib/ipc/client.js";
 
 class ProjectsStore {
   projects = $state<ProjectEntry[]>([]);
@@ -11,24 +11,21 @@ class ProjectsStore {
   }
 
   async loadProjects(): Promise<void> {
-    if (!connectionStore.client) return;
     this.loading = true;
     try {
-      this.projects = await connectionStore.client.listProjects();
+      this.projects = await ipcClient.listProjects();
     } finally {
       this.loading = false;
     }
   }
 
   async registerProject(path: string): Promise<void> {
-    if (!connectionStore.client) return;
-    const entry = await connectionStore.client.registerProject(path);
+    const entry = await ipcClient.registerProject(path);
     this.projects = [...this.projects, entry];
   }
 
   async unregisterProject(id: string): Promise<void> {
-    if (!connectionStore.client) return;
-    await connectionStore.client.unregisterProject(id);
+    await ipcClient.unregisterProject(id);
     this.projects = this.projects.filter((p) => p.id !== id);
     if (this.activeProjectId === id) {
       this.activeProjectId = null;
