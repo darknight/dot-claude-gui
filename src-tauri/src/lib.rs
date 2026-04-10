@@ -333,6 +333,11 @@ pub fn run() {
             commands::claudemd::get_claudemd_file,
             commands::claudemd::update_claudemd_file,
             commands::claudemd::delete_claudemd_file,
+            commands::memory::list_memory_projects,
+            commands::memory::list_memory_files,
+            commands::memory::get_memory_file,
+            commands::memory::update_memory_file,
+            commands::memory::delete_memory_file,
         ])
         .setup(|app| {
             let claude_home = dirs_next::home_dir()
