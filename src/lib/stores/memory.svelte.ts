@@ -1,4 +1,4 @@
-import { connectionStore } from "./connection.svelte";
+import { ipcClient } from "$lib/ipc/client.js";
 import type { MemoryProject, MemoryFile, MemoryFileDetail } from "$lib/api/types";
 import { toastStore } from "./toast.svelte";
 
@@ -12,12 +12,10 @@ class MemoryStore {
   error = $state<string>("");
 
   async loadProjects() {
-    const client = connectionStore.client;
-    if (!client) return;
     this.loading = true;
     this.error = "";
     try {
-      this.projects = await client.listMemoryProjects();
+      this.projects = await ipcClient.listMemoryProjects();
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load memory projects";
     } finally {
@@ -26,12 +24,10 @@ class MemoryStore {
   }
 
   async loadFiles(projectId: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     this.loading = true;
     this.error = "";
     try {
-      this.files = await client.listMemoryFiles(projectId);
+      this.files = await ipcClient.listMemoryFiles(projectId);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load memory files";
     } finally {
@@ -40,12 +36,10 @@ class MemoryStore {
   }
 
   async loadFile(projectId: string, filename: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     this.loading = true;
     this.error = "";
     try {
-      this.activeFile = await client.getMemoryFile(projectId, filename);
+      this.activeFile = await ipcClient.getMemoryFile(projectId, filename);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load memory file";
     } finally {
@@ -54,12 +48,10 @@ class MemoryStore {
   }
 
   async saveFile(projectId: string, filename: string, content: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     this.saving = true;
     this.error = "";
     try {
-      await client.updateMemoryFile(projectId, filename, content);
+      await ipcClient.updateMemoryFile(projectId, filename, content);
       // Update activeFile content to reflect saved state
       if (this.activeFile && this.activeFile.filename === filename) {
         this.activeFile = { ...this.activeFile, content };
@@ -74,11 +66,9 @@ class MemoryStore {
   }
 
   async deleteFile(projectId: string, filename: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     this.error = "";
     try {
-      await client.deleteMemoryFile(projectId, filename);
+      await ipcClient.deleteMemoryFile(projectId, filename);
       this.files = this.files.filter((f) => f.filename !== filename);
       if (this.activeFile?.filename === filename) {
         this.activeFile = null;
