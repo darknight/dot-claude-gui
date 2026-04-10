@@ -358,6 +358,19 @@ pub fn run() {
             let app_state = crate::state::AppState::new(claude_home);
             app.manage(app_state);
 
+            // Load initial user settings into the cache before the watcher starts.
+            let state_handle = app.state::<crate::state::AppState>();
+            let state_clone = (*state_handle).clone();
+            tauri::async_runtime::block_on(async {
+                if let Err(e) = state_clone.load_user_settings().await {
+                    tracing::warn!("failed to load initial user settings: {e}");
+                }
+            });
+
+            // Start the file watcher (background OS thread + tokio task bridging).
+            let app_handle_for_watcher = app.handle().clone();
+            crate::watcher::start_watcher(app_handle_for_watcher, state_clone);
+
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 start_sidecar(handle).await;
