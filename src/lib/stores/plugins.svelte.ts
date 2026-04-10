@@ -1,4 +1,4 @@
-import { connectionStore } from "./connection.svelte";
+import { ipcClient } from "$lib/ipc/client.js";
 import type { PluginInfo, MarketplaceInfo, AvailablePlugin } from "$lib/api/types";
 
 class PluginsStore {
@@ -9,11 +9,9 @@ class PluginsStore {
   error = $state<string>("");
 
   async loadPlugins() {
-    const client = connectionStore.client;
-    if (!client) return;
     this.loading = true;
     try {
-      this.plugins = await client.listPlugins();
+      this.plugins = await ipcClient.listPlugins();
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load plugins";
     } finally {
@@ -22,30 +20,24 @@ class PluginsStore {
   }
 
   async loadMarketplaces() {
-    const client = connectionStore.client;
-    if (!client) return;
     try {
-      this.marketplaces = await client.listMarketplaces();
+      this.marketplaces = await ipcClient.listMarketplaces();
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load marketplaces";
     }
   }
 
   async loadMarketplacePlugins(marketplaceId: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     try {
-      this.availablePlugins = await client.getMarketplacePlugins(marketplaceId);
+      this.availablePlugins = await ipcClient.getMarketplacePlugins(marketplaceId);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed";
     }
   }
 
   async togglePlugin(id: string, enabled: boolean) {
-    const client = connectionStore.client;
-    if (!client) return;
     try {
-      await client.togglePlugin(id, enabled);
+      await ipcClient.togglePlugin(id, enabled);
       // Update local state
       this.plugins = this.plugins.map(p => p.id === id ? { ...p, enabled } : p);
     } catch (e) {
@@ -54,40 +46,32 @@ class PluginsStore {
   }
 
   async installPlugin(name: string, marketplace: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     try {
-      return await client.installPlugin(name, marketplace);
+      return await ipcClient.installPlugin(name, marketplace);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed";
     }
   }
 
   async uninstallPlugin(id: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     try {
-      return await client.uninstallPlugin(id);
+      return await ipcClient.uninstallPlugin(id);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed";
     }
   }
 
   async addMarketplace(repo: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     try {
-      return await client.addMarketplace(repo);
+      return await ipcClient.addMarketplace(repo);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to add marketplace";
     }
   }
 
   async removeMarketplace(id: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     try {
-      return await client.removeMarketplace(id);
+      return await ipcClient.removeMarketplace(id);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to remove marketplace";
     }
