@@ -203,7 +203,7 @@ futures-util = "0.3"
 
 ```rust
 // src-tauri/src/events.rs
-// Stub — populated in Task 11
+// Stub — populated in Task 12
 ```
 
 ```rust
