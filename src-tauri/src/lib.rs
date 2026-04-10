@@ -1,3 +1,9 @@
+mod commands;
+mod events;
+mod executor;
+mod state;
+mod watcher;
+
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::net::TcpListener;

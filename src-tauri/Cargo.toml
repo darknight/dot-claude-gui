@@ -12,6 +12,11 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 claude-types = { path = "../crates/claude-types" }
+claude-config = { path = "../crates/claude-config" }
+notify = "8"
+anyhow = "1"
+uuid = { version = "1", features = ["v4"] }
+futures-util = "0.3"
 tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"
 serde.workspace = true
