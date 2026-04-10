@@ -1,4 +1,4 @@
-import { connectionStore } from "./connection.svelte";
+import { ipcClient } from "$lib/ipc/client.js";
 import { toastStore } from "./toast.svelte";
 import type { SkillInfo } from "$lib/api/types";
 
@@ -15,11 +15,9 @@ class SkillsStore {
   }
 
   async loadSkills() {
-    const client = connectionStore.client;
-    if (!client) return;
     this.loading = true;
     try {
-      this.skills = await client.listSkills();
+      this.skills = await ipcClient.listSkills();
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load skills";
     } finally {
@@ -36,11 +34,9 @@ class SkillsStore {
   }
 
   async loadSkillContent(id: string) {
-    const client = connectionStore.client;
-    if (!client) return;
     this.contentLoading = true;
     try {
-      const res = await client.getSkillContent(id);
+      const res = await ipcClient.getSkillContent(id);
       this.skillContent = res.content;
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to load skill content";
