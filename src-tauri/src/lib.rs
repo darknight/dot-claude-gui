@@ -136,9 +136,14 @@ pub fn run() {
                 }
             });
 
-            // Start the file watcher (background OS thread + tokio task bridging).
+            // Start the file watcher inside the async runtime so that
+            // tokio::runtime::Handle::current() inside start_watcher succeeds.
+            // Tauri's setup() is synchronous and has no tokio context, but
+            // tauri::async_runtime::spawn runs on the global tokio runtime.
             let app_handle_for_watcher = app.handle().clone();
-            crate::watcher::start_watcher(app_handle_for_watcher, state_clone);
+            tauri::async_runtime::spawn(async move {
+                crate::watcher::start_watcher(app_handle_for_watcher, state_clone);
+            });
 
             Ok(())
         })
