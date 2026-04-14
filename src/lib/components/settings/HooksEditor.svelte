@@ -4,9 +4,12 @@
   import type { HookGroup, HookDefinition } from "$lib/api/types";
 
   const validEvents = [
-    "PreToolUse", "PostToolUse", "Notification", "Stop", "SubagentStop",
-    "CwdChanged", "FileChanged", "ConfigChange", "StopFailure", "TaskCreated",
-    "WorktreeCreate", "WorktreeRemove", "PostCompact", "Elicitation", "InstructionsLoaded",
+    "PreToolUse", "PostToolUse", "PostToolUseFailure", "Notification", "UserPromptSubmit",
+    "SessionStart", "SessionEnd", "Stop", "StopFailure", "SubagentStart", "SubagentStop",
+    "PreCompact", "PostCompact", "PermissionRequest", "PermissionDenied", "Setup",
+    "TeammateIdle", "TaskCreated", "TaskCompleted", "Elicitation", "ElicitationResult",
+    "ConfigChange", "WorktreeCreate", "WorktreeRemove", "InstructionsLoaded",
+    "CwdChanged", "FileChanged",
   ];
 
   const settings = $derived(configStore.activeSettings);

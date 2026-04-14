@@ -11,23 +11,35 @@ const VALID_DEFAULT_MODES: &[&str] = &[
     "auto",
 ];
 
-/// Valid hook event names.
+/// Valid hook event names (synced with Claude Code's official schema).
 const VALID_HOOK_EVENTS: &[&str] = &[
     "PreToolUse",
     "PostToolUse",
+    "PostToolUseFailure",
     "Notification",
+    "UserPromptSubmit",
+    "SessionStart",
+    "SessionEnd",
     "Stop",
-    "SubagentStop",
-    "CwdChanged",
-    "FileChanged",
-    "ConfigChange",
     "StopFailure",
+    "SubagentStart",
+    "SubagentStop",
+    "PreCompact",
+    "PostCompact",
+    "PermissionRequest",
+    "PermissionDenied",
+    "Setup",
+    "TeammateIdle",
     "TaskCreated",
+    "TaskCompleted",
+    "Elicitation",
+    "ElicitationResult",
+    "ConfigChange",
     "WorktreeCreate",
     "WorktreeRemove",
-    "PostCompact",
-    "Elicitation",
     "InstructionsLoaded",
+    "CwdChanged",
+    "FileChanged",
 ];
 
 /// Validates the given `Settings` and returns a list of `ValidationError`s.
