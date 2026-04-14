@@ -144,10 +144,8 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
 
       // Subscribe to config-changed events pushed from backend file watcher
       unlistenConfigChanged = await onConfigChanged((payload) => {
-        // Update user config cache when the file watcher detects a settings change
-        if (payload.source === "user" || !payload.source) {
-          configStore.setUserConfig(payload.settings);
-        }
+        // Update user config cache on any config change (file-watcher or API save)
+        configStore.setUserConfig(payload.settings);
       });
     })();
 
