@@ -49,7 +49,7 @@
             <div class="flex items-center gap-3">
               <!-- Uninstall button (hover only) -->
               <button
-                class="hidden rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-red-900/50 hover:text-red-400 group-hover:block"
+                class="rounded px-2 py-1 text-xs text-gray-500 opacity-0 transition-opacity hover:bg-red-900/50 hover:text-red-400 group-hover:opacity-100"
                 onclick={() => handleUninstall(plugin.id)}
                 title="Uninstall plugin"
               >

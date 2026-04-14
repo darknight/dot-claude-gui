@@ -41,3 +41,20 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
 }
+
+/* Always show scrollbars so users can gauge remaining content */
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: var(--text-muted);
+  opacity: 0.5;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}

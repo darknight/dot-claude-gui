@@ -6,7 +6,7 @@ class AppSettingsStore {
     theme: "system",
     language: "zh-CN",
     fontSize: 14,
-    sidebarWidth: 56,
+    sidebarWidth: 140,
     subpanelWidth: 240,
   });
 

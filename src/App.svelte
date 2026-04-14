@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount } from "svelte";
   import { configStore } from "$lib/stores/config.svelte";
   import { projectsStore } from "$lib/stores/projects.svelte";
   import { pluginsStore } from "$lib/stores/plugins.svelte";
@@ -123,6 +123,9 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   // Mount: load all stores and subscribe to file-watcher events
   // ---------------------------------------------------------------------------
 
+  // Store cleanup functions for async subscriptions
+  let unlistenConfigChanged: (() => void) | undefined;
+
   onMount(() => {
     void (async () => {
       // Load UI preferences first
@@ -140,16 +143,12 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
       ]);
 
       // Subscribe to config-changed events pushed from backend file watcher
-      const unlisten = await onConfigChanged((payload) => {
+      unlistenConfigChanged = await onConfigChanged((payload) => {
         // Update user config cache when the file watcher detects a settings change
         if (payload.source === "user" || !payload.source) {
           configStore.setUserConfig(payload.settings);
         }
-        // Project/local changes could also trigger reloads — keep it minimal for now
       });
-
-      // Clean up the listener when the component unmounts
-      onDestroy(unlisten);
     })();
 
     // Listen for navigation events
@@ -161,23 +160,32 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
       }
     };
     window.addEventListener("navigate", handleNavigate);
-    return () => window.removeEventListener("navigate", handleNavigate);
+
+    return () => {
+      unlistenConfigChanged?.();
+      window.removeEventListener("navigate", handleNavigate);
+    };
   });
+
+  // ---------------------------------------------------------------------------
+  // Sidebar collapse
+  // ---------------------------------------------------------------------------
+
+  const SIDEBAR_COLLAPSED = 56;
+  const SIDEBAR_EXPANDED = 140;
+  let sidebarCollapsed = $derived(appSettingsStore.preferences.sidebarWidth <= SIDEBAR_COLLAPSED);
+
+  function toggleSidebar() {
+    const next = sidebarCollapsed ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED;
+    appSettingsStore.update({ sidebarWidth: next });
+  }
 
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 
-  // Reactive navigation checks — inline in template for reliable Svelte 5 tracking
-  const isSettings = $derived(activeNav === "S");
-  const isPlugins = $derived(activeNav === "P");
-  const isSkills = $derived(activeNav === "K");
-  const isMemory = $derived(activeNav === "M");
-  const isMcp = $derived(activeNav === "C");
-  const isEffective = $derived(activeNav === "E");
-  const isLauncher = $derived(activeNav === "L");
-  const isClaudeMd = $derived(activeNav === "D");
-  const isAppSettings = $derived(activeNav === "A");
+  // Navigation checks are done directly in the template as `activeNav === "X"`
+  // to avoid any Svelte 5 reactivity tracking issues with function calls or $derived.
 </script>
 
 <!-- ===== Root container ===== -->
@@ -197,11 +205,12 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
 
     <!-- Sidebar: icon + text nav -->
       <nav
-        class="flex flex-col overflow-hidden py-3"
-        style="width: var(--sidebar-width); flex-shrink: 0; background-color: var(--bg-secondary); border-right: 1px solid var(--border-color)"
+        class="flex flex-col overflow-hidden"
+        style="width: var(--sidebar-width); flex-shrink: 0; background-color: var(--bg-secondary); border-right: 1px solid var(--border-color); transition: width 0.15s ease"
       >
-        <div class="flex flex-col gap-1 flex-1 px-2">
-          {#each navButtons as btn}
+        <!-- Nav items (including App Settings) -->
+        <div class="flex flex-col gap-1 flex-1 px-2 py-3 overflow-y-auto">
+          {#each [...navButtons, appSettingsButton] as btn}
             <button
               class="flex items-center gap-2 h-9 px-2 rounded-lg text-sm transition-colors overflow-hidden whitespace-nowrap
                 {activeNav === btn.id
@@ -219,22 +228,25 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
           {/each}
         </div>
 
-        <div class="mt-2 pt-2 px-2" style="border-top: 1px solid var(--border-color)">
-          <button
-            class="flex items-center gap-2 h-9 px-2 rounded-lg text-sm transition-colors overflow-hidden whitespace-nowrap w-full
-              {activeNav === appSettingsButton.id
-              ? 'text-white'
-              : 'hover:text-[var(--text-primary)]'}"
-            style="{activeNav === appSettingsButton.id ? 'background-color: var(--nav-active-bg)' : ''} color: {activeNav === appSettingsButton.id ? 'var(--nav-active-text)' : 'var(--text-secondary)'}"
-            title={appSettingsButton.label}
-            onclick={() => { activeNav = appSettingsButton.id; }}
-          >
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d={appSettingsButton.icon} />
-            </svg>
-            <span class="truncate">{appSettingsButton.label}</span>
-          </button>
-        </div>
+        <!-- Collapse / expand toggle — alone at bottom -->
+        <button
+          class="flex items-center h-8 px-2 mx-2 mb-2 rounded-lg transition-colors hover:bg-gray-800/50"
+          style="color: var(--text-muted); flex-shrink: 0"
+          title={sidebarCollapsed ? "展开侧边栏" : "折叠侧边栏"}
+          onclick={toggleSidebar}
+        >
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            {#if sidebarCollapsed}
+              <!-- Panel expand: right-facing sidebar icon -->
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75h16.5v16.5H3.75z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.75v16.5" />
+            {:else}
+              <!-- Panel collapse: left-facing sidebar icon -->
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75h16.5v16.5H3.75z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.75v16.5" />
+            {/if}
+          </svg>
+        </button>
       </nav>
 
       <!-- Sidebar resize handle -->
@@ -255,7 +267,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
           </h2>
         </div>
 
-        {#if isSettings}
+        {#if activeNav === "S"}
           <!-- Settings sub-navigation -->
           <ul class="flex-1 overflow-y-auto py-2">
             {#each settingsSections as section}
@@ -272,7 +284,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
               </li>
             {/each}
           </ul>
-        {:else if isPlugins}
+        {:else if activeNav === "P"}
           <!-- Plugins sub-navigation -->
           <ul class="flex-1 overflow-y-auto py-2">
             {#each pluginsSections as section}
@@ -289,7 +301,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
               </li>
             {/each}
           </ul>
-        {:else if isSkills}
+        {:else if activeNav === "K"}
           <!-- Skills sub-navigation: list skill names -->
           <ul class="flex-1 overflow-y-auto py-2">
             {#if skillsStore.loading}
@@ -297,7 +309,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
             {:else if skillsStore.skills.length === 0}
               <li class="px-4 py-2 text-xs text-gray-600">No skills found</li>
             {:else}
-              {#each skillsStore.skills as skill (skill.id)}
+              {#each skillsStore.skills as skill (skill.id + ':' + skill.source)}
                 <li>
                   <button
                     class="flex w-full items-center justify-between px-4 py-2 text-left text-sm transition-colors
@@ -317,12 +329,12 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
               {/each}
             {/if}
           </ul>
-        {:else if isMemory}
+        {:else if activeNav === "M"}
           <!-- Memory sub-panel: project selector + file list -->
           <MemoryList />
-        {:else if isClaudeMd}
+        {:else if activeNav === "D"}
           <ClaudeMdList />
-        {:else if isMcp}
+        {:else if activeNav === "C"}
           <!-- MCP sub-navigation -->
           <ul class="flex-1 overflow-y-auto py-2">
             {#each mcpSections as section}
@@ -339,17 +351,17 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
               </li>
             {/each}
           </ul>
-        {:else if isEffective}
+        {:else if activeNav === "E"}
           <!-- Effective Config: no sub-navigation needed -->
           <div class="flex-1 overflow-y-auto py-2">
             <p class="px-4 py-2 text-xs text-gray-600">Merged config for active project</p>
           </div>
-        {:else if isLauncher}
+        {:else if activeNav === "L"}
           <!-- Launcher: no sub-navigation needed -->
           <div class="flex-1 overflow-y-auto py-2">
             <p class="px-4 py-2 text-xs text-gray-600">Select a project and launch</p>
           </div>
-        {:else if isAppSettings}
+        {:else if activeNav === "A"}
           <!-- App Settings sub-navigation -->
           <ul class="flex-1 overflow-y-auto py-2">
             <li>
@@ -388,11 +400,11 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
         <div class="flex flex-1 flex-col overflow-hidden">
-          {#if isAppSettings}
+          {#if activeNav === "A"}
             <!-- App Settings module -->
             <AppSettingsView />
 
-          {:else if isSettings}
+          {:else if activeNav === "S"}
             <!-- Settings module: SettingsEditor orchestrator -->
             {#if configStore.loading}
               <div class="flex-1 overflow-auto p-6">
@@ -402,30 +414,30 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
               <SettingsEditor activeSection={settingsSection} />
             {/if}
 
-          {:else if isPlugins}
+          {:else if activeNav === "P"}
             <!-- Plugins module: PluginsModule orchestrator -->
             <PluginsModule activeSection={pluginsSection} />
 
-          {:else if isSkills}
+          {:else if activeNav === "K"}
             <!-- Skills module: SkillsModule orchestrator -->
             <SkillsModule />
 
-          {:else if isMemory}
+          {:else if activeNav === "M"}
             <!-- Memory module: MemoryModule orchestrator -->
             <MemoryModule />
 
-          {:else if isClaudeMd}
+          {:else if activeNav === "D"}
             <ClaudeMdModule />
 
-          {:else if isMcp}
+          {:else if activeNav === "C"}
             <!-- MCP module: McpModule orchestrator -->
             <McpModule activeSection={mcpSection} />
 
-          {:else if isEffective}
+          {:else if activeNav === "E"}
             <!-- Effective Config module -->
             <EffectiveConfigView />
 
-          {:else if isLauncher}
+          {:else if activeNav === "L"}
             <!-- Launcher module -->
             <LauncherView />
 
