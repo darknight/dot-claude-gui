@@ -1,10 +1,9 @@
 <script lang="ts">
+  import { open as openDialog } from "@tauri-apps/plugin-dialog";
   import { projectsStore } from "$lib/stores/projects.svelte.js";
   import { configStore } from "$lib/stores/config.svelte.js";
 
   let open = $state(false);
-  let showAddProject = $state(false);
-  let newProjectPath = $state("");
   let addError = $state("");
 
   function selectUserScope() {
@@ -22,12 +21,16 @@
   }
 
   async function addProject() {
-    if (!newProjectPath.trim()) return;
     addError = "";
     try {
-      await projectsStore.registerProject(newProjectPath.trim());
-      newProjectPath = "";
-      showAddProject = false;
+      const selected = await openDialog({
+        directory: true,
+        multiple: false,
+        title: "选择项目目录",
+      });
+      if (selected) {
+        await projectsStore.registerProject(selected);
+      }
     } catch (err) {
       addError = err instanceof Error ? err.message : String(err);
     }
@@ -58,7 +61,7 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="fixed inset-0 z-40" onclick={() => (open = false)} onkeydown={() => {}}></div>
 
-    <div class="absolute top-full left-0 mt-1 w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
+    <div class="absolute top-full right-0 mt-1 w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1">
       <button
         class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-700
           {!projectsStore.activeProjectId ? 'text-blue-400' : 'text-gray-300'}"
@@ -85,35 +88,18 @@
 
       <div class="border-t border-gray-700 my-1"></div>
 
-      {#if showAddProject}
-        <div class="px-3 py-2">
-          <div class="flex gap-2">
-            <input
-              type="text"
-              bind:value={newProjectPath}
-              placeholder="/path/to/project"
-              class="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-gray-200"
-              onkeydown={(e) => e.key === "Enter" && addProject()}
-            />
-            <button
-              class="px-2 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-500"
-              onclick={addProject}
-            >
-              添加
-            </button>
-          </div>
-          {#if addError}
-            <p class="text-xs text-red-400 mt-1">{addError}</p>
-          {/if}
+      <button
+        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-gray-400 hover:bg-gray-700"
+        onclick={addProject}
+      >
+        <span>+</span>
+        <span>添加项目...</span>
+      </button>
+
+      {#if addError}
+        <div class="px-3 py-1">
+          <p class="text-xs text-red-400">{addError}</p>
         </div>
-      {:else}
-        <button
-          class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-gray-400 hover:bg-gray-700"
-          onclick={() => (showAddProject = true)}
-        >
-          <span>+</span>
-          <span>添加项目...</span>
-        </button>
       {/if}
     </div>
   {/if}

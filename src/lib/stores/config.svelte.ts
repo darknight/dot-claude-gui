@@ -19,6 +19,7 @@ class ConfigStore {
 
   async loadUserConfig() {
     this.loading = true;
+    this.isDirty = false;
     this.error = "";
     try {
       const res = await ipcClient.getUserConfig();
@@ -32,6 +33,7 @@ class ConfigStore {
 
   async loadProjectConfig(projectId: string) {
     this.loading = true;
+    this.isDirty = false;
     this.error = "";
     try {
       const res = await ipcClient.getProjectConfig(projectId);
