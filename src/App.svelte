@@ -168,41 +168,16 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   // Helpers
   // ---------------------------------------------------------------------------
 
-  function isSettingsModule(): boolean {
-    return activeNav === "S";
-  }
-
-  function isPluginsModule(): boolean {
-    return activeNav === "P";
-  }
-
-  function isSkillsModule(): boolean {
-    return activeNav === "K";
-  }
-
-  function isMemoryModule(): boolean {
-    return activeNav === "M";
-  }
-
-  function isMcpModule(): boolean {
-    return activeNav === "C";
-  }
-
-  function isEffectiveConfigModule(): boolean {
-    return activeNav === "E";
-  }
-
-  function isLauncherModule(): boolean {
-    return activeNav === "L";
-  }
-
-  function isClaudeMdModule(): boolean {
-    return activeNav === "D";
-  }
-
-  function isAppSettingsModule(): boolean {
-    return activeNav === "A";
-  }
+  // Reactive navigation checks — inline in template for reliable Svelte 5 tracking
+  const isSettings = $derived(activeNav === "S");
+  const isPlugins = $derived(activeNav === "P");
+  const isSkills = $derived(activeNav === "K");
+  const isMemory = $derived(activeNav === "M");
+  const isMcp = $derived(activeNav === "C");
+  const isEffective = $derived(activeNav === "E");
+  const isLauncher = $derived(activeNav === "L");
+  const isClaudeMd = $derived(activeNav === "D");
+  const isAppSettings = $derived(activeNav === "A");
 </script>
 
 <!-- ===== Root container ===== -->
@@ -280,7 +255,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
           </h2>
         </div>
 
-        {#if isSettingsModule()}
+        {#if isSettings}
           <!-- Settings sub-navigation -->
           <ul class="flex-1 overflow-y-auto py-2">
             {#each settingsSections as section}
@@ -297,7 +272,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
               </li>
             {/each}
           </ul>
-        {:else if isPluginsModule()}
+        {:else if isPlugins}
           <!-- Plugins sub-navigation -->
           <ul class="flex-1 overflow-y-auto py-2">
             {#each pluginsSections as section}
@@ -314,7 +289,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
               </li>
             {/each}
           </ul>
-        {:else if isSkillsModule()}
+        {:else if isSkills}
           <!-- Skills sub-navigation: list skill names -->
           <ul class="flex-1 overflow-y-auto py-2">
             {#if skillsStore.loading}
@@ -342,12 +317,12 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
               {/each}
             {/if}
           </ul>
-        {:else if isMemoryModule()}
+        {:else if isMemory}
           <!-- Memory sub-panel: project selector + file list -->
           <MemoryList />
-        {:else if isClaudeMdModule()}
+        {:else if isClaudeMd}
           <ClaudeMdList />
-        {:else if isMcpModule()}
+        {:else if isMcp}
           <!-- MCP sub-navigation -->
           <ul class="flex-1 overflow-y-auto py-2">
             {#each mcpSections as section}
@@ -364,17 +339,17 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
               </li>
             {/each}
           </ul>
-        {:else if isEffectiveConfigModule()}
+        {:else if isEffective}
           <!-- Effective Config: no sub-navigation needed -->
           <div class="flex-1 overflow-y-auto py-2">
             <p class="px-4 py-2 text-xs text-gray-600">Merged config for active project</p>
           </div>
-        {:else if isLauncherModule()}
+        {:else if isLauncher}
           <!-- Launcher: no sub-navigation needed -->
           <div class="flex-1 overflow-y-auto py-2">
             <p class="px-4 py-2 text-xs text-gray-600">Select a project and launch</p>
           </div>
-        {:else if isAppSettingsModule()}
+        {:else if isAppSettings}
           <!-- App Settings sub-navigation -->
           <ul class="flex-1 overflow-y-auto py-2">
             <li>
@@ -413,11 +388,11 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">
         <div class="flex flex-1 flex-col overflow-hidden">
-          {#if isAppSettingsModule()}
+          {#if isAppSettings}
             <!-- App Settings module -->
             <AppSettingsView />
 
-          {:else if isSettingsModule()}
+          {:else if isSettings}
             <!-- Settings module: SettingsEditor orchestrator -->
             {#if configStore.loading}
               <div class="flex-1 overflow-auto p-6">
@@ -427,30 +402,30 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
               <SettingsEditor activeSection={settingsSection} />
             {/if}
 
-          {:else if isPluginsModule()}
+          {:else if isPlugins}
             <!-- Plugins module: PluginsModule orchestrator -->
             <PluginsModule activeSection={pluginsSection} />
 
-          {:else if isSkillsModule()}
+          {:else if isSkills}
             <!-- Skills module: SkillsModule orchestrator -->
             <SkillsModule />
 
-          {:else if isMemoryModule()}
+          {:else if isMemory}
             <!-- Memory module: MemoryModule orchestrator -->
             <MemoryModule />
 
-          {:else if isClaudeMdModule()}
+          {:else if isClaudeMd}
             <ClaudeMdModule />
 
-          {:else if isMcpModule()}
+          {:else if isMcp}
             <!-- MCP module: McpModule orchestrator -->
             <McpModule activeSection={mcpSection} />
 
-          {:else if isEffectiveConfigModule()}
+          {:else if isEffective}
             <!-- Effective Config module -->
             <EffectiveConfigView />
 
-          {:else if isLauncherModule()}
+          {:else if isLauncher}
             <!-- Launcher module -->
             <LauncherView />
 
