@@ -1,18 +1,28 @@
 <script lang="ts">
   import { mcpStore } from "$lib/stores/mcp.svelte";
 
-  // Group servers by scope
-  const groupedServers = $derived(() => {
+  // Group servers by origin (derived from name prefix / scope).
+  // Claude Code's `claude mcp list` doesn't expose per-server scope, so
+  // we group by heuristic: claude.ai hosted, plugin-provided, or local.
+  function serverGroup(server: { name: string; scope: string }): string {
+    if (server.name.startsWith("claude.ai ")) return "claude.ai";
+    if (server.name.startsWith("plugin:")) return "plugin";
+    if (server.scope === "user" || server.scope === "project" || server.scope === "local") {
+      return server.scope;
+    }
+    return "other";
+  }
+
+  const groupedServers = $derived.by(() => {
     const groups: Record<string, typeof mcpStore.servers> = {};
     for (const server of mcpStore.servers) {
-      const scope = server.scope || "user";
-      if (!groups[scope]) groups[scope] = [];
-      groups[scope].push(server);
+      const g = serverGroup(server);
+      (groups[g] ??= []).push(server);
     }
     return groups;
   });
 
-  const scopeOrder = ["user", "project", "local"];
+  const scopeOrder = ["claude.ai", "plugin", "user", "project", "local", "other"];
 
   function transportBadgeClass(transport: string): string {
     if (transport === "stdio") return "bg-blue-900 text-blue-300";
@@ -59,11 +69,11 @@
     </div>
   {:else}
     <div class="space-y-6">
-      {#each scopeOrder.filter(s => groupedServers()[s]?.length > 0) as scope}
+      {#each scopeOrder.filter(s => groupedServers[s]?.length > 0) as scope}
         <div>
           <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">{scope}</h3>
           <div class="space-y-2">
-            {#each groupedServers()[scope] as server (server.name + server.scope)}
+            {#each groupedServers[scope] as server (server.name + server.scope)}
               <div class="group relative rounded-lg border border-gray-800 bg-gray-900 px-4 py-3 transition-colors hover:border-gray-700">
                 <div class="flex items-start justify-between gap-4">
                   <!-- Server info -->
