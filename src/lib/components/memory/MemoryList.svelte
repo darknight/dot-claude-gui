@@ -110,7 +110,15 @@
             onclick={() => memoryStore.selectFile(file.filename)}
           >
             <div class="flex items-center justify-between gap-2">
-              <span class="truncate text-sm">{file.name ?? file.filename}</span>
+              <span class="flex items-center gap-1.5 truncate text-sm">
+                {#if memoryStore.activeFile?.filename === file.filename && memoryStore.activeFileDirty}
+                  <span
+                    class="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-orange-500"
+                    aria-label="unsaved changes"
+                  ></span>
+                {/if}
+                <span class="truncate">{file.name ?? file.filename}</span>
+              </span>
               {#if file.memoryType}
                 <span class="flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-medium {typeBadgeClass(file.memoryType)}">
                   {file.memoryType}

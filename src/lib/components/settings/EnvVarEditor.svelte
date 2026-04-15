@@ -10,6 +10,12 @@
     entries = Object.entries(settings.env ?? {}).map(([key, value]) => ({ key, value }));
   });
 
+  const originalEnv = $derived(settings.env ?? {});
+  function isRowDirty(key: string, value: string): boolean {
+    if (!(key in originalEnv)) return true;
+    return originalEnv[key] !== value;
+  }
+
   let newKey = $state("");
   let newValue = $state("");
   let addError = $state("");
@@ -68,7 +74,14 @@
   {#if entries.length > 0}
     <div class="space-y-2">
       {#each entries as entry, index}
-        <div class="group flex items-center gap-2">
+        {@const rowDirty = isRowDirty(entry.key, entry.value)}
+        <div class="group relative flex items-center gap-2">
+          {#if rowDirty}
+            <span
+              class="absolute -left-3 top-1/2 -translate-y-1/2 inline-block h-1.5 w-1.5 rounded-full bg-orange-500"
+              aria-label="Modified"
+            ></span>
+          {/if}
           <code class="shrink-0 rounded bg-gray-100 dark:bg-gray-800 px-2 py-1.5 text-xs font-mono text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
             {entry.key}
           </code>

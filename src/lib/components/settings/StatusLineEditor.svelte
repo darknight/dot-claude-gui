@@ -1,5 +1,6 @@
 <script lang="ts">
   import { configStore } from "$lib/stores/config.svelte";
+  import DirtyDot from "$lib/components/shared/DirtyDot.svelte";
   import JsonPreview from "./JsonPreview.svelte";
 
   const settings = $derived(configStore.activeSettings);
@@ -14,6 +15,10 @@
     command = statusLine.command ?? "";
     padding = statusLine.padding ?? 0;
   });
+
+  const typeDirty = $derived(statusType !== (statusLine.type ?? "command"));
+  const commandDirty = $derived(command !== (statusLine.command ?? ""));
+  const paddingDirty = $derived(padding !== (statusLine.padding ?? 0));
 
   const previewData = $derived({
     statusLine: {
@@ -42,6 +47,7 @@
       class="block text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       Type
+      <DirtyDot dirty={typeDirty} />
     </label>
     <select
       id="statusType"
@@ -60,6 +66,7 @@
       class="block text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       Command
+      <DirtyDot dirty={commandDirty} />
     </label>
     <input
       id="command"
@@ -78,6 +85,7 @@
       class="block text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       Padding
+      <DirtyDot dirty={paddingDirty} />
     </label>
     <input
       id="padding"

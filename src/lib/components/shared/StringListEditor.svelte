@@ -1,12 +1,16 @@
 <script lang="ts">
+  import DirtyDot from "./DirtyDot.svelte";
+
   let {
     items = $bindable([]),
     placeholder = "Add item...",
     label,
+    dirty = false,
   }: {
     items: string[];
     placeholder?: string;
     label?: string;
+    dirty?: boolean;
   } = $props();
 
   let inputValue = $state("");
@@ -32,7 +36,10 @@
 
 <div class="flex flex-col gap-2">
   {#if label}
-    <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">{label}</label>
+    <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">
+      {label}
+      <DirtyDot {dirty} />
+    </label>
   {/if}
 
   <ul class="flex flex-col gap-1">

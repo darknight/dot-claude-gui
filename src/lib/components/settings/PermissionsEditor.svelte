@@ -1,6 +1,8 @@
 <script lang="ts">
   import { configStore } from "$lib/stores/config.svelte";
   import StringListEditor from "$lib/components/shared/StringListEditor.svelte";
+  import DirtyDot from "$lib/components/shared/DirtyDot.svelte";
+  import { arraysEqual } from "$lib/utils/diff";
   import JsonPreview from "./JsonPreview.svelte";
 
   const settings = $derived(configStore.activeSettings);
@@ -30,6 +32,11 @@
     if (initialized) configStore.markDirty();
   });
 
+  const allowDirty = $derived(!arraysEqual(allow, perms?.allow));
+  const denyDirty = $derived(!arraysEqual(deny, perms?.deny));
+  const askDirty = $derived(!arraysEqual(ask, perms?.ask));
+  const modeDirty = $derived(defaultMode !== (perms?.defaultMode ?? "default"));
+
   const previewData = $derived({
     permissions: { allow, deny, ask, defaultMode },
   });
@@ -46,6 +53,7 @@
       bind:items={allow}
       label="Allow"
       placeholder="e.g. Bash(git:*)"
+      dirty={allowDirty}
     />
   </div>
 
@@ -55,6 +63,7 @@
       bind:items={deny}
       label="Deny"
       placeholder="e.g. Bash(rm:*)"
+      dirty={denyDirty}
     />
   </div>
 
@@ -64,6 +73,7 @@
       bind:items={ask}
       label="Ask"
       placeholder="e.g. WebSearch"
+      dirty={askDirty}
     />
   </div>
 
@@ -74,6 +84,7 @@
       class="block text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       Default Mode
+      <DirtyDot dirty={modeDirty} />
     </label>
     <select
       id="defaultMode"

@@ -1,5 +1,7 @@
 <script lang="ts">
   import { configStore } from "$lib/stores/config.svelte";
+  import DirtyDot from "$lib/components/shared/DirtyDot.svelte";
+  import { deepEqual } from "$lib/utils/diff";
   import JsonPreview from "./JsonPreview.svelte";
   import type { HookGroup, HookDefinition } from "$lib/api/types";
 
@@ -109,6 +111,18 @@
     return (hooks[event] ?? []).length;
   }
 
+  function originalGroup(index: number): HookGroup | undefined {
+    return settings.hooks?.[selectedEvent]?.[index];
+  }
+
+  function isRuleDirty(index: number, group: HookGroup): boolean {
+    return !deepEqual(group, originalGroup(index));
+  }
+
+  function isEventDirty(event: string): boolean {
+    return !deepEqual(hooks[event] ?? [], settings.hooks?.[event] ?? []);
+  }
+
   function save() {
     // Filter out events with no groups
     const filtered: Record<string, HookGroup[]> = {};
@@ -131,6 +145,7 @@
       class="block text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       Event Type
+      <DirtyDot dirty={isEventDirty(selectedEvent)} />
     </label>
     <select
       id="eventType"
@@ -139,8 +154,9 @@
     >
       {#each validEvents as event}
         {@const count = eventCount(event)}
+        {@const dirty = isEventDirty(event)}
         <option value={event}>
-          {event}{count > 0 ? ` (${count})` : ""}
+          {event}{count > 0 ? ` (${count})` : ""}{dirty ? " ●" : ""}
         </option>
       {/each}
     </select>
@@ -154,6 +170,7 @@
         <div class="flex items-center justify-between">
           <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             Rule {groupIndex + 1}
+            <DirtyDot dirty={isRuleDirty(groupIndex, group)} />
           </span>
           <button
             type="button"

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { configStore } from "$lib/stores/config.svelte";
+  import DirtyDot from "$lib/components/shared/DirtyDot.svelte";
   import JsonPreview from "./JsonPreview.svelte";
 
   const settings = $derived(configStore.activeSettings);
@@ -22,6 +23,24 @@
     skipDangerousModePermissionPrompt =
       settings.skipDangerousModePermissionPrompt ?? false;
   });
+
+  const languageDirty = $derived(language !== (settings.language ?? ""));
+  const thinkingDirty = $derived(
+    alwaysThinkingEnabled !== (settings.alwaysThinkingEnabled ?? false),
+  );
+  const channelDirty = $derived(
+    autoUpdatesChannel !== (settings.autoUpdatesChannel ?? "stable"),
+  );
+  const versionDirty = $derived(
+    minimumVersion !== (settings.minimumVersion ?? ""),
+  );
+  const coauthorDirty = $derived(
+    includeCoAuthoredBy !== (settings.includeCoAuthoredBy ?? false),
+  );
+  const skipDangerousDirty = $derived(
+    skipDangerousModePermissionPrompt !==
+      (settings.skipDangerousModePermissionPrompt ?? false),
+  );
 
   const previewData = $derived({
     language: language || undefined,
@@ -52,6 +71,7 @@
       class="block text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       Language
+      <DirtyDot dirty={languageDirty} />
     </label>
     <input
       id="language"
@@ -73,6 +93,7 @@
     />
     <span class="text-sm text-gray-700 dark:text-gray-300">
       Always thinking enabled
+      <DirtyDot dirty={thinkingDirty} />
     </span>
   </label>
 
@@ -83,6 +104,7 @@
       class="block text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       Auto Updates Channel
+      <DirtyDot dirty={channelDirty} />
     </label>
     <select
       id="autoUpdatesChannel"
@@ -102,6 +124,7 @@
       class="block text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       Minimum Version
+      <DirtyDot dirty={versionDirty} />
     </label>
     <input
       id="minimumVersion"
@@ -123,6 +146,7 @@
     />
     <span class="text-sm text-gray-700 dark:text-gray-300">
       Include Co-authored-by in commits
+      <DirtyDot dirty={coauthorDirty} />
     </span>
   </label>
 
@@ -136,6 +160,7 @@
     />
     <span class="text-sm text-gray-700 dark:text-gray-300">
       Skip dangerous mode permission prompt
+      <DirtyDot dirty={skipDangerousDirty} />
     </span>
   </label>
 

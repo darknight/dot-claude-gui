@@ -1,6 +1,8 @@
 <script lang="ts">
   import { configStore } from "$lib/stores/config.svelte";
   import StringListEditor from "$lib/components/shared/StringListEditor.svelte";
+  import DirtyDot from "$lib/components/shared/DirtyDot.svelte";
+  import { arraysEqual } from "$lib/utils/diff";
   import JsonPreview from "./JsonPreview.svelte";
 
   const settings = $derived(configStore.activeSettings);
@@ -35,6 +37,22 @@
     if (initialized) configStore.markDirty();
   });
 
+  const allowReadDirty = $derived(!arraysEqual(allowRead, sandbox?.allowRead));
+  const denyReadDirty = $derived(!arraysEqual(denyRead, sandbox?.denyRead));
+  const allowWriteDirty = $derived(
+    !arraysEqual(allowWrite, sandbox?.allowWrite),
+  );
+  const excludedCommandsDirty = $derived(
+    !arraysEqual(excludedCommands, sandbox?.excludedCommands),
+  );
+  const failIfUnavailableDirty = $derived(
+    failIfUnavailable !== (sandbox?.failIfUnavailable ?? false),
+  );
+  const weakerIsolationDirty = $derived(
+    enableWeakerNetworkIsolation !==
+      (sandbox?.enableWeakerNetworkIsolation ?? false),
+  );
+
   const previewData = $derived({
     sandbox: {
       allowRead,
@@ -67,6 +85,7 @@
       bind:items={allowRead}
       label="Allow Read"
       placeholder="e.g. /home/user/docs"
+      dirty={allowReadDirty}
     />
   </div>
 
@@ -76,6 +95,7 @@
       bind:items={denyRead}
       label="Deny Read"
       placeholder="e.g. /etc/secrets"
+      dirty={denyReadDirty}
     />
   </div>
 
@@ -85,6 +105,7 @@
       bind:items={allowWrite}
       label="Allow Write"
       placeholder="e.g. /tmp/output"
+      dirty={allowWriteDirty}
     />
   </div>
 
@@ -94,6 +115,7 @@
       bind:items={excludedCommands}
       label="Excluded Commands"
       placeholder="e.g. curl"
+      dirty={excludedCommandsDirty}
     />
   </div>
 
@@ -111,6 +133,7 @@
       class="text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       Fail If Unavailable
+      <DirtyDot dirty={failIfUnavailableDirty} />
     </label>
   </div>
 
@@ -128,6 +151,7 @@
       class="text-sm font-medium text-gray-700 dark:text-gray-300"
     >
       Enable Weaker Network Isolation
+      <DirtyDot dirty={weakerIsolationDirty} />
     </label>
   </div>
 

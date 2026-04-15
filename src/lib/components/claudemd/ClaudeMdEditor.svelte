@@ -17,6 +17,10 @@
 
   let isDirty = $derived(localContent !== originalContent);
 
+  $effect(() => {
+    claudeMdStore.activeFileDirty = isDirty;
+  });
+
   async function handleSave() {
     const file = claudeMdStore.activeFile;
     if (!file) return;

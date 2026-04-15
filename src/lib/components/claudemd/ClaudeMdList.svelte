@@ -60,10 +60,18 @@
                 : 'text-gray-600 italic hover:bg-gray-800/50 hover:text-gray-400'}"
             onclick={() => claudeMdStore.selectFile(file.id)}
           >
-            <span class="truncate">
-              {file.scope === "global"
-                ? (file.exists ? "CLAUDE.md" : "CLAUDE.md (create)")
-                : (file.projectName ?? file.projectId)}
+            <span class="flex items-center gap-1.5 truncate">
+              {#if claudeMdStore.activeFile?.id === file.id && claudeMdStore.activeFileDirty}
+                <span
+                  class="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-orange-500"
+                  aria-label="unsaved changes"
+                ></span>
+              {/if}
+              <span class="truncate">
+                {file.scope === "global"
+                  ? (file.exists ? "CLAUDE.md" : "CLAUDE.md (create)")
+                  : (file.projectName ?? file.projectId)}
+              </span>
             </span>
             {#if !file.exists}
               <span class="ml-auto flex-shrink-0 text-xs text-gray-600">click to create</span>

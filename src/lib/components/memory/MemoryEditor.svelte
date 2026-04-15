@@ -19,6 +19,10 @@
 
   let isDirty = $derived(localContent !== originalContent);
 
+  $effect(() => {
+    memoryStore.activeFileDirty = isDirty;
+  });
+
   async function handleSave() {
     const file = memoryStore.activeFile;
     const projectId = memoryStore.activeProjectId;

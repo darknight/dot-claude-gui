@@ -5,6 +5,7 @@ import type { ClaudeMdFile, ClaudeMdFileDetail } from "$lib/api/types";
 class ClaudeMdStore {
   files = $state<ClaudeMdFile[]>([]);
   activeFile = $state<ClaudeMdFileDetail | null>(null);
+  activeFileDirty = $state<boolean>(false);
   loading = $state(false);
   saving = $state(false);
   error = $state<string>("");
@@ -90,6 +91,7 @@ class ClaudeMdStore {
   reset(): void {
     this.files = [];
     this.activeFile = null;
+    this.activeFileDirty = false;
     this.loading = false;
     this.saving = false;
     this.error = "";

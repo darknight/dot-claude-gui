@@ -7,6 +7,7 @@ class MemoryStore {
   activeProjectId = $state<string | null>(null);
   files = $state<MemoryFile[]>([]);
   activeFile = $state<MemoryFileDetail | null>(null);
+  activeFileDirty = $state<boolean>(false);
   loading = $state(false);
   saving = $state(false);
   error = $state<string>("");
@@ -84,6 +85,7 @@ class MemoryStore {
     this.activeProjectId = id;
     this.files = [];
     this.activeFile = null;
+    this.activeFileDirty = false;
     void this.loadFiles(id);
   }
 
@@ -91,6 +93,7 @@ class MemoryStore {
     this.activeProjectId = null;
     this.files = [];
     this.activeFile = null;
+    this.activeFileDirty = false;
   }
 
   selectFile(filename: string) {
@@ -104,6 +107,7 @@ class MemoryStore {
     this.activeProjectId = null;
     this.files = [];
     this.activeFile = null;
+    this.activeFileDirty = false;
     this.loading = false;
     this.saving = false;
     this.error = "";
