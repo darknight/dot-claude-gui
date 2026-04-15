@@ -1,12 +1,14 @@
 use claude_types::mcp::LaunchRequest;
 use serde_json::json;
-use std::process::{Command, Stdio};
+use std::process::Command;
 use tauri::State;
 
 use crate::state::AppState;
 
 // ---------------------------------------------------------------------------
-// Launch claude in a detached subprocess at the given project path
+// Launch `claude` inside a new terminal window so its TUI is visible.
+// macOS: uses AppleScript to open Terminal.app with the requested cwd and env.
+// Other platforms: TODO — for now, returns an error.
 // ---------------------------------------------------------------------------
 
 pub(crate) fn launch_claude_logic(req: LaunchRequest) -> Result<serde_json::Value, String> {
@@ -15,22 +17,46 @@ pub(crate) fn launch_claude_logic(req: LaunchRequest) -> Result<serde_json::Valu
         return Err(format!("invalid_path: {}", req.project_path));
     }
 
-    let mut cmd = Command::new("claude");
-    cmd.current_dir(&project_path);
-    for (k, v) in &req.env {
-        cmd.env(k, v);
+    #[cfg(target_os = "macos")]
+    {
+        // Build `KEY='VAL' KEY2='VAL2' ...` env prefix, escaping single quotes.
+        let env_prefix = req
+            .env
+            .iter()
+            .map(|(k, v)| format!("{}='{}'", k, v.replace('\'', "'\\''")))
+            .collect::<Vec<_>>()
+            .join(" ");
+
+        let path_escaped = req.project_path.replace('\'', "'\\''");
+        let shell_cmd = if env_prefix.is_empty() {
+            format!("cd '{}' && claude", path_escaped)
+        } else {
+            format!("cd '{}' && {} claude", path_escaped, env_prefix)
+        };
+
+        // AppleScript needs `\` and `"` inside the do script string escaped.
+        let script_arg = shell_cmd.replace('\\', "\\\\").replace('"', "\\\"");
+        let osa_script = format!(
+            "tell application \"Terminal\"\n  activate\n  do script \"{}\"\nend tell",
+            script_arg
+        );
+
+        Command::new("osascript")
+            .args(["-e", &osa_script])
+            .spawn()
+            .map_err(|e| format!("spawn osascript: {e}"))?;
+
+        return Ok(json!({
+            "status": "launched",
+            "projectPath": req.project_path,
+            "terminal": "Terminal.app",
+        }));
     }
 
-    cmd.stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .map_err(|e| format!("spawn: {e}"))?;
-
-    Ok(json!({
-        "status": "launched",
-        "projectPath": req.project_path,
-    }))
+    #[cfg(not(target_os = "macos"))]
+    {
+        Err("launch_unsupported: only macOS is supported for now".to_string())
+    }
 }
 
 #[tauri::command]
