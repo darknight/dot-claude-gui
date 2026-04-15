@@ -215,10 +215,11 @@ pub(crate) fn list_skills_logic(claude_home: &Path) -> Vec<SkillInfo> {
     let plugins_dir = claude_home.join("plugins");
     let installed = read_installed_plugins(&plugins_dir);
 
-    for (marketplace_id, plugins) in &installed.plugins {
+    // Map keys look like "plugin-name@marketplace-id" (e.g. "superpowers@claude-plugins-official").
+    // `plugin.scope` is the install scope ("user" | "project"), not the plugin name.
+    for (plugin_key, plugins) in &installed.plugins {
         for plugin in plugins {
-            let plugin_id = format!("{}@{}", plugin.scope, marketplace_id);
-            let source = format!("plugin:{}", plugin_id);
+            let source = format!("plugin:{}", plugin_key);
             let plugin_skills_dir =
                 std::path::PathBuf::from(&plugin.install_path).join("skills");
             result.extend(scan_skills_dir(&plugin_skills_dir, &source));

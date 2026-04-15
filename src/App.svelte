@@ -13,6 +13,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
   import PluginsModule from "$lib/components/plugins/PluginsModule.svelte";
   import SkillsModule from "$lib/components/skills/SkillsModule.svelte";
+  import SkillList from "$lib/components/skills/SkillList.svelte";
   import MemoryList from "$lib/components/memory/MemoryList.svelte";
   import MemoryModule from "$lib/components/memory/MemoryModule.svelte";
   import McpModule from "$lib/components/mcp/McpModule.svelte";
@@ -259,11 +260,13 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
         class="flex flex-col"
         style="width: var(--subpanel-width); flex-shrink: 0; background-color: var(--bg-secondary); border-right: 1px solid var(--border-color)"
       >
-        <div class="px-4 py-3" style="border-bottom: 1px solid var(--border-color)">
-          <h2 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">
-            {navButtons.find((b) => b.id === activeNav)?.label ?? (activeNav === appSettingsButton.id ? appSettingsButton.label : "")}
-          </h2>
-        </div>
+        {#if activeNav !== "K"}
+          <div class="px-4 py-3" style="border-bottom: 1px solid var(--border-color)">
+            <h2 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">
+              {navButtons.find((b) => b.id === activeNav)?.label ?? (activeNav === appSettingsButton.id ? appSettingsButton.label : "")}
+            </h2>
+          </div>
+        {/if}
 
         {#if activeNav === "S"}
           <!-- Settings sub-navigation -->
@@ -300,33 +303,8 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
             {/each}
           </ul>
         {:else if activeNav === "K"}
-          <!-- Skills sub-navigation: list skill names -->
-          <ul class="flex-1 overflow-y-auto py-2">
-            {#if skillsStore.loading}
-              <li class="px-4 py-2 text-xs text-gray-500">Loading...</li>
-            {:else if skillsStore.skills.length === 0}
-              <li class="px-4 py-2 text-xs text-gray-600">No skills found</li>
-            {:else}
-              {#each skillsStore.skills as skill (skill.id + ':' + skill.source)}
-                <li>
-                  <button
-                    class="flex w-full items-center justify-between px-4 py-2 text-left text-sm transition-colors
-                      {skillsStore.selectedSkillId === skill.id
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-                    onclick={() => skillsStore.selectSkill(skill.id)}
-                  >
-                    <span class="truncate">{skill.name}</span>
-                    {#if skill.valid}
-                      <span class="ml-1 flex-shrink-0 text-xs text-green-400">✓</span>
-                    {:else}
-                      <span class="ml-1 flex-shrink-0 text-xs text-red-400">✗</span>
-                    {/if}
-                  </button>
-                </li>
-              {/each}
-            {/if}
-          </ul>
+          <!-- Skills sub-panel -->
+          <SkillList />
         {:else if activeNav === "M"}
           <!-- Memory sub-panel: project selector + file list -->
           <MemoryList />

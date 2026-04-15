@@ -1,115 +1,113 @@
 <script lang="ts">
   import { skillsStore } from "$lib/stores/skills.svelte";
+  import type { SkillInfo } from "$lib/api/types";
 
-  // Group skills: user skills first, then plugin skills
-  let userSkills = $derived(
-    skillsStore.skills.filter((s) => s.source === "user")
+  type SortMode = "name-asc" | "name-desc";
+
+  let sortBy = $state<SortMode>("name-asc");
+  let collapsed = $state<Record<string, boolean>>({});
+
+  const USER_GROUP = "用户技能";
+
+  function pluginNameOf(skill: SkillInfo): string {
+    if (skill.source === "user") return USER_GROUP;
+    const m = skill.source.match(/^plugin:([^@]+)@/);
+    return m?.[1] ?? skill.source;
+  }
+
+  const sortedSkills = $derived(
+    [...skillsStore.skills].sort((a, b) => {
+      const cmp = a.name.localeCompare(b.name);
+      return sortBy === "name-asc" ? cmp : -cmp;
+    }),
   );
-  let pluginSkills = $derived(
-    skillsStore.skills.filter((s) => s.source !== "user")
-  );
+
+  const groups = $derived.by(() => {
+    const map = new Map<string, SkillInfo[]>();
+    for (const s of sortedSkills) {
+      const k = pluginNameOf(s);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(s);
+    }
+    return [...map.entries()].sort(([a], [b]) => {
+      if (a === USER_GROUP) return -1;
+      if (b === USER_GROUP) return 1;
+      return a.localeCompare(b);
+    });
+  });
+
+  function toggleGroup(name: string) {
+    collapsed = { ...collapsed, [name]: !collapsed[name] };
+  }
 </script>
 
-<div class="flex-1 overflow-auto p-6">
-  {#if skillsStore.loading}
-    <p class="text-sm text-gray-500">Loading skills...</p>
-  {:else if skillsStore.error}
-    <div class="mb-4 rounded border border-red-800 bg-red-950 px-4 py-2">
-      <p class="text-xs text-red-400">{skillsStore.error}</p>
-    </div>
-  {/if}
+<div class="flex h-full flex-col overflow-hidden">
+  <!-- Header + toolbar (replaces shared sub-panel header for this module) -->
+  <div
+    class="flex items-center justify-between gap-2 px-4 py-3"
+    style="border-bottom: 1px solid var(--border-color)"
+  >
+    <h2
+      class="truncate text-xs font-semibold uppercase tracking-wider"
+      style="color: var(--text-muted)"
+    >
+      技能 <span class="normal-case">({skillsStore.skills.length})</span>
+    </h2>
+    <select
+      bind:value={sortBy}
+      class="shrink-0 rounded bg-gray-800 px-1.5 py-1 text-xs text-gray-300 focus:outline-none"
+    >
+      <option value="name-asc">A→Z</option>
+      <option value="name-desc">Z→A</option>
+    </select>
+  </div>
 
-  {#if skillsStore.skills.length === 0 && !skillsStore.loading}
-    <div class="flex h-full items-center justify-center">
-      <p class="text-sm text-gray-600">No skills found</p>
-    </div>
-  {:else}
-    <!-- User skills -->
-    {#if userSkills.length > 0}
-      <div class="mb-4">
-        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-          User Skills
-        </h3>
-        <div class="space-y-2">
-          {#each userSkills as skill (skill.id)}
-            <button
-              class="w-full rounded-lg border px-4 py-3 text-left transition-colors
-                {skillsStore.selectedSkillId === skill.id
-                ? 'border-blue-700 bg-blue-950'
-                : 'border-gray-800 bg-gray-900 hover:border-gray-700'}"
-              onclick={() => skillsStore.selectSkill(skill.id)}
-            >
-              <div class="flex items-start justify-between gap-2">
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-2">
-                    <span class="font-semibold text-gray-100">{skill.name}</span>
-                    <!-- Source badge -->
-                    <span class="rounded bg-blue-900 px-1.5 py-0.5 text-xs font-medium text-blue-300">
-                      User
-                    </span>
-                  </div>
-                  {#if skill.description}
-                    <p class="mt-0.5 truncate text-xs text-gray-400">{skill.description}</p>
-                  {/if}
-                </div>
-                <!-- Validation status -->
+  <!-- Body -->
+  <ul class="flex-1 overflow-y-auto py-1">
+    {#if skillsStore.loading && skillsStore.skills.length === 0}
+      <li class="px-4 py-2 text-xs text-gray-500">Loading...</li>
+    {:else if skillsStore.error}
+      <li class="px-4 py-2 text-xs text-red-400">{skillsStore.error}</li>
+    {:else if skillsStore.skills.length === 0}
+      <li class="px-4 py-2 text-xs text-gray-600">No skills found</li>
+    {:else}
+      {#each groups as [groupName, skills], groupIndex (groupName)}
+        {@const isCollapsed = collapsed[groupName] ?? false}
+        <li class={groupIndex === 0 ? "" : "mt-3"}>
+          <button
+            type="button"
+            class="flex w-full items-center gap-1 px-3 py-1.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300"
+            onclick={() => toggleGroup(groupName)}
+          >
+            <span class="inline-block w-3 text-center">{isCollapsed ? "▸" : "▾"}</span>
+            <span class="truncate">{groupName}</span>
+            <span class="text-gray-600">({skills.length})</span>
+          </button>
+        </li>
+        {#if !isCollapsed}
+          {#each skills as skill (skill.id + ":" + skill.source)}
+            <li>
+              <button
+                class="flex w-full items-center justify-between gap-2 py-1.5 pl-8 pr-4 text-left text-sm transition-colors
+                  {skillsStore.selectedSkillId === skill.id
+                  ? 'bg-gray-800 text-white'
+                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
+                onclick={() => skillsStore.selectSkill(skill.id)}
+              >
+                <span class="truncate">{skill.name}</span>
                 {#if skill.valid}
-                  <span class="flex-shrink-0 text-green-400" title="Valid">✓</span>
+                  <span class="flex-shrink-0 text-xs text-green-400">✓</span>
                 {:else}
                   <span
-                    class="flex-shrink-0 cursor-help text-red-400"
+                    class="flex-shrink-0 cursor-help text-xs text-red-400"
                     title={skill.validationError ?? "Invalid"}
                   >✗</span>
                 {/if}
-              </div>
-            </button>
+              </button>
+            </li>
           {/each}
-        </div>
-      </div>
+        {/if}
+      {/each}
     {/if}
-
-    <!-- Plugin skills -->
-    {#if pluginSkills.length > 0}
-      <div>
-        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-          Plugin Skills
-        </h3>
-        <div class="space-y-2">
-          {#each pluginSkills as skill (skill.id)}
-            <button
-              class="w-full rounded-lg border px-4 py-3 text-left transition-colors
-                {skillsStore.selectedSkillId === skill.id
-                ? 'border-blue-700 bg-blue-950'
-                : 'border-gray-800 bg-gray-900 hover:border-gray-700'}"
-              onclick={() => skillsStore.selectSkill(skill.id)}
-            >
-              <div class="flex items-start justify-between gap-2">
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-2">
-                    <span class="font-semibold text-gray-100">{skill.name}</span>
-                    <!-- Source badge -->
-                    <span class="rounded bg-gray-700 px-1.5 py-0.5 text-xs font-medium text-gray-300">
-                      Plugin: {skill.source}
-                    </span>
-                  </div>
-                  {#if skill.description}
-                    <p class="mt-0.5 truncate text-xs text-gray-400">{skill.description}</p>
-                  {/if}
-                </div>
-                <!-- Validation status -->
-                {#if skill.valid}
-                  <span class="flex-shrink-0 text-green-400" title="Valid">✓</span>
-                {:else}
-                  <span
-                    class="flex-shrink-0 cursor-help text-red-400"
-                    title={skill.validationError ?? "Invalid"}
-                  >✗</span>
-                {/if}
-              </div>
-            </button>
-          {/each}
-        </div>
-      </div>
-    {/if}
-  {/if}
+  </ul>
 </div>
