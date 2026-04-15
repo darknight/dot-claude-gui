@@ -58,6 +58,11 @@ pub(crate) async fn register_project_logic(
 
     state.inner.projects.write().await.push(info);
 
+    // Persist the updated registry; failure is logged but not fatal.
+    if let Err(e) = state.save_projects().await {
+        tracing::warn!("failed to persist projects.json: {}", e);
+    }
+
     Ok(ProjectEntry {
         id,
         name,
@@ -88,6 +93,12 @@ pub(crate) async fn unregister_project_logic(
 
     if projects.len() == original_len {
         return Err(format!("not_found: project '{}' not found", id));
+    }
+
+    // Release the write lock before saving to avoid re-acquiring it in save_projects.
+    drop(projects);
+    if let Err(e) = state.save_projects().await {
+        tracing::warn!("failed to persist projects.json: {}", e);
     }
 
     Ok(())

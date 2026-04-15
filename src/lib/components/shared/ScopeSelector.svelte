@@ -2,6 +2,8 @@
   import { open as openDialog } from "@tauri-apps/plugin-dialog";
   import { projectsStore } from "$lib/stores/projects.svelte.js";
   import { configStore } from "$lib/stores/config.svelte.js";
+  import { claudeMdStore } from "$lib/stores/claudemd.svelte.js";
+  import { memoryStore } from "$lib/stores/memory.svelte.js";
 
   let open = $state(false);
   let addError = $state("");
@@ -30,6 +32,11 @@
       });
       if (selected) {
         await projectsStore.registerProject(selected);
+        // Refresh per-project data that depends on the project registry
+        await Promise.all([
+          claudeMdStore.loadFiles(),
+          memoryStore.loadProjects(),
+        ]);
       }
     } catch (err) {
       addError = err instanceof Error ? err.message : String(err);

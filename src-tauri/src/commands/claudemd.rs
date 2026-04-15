@@ -20,7 +20,7 @@ async fn resolve_claudemd_path(state: &AppState, id: &str) -> Result<PathBuf, St
             .iter()
             .find(|p| p.id == project_id)
             .ok_or_else(|| format!("not_found: Project '{}' not found", project_id))?;
-        return Ok(project.path.join(".claude").join("CLAUDE.md"));
+        return Ok(project.path.join("CLAUDE.md"));
     }
 
     Err(format!("invalid_id: Invalid CLAUDE.md id format: '{}'", id))
@@ -46,7 +46,7 @@ pub(crate) async fn list_claudemd_files_logic(state: &AppState) -> Vec<ClaudeMdF
 
     let projects = state.inner.projects.read().await;
     for project in projects.iter() {
-        let project_path = project.path.join(".claude").join("CLAUDE.md");
+        let project_path = project.path.join("CLAUDE.md");
         let id = format!("project:{}", project.id);
         result.push(ClaudeMdFile {
             id,
