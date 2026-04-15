@@ -61,3 +61,24 @@ pnpm tauri build                          # Build production .app and .dmg
 - **TypeScript strict mode** enabled
 - **pnpm** as package manager (not npm/yarn)
 - Frontend has no test suite; all tests are Rust-side with `cargo test`
+- **i18n** — user-facing strings go through `src/lib/i18n.ts` with `t("key", params)`. Supports `zh-CN` / `en-US` from `appSettingsStore.preferences.language`. Do NOT hardcode Chinese or English text in components.
+
+## Svelte 5 Gotchas (hard-learned)
+
+These caused multi-round debugging sessions. Check here FIRST when UI doesn't update as expected.
+
+1. **HMR does not rebuild the reactive graph for script changes.** Adding/removing `$state`, `$derived`, `$effect` in `<script>` often looks like it applied (Vite logs "hmr update") but the running component keeps the stale graph. Template-only edits HMR reliably. **When you add new runes or change effect bodies, kill and restart `pnpm tauri dev`** — don't trust HMR.
+
+2. **`onDestroy` must be called synchronously during component setup.** Calling it inside an `await`-ed callback (e.g. after `onConfigChanged()` resolves) throws `lifecycle_outside_component` and **silently corrupts the component's reactive state** — `{#if}` chains stop re-evaluating, events fire but UI doesn't update. Use the cleanup function returned from `onMount(() => { ...; return () => {...} })` and store async unlisteners in a module-level variable.
+
+3. **`{#each}` keys must be globally unique.** `(item.id)` fails with `each_key_duplicate` when two items share an id from different sources (e.g. plugin-contributed skills with the same name). Use compound keys: `(item.id + ':' + item.source)`.
+
+4. **Prefer direct state comparisons in `{#if}` over helper functions.** `{#if activeNav === "S"}` is reliable; `{#if isSettings()}` or `{#if isSettingsDerived}` can fail to re-render in `{:else if}` chains. When in doubt, inline the comparison.
+
+5. **Open Tauri DevTools (`Cmd+Option+I`) before debugging UI bugs.** The Console almost always has the real error — Svelte lifecycle errors, each-key duplicates, null IPC params. Grepping source is slower than reading one error line.
+
+6. **Project path decoding is ambiguous.** Claude Code encodes `/` as `-` in `~/.claude/projects/<dirname>`, so `whoishiring-insight` and `whoishiring/insight` encode to the same string. When you need the real path, read `cwd` from any session `.jsonl` file inside the directory (see `src-tauri/src/commands/memory.rs::read_cwd_from_sessions`).
+
+7. **Validation lists drift from Claude Code's schema.** Hook event names, settings keys, etc. Source of truth is `https://json.schemastore.org/claude-code-settings.json`. If a save fails with "unknown X", check the schema before assuming the user's config is wrong.
+
+8. **`config-changed` events carry `source: "file-watcher"`** (not `"user"`). Filter handlers accordingly — overly strict source checks silently break live reload.
