@@ -87,6 +87,12 @@ class MemoryStore {
     void this.loadFiles(id);
   }
 
+  clearSelection() {
+    this.activeProjectId = null;
+    this.files = [];
+    this.activeFile = null;
+  }
+
   selectFile(filename: string) {
     if (this.activeProjectId) {
       void this.loadFile(this.activeProjectId, filename);

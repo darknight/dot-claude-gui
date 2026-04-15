@@ -58,10 +58,55 @@ fn parse_frontmatter(contents: &str) -> Option<MemoryFrontmatter> {
 
 /// Decode a project directory name into a human-readable path.
 ///
-/// Directory names encode paths by replacing `/` with `-`.
-/// e.g. `-Users-eric-yao-workspace-darknight` → `/Users/eric.yao/workspace/darknight`
-fn decode_project_path(project_id: &str) -> String {
+/// Directory names encode paths by replacing `/` with `-`. This encoding is
+/// ambiguous: `whoishiring-insight` (literal dash) and `whoishiring/insight`
+/// (path separator) both encode to the same string.
+///
+/// To resolve this ambiguity, we try to read a session JSONL file inside the
+/// project directory and extract the `cwd` field, which contains the original
+/// path unambiguously. Falls back to naive `-` → `/` replacement otherwise.
+fn decode_project_path(project_id: &str, project_dir: &std::path::Path) -> String {
+    if let Some(cwd) = read_cwd_from_sessions(project_dir) {
+        return cwd;
+    }
     project_id.replace('-', "/")
+}
+
+/// Search the project directory for any JSONL session file and extract the
+/// `cwd` field from its first line. Returns `None` if no JSONL file with a
+/// parseable `cwd` is found.
+fn read_cwd_from_sessions(project_dir: &std::path::Path) -> Option<String> {
+    // Walk up to 2 levels deep looking for any .jsonl file
+    fn find_jsonl(dir: &std::path::Path, depth: usize) -> Option<std::path::PathBuf> {
+        if depth > 2 {
+            return None;
+        }
+        let entries = std::fs::read_dir(dir).ok()?;
+        // First pass: look for jsonl files at this level
+        let mut subdirs = Vec::new();
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) == Some("jsonl") {
+                return Some(path);
+            }
+            if path.is_dir() {
+                subdirs.push(path);
+            }
+        }
+        // Second pass: recurse into subdirectories
+        for subdir in subdirs {
+            if let Some(p) = find_jsonl(&subdir, depth + 1) {
+                return Some(p);
+            }
+        }
+        None
+    }
+
+    let jsonl_path = find_jsonl(project_dir, 0)?;
+    let contents = std::fs::read_to_string(&jsonl_path).ok()?;
+    let first_line = contents.lines().next()?;
+    let json: serde_json::Value = serde_json::from_str(first_line).ok()?;
+    json.get("cwd")?.as_str().map(|s| s.to_string())
 }
 
 // ---------------------------------------------------------------------------
@@ -114,7 +159,7 @@ pub(crate) fn list_memory_projects_logic(state: &AppState) -> Vec<MemoryProject>
         }
 
         result.push(MemoryProject {
-            project_path: decode_project_path(&id),
+            project_path: decode_project_path(&id, &entry_path),
             id,
             file_count,
         });
@@ -334,8 +379,38 @@ mod tests {
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].id, "-Users-test-proj");
+        // Falls back to naive decoding when no jsonl session file exists
         assert_eq!(result[0].project_path, "/Users/test/proj");
         assert_eq!(result[0].file_count, 1);
+    }
+
+    // Verify the cwd-based decoding resolves ambiguous dashes
+    #[test]
+    fn list_memory_projects_uses_cwd_from_session_jsonl() {
+        let dir = tempdir().unwrap();
+        // Ambiguous id: "-Users-eric-whoishiring-insight" could decode to
+        // either "/Users/eric/whoishiring/insight" or "/Users/eric/whoishiring-insight".
+        let project_id = "-Users-eric-whoishiring-insight";
+        let project_dir = dir.path().join("projects").join(project_id);
+        let memory_dir = project_dir.join("memory");
+        std::fs::create_dir_all(&memory_dir).unwrap();
+        std::fs::write(memory_dir.join("notes.md"), "# Notes\n").unwrap();
+
+        // Create a session jsonl with the real cwd
+        let real_path = "/Users/eric/whoishiring-insight";
+        let session_dir = project_dir.join("session-id");
+        std::fs::create_dir_all(&session_dir).unwrap();
+        std::fs::write(
+            session_dir.join("session.jsonl"),
+            format!("{{\"cwd\":\"{}\"}}\n", real_path),
+        )
+        .unwrap();
+
+        let state = AppState::new(dir.path().to_path_buf());
+        let result = list_memory_projects_logic(&state);
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].project_path, real_path);
     }
 
     // 3. list_memory_projects_skips_projects_without_memory_dir

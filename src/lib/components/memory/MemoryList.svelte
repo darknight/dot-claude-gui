@@ -1,13 +1,46 @@
 <script lang="ts">
   import { memoryStore } from "$lib/stores/memory.svelte";
+  import { projectsStore } from "$lib/stores/projects.svelte";
+  import { t } from "$lib/i18n";
 
-  function decodePath(projectPath: string): string {
-    try {
-      return decodeURIComponent(projectPath.replace(/-/g, "%"));
-    } catch {
-      return projectPath;
+  // Auto-sync with the active project in ScopeSelector:
+  // when the active project has a memory dir, show its memory files.
+  // If the active project has no memory, clear the selection so the user
+  // sees an explicit "no memory" state instead of stale files from another project.
+  $effect(() => {
+    const activeProject = projectsStore.activeProject;
+    if (!activeProject) return;
+    const match = memoryStore.projects.find(
+      (p) => p.projectPath === activeProject.path,
+    );
+    if (match) {
+      if (memoryStore.activeProjectId !== match.id) {
+        memoryStore.selectProject(match.id);
+      }
+    } else {
+      // Clear selection — this project has no memory directory yet.
+      if (memoryStore.activeProjectId !== null) {
+        memoryStore.clearSelection();
+      }
     }
-  }
+  });
+
+  // Whether the active scope project has no memory directory.
+  const activeProjectHasNoMemory = $derived(
+    projectsStore.activeProject != null &&
+      !memoryStore.projects.some(
+        (p) => p.projectPath === projectsStore.activeProject?.path,
+      ),
+  );
+
+  // Auto-select MEMORY.md (or first file) once files are loaded.
+  $effect(() => {
+    if (memoryStore.files.length === 0) return;
+    if (memoryStore.activeFile) return;
+    const memoryMd = memoryStore.files.find((f) => f.filename === "MEMORY.md");
+    const target = memoryMd ?? memoryStore.files[0];
+    memoryStore.selectFile(target.filename);
+  });
 
   function typeBadgeClass(memoryType?: string): string {
     switch (memoryType) {
@@ -39,7 +72,7 @@
       >
         <option value="">Select project...</option>
         {#each memoryStore.projects as project (project.id)}
-          <option value={project.id}>{decodePath(project.projectPath)}</option>
+          <option value={project.id}>{project.projectPath}</option>
         {/each}
       </select>
     {/if}
@@ -49,6 +82,12 @@
   <ul class="flex-1 overflow-y-auto py-2">
     {#if memoryStore.loading && memoryStore.activeProjectId && memoryStore.files.length === 0}
       <li class="px-4 py-2 text-xs text-gray-500">Loading...</li>
+    {:else if activeProjectHasNoMemory}
+      <li class="px-4 py-2 text-xs text-gray-500">
+        {t("memory.noFilesYet", {
+          name: projectsStore.activeProject?.path.replace(/^.*\//, "") ?? "",
+        })}
+      </li>
     {:else if !memoryStore.activeProjectId}
       <li class="px-4 py-2 text-xs text-gray-600">Select a project above</li>
     {:else if memoryStore.files.length === 0}
