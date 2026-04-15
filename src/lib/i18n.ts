@@ -7,6 +7,10 @@ const translations: Record<string, Record<Locale, string>> = {
     "zh-CN": "当前项目 {name} 还没有生成记忆文件。",
     "en-US": "This project {name} has no memory files yet.",
   },
+  "memory.dropdownDisabledInProjectScope": {
+    "zh-CN": "项目 scope 下由顶部 scope 选择器决定，切换到 User Scope 可手动选择。",
+    "en-US": "In project scope, memory follows the top-right scope selector. Switch to User Scope to pick manually.",
+  },
 };
 
 /**

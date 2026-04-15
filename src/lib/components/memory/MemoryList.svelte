@@ -1,7 +1,12 @@
 <script lang="ts">
   import { memoryStore } from "$lib/stores/memory.svelte";
   import { projectsStore } from "$lib/stores/projects.svelte";
+  import { configStore } from "$lib/stores/config.svelte";
   import { t } from "$lib/i18n";
+
+  // In project scope, the memory project is dictated by ScopeSelector.
+  // Disable the manual dropdown so the UI is unambiguous.
+  const isProjectScope = $derived(configStore.activeScope === "project");
 
   // Auto-sync with the active project in ScopeSelector:
   // when the active project has a memory dir, show its memory files.
@@ -63,8 +68,10 @@
       <span class="text-xs text-gray-600">No memory projects</span>
     {:else}
       <select
-        class="w-full rounded bg-gray-800 px-2 py-1.5 text-xs text-gray-300 focus:outline-none"
+        class="w-full rounded bg-gray-800 px-2 py-1.5 text-xs text-gray-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
         value={memoryStore.activeProjectId ?? ""}
+        disabled={isProjectScope}
+        title={isProjectScope ? t("memory.dropdownDisabledInProjectScope") : ""}
         onchange={(e) => {
           const val = (e.target as HTMLSelectElement).value;
           if (val) memoryStore.selectProject(val);
