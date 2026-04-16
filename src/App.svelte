@@ -45,6 +45,12 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
     }
   });
 
+  // Document lang effect — keeps <html lang> in sync for a11y / font fallback
+  $effect(() => {
+    const lang = appSettingsStore.preferences.language;
+    if (lang) document.documentElement.lang = lang;
+  });
+
   // Font size effect
   $effect(() => {
     document.documentElement.style.setProperty("--app-font-size", appSettingsStore.preferences.fontSize + "px");
@@ -187,6 +193,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   // to avoid any Svelte 5 reactivity tracking issues with function calls or $derived.
 </script>
 
+{#if appSettingsStore.loaded}
 <!-- ===== Root container ===== -->
 <div class="flex h-screen w-screen flex-col overflow-hidden" style="background-color: var(--bg-primary); color: var(--text-primary)">
 
@@ -468,3 +475,6 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   </div>
   <Toast />
 </div>
+{:else}
+  <div class="flex h-screen w-screen items-center justify-center" style="background-color: var(--bg-primary)"></div>
+{/if}
