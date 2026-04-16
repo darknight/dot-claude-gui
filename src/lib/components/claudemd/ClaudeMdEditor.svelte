@@ -36,9 +36,7 @@
   }
 
   function scopeBadgeClass(scope: string): string {
-    return scope === "global"
-      ? "bg-blue-900 text-blue-300"
-      : "bg-purple-900 text-purple-300";
+    return scope === "global" ? "badge badge-info" : "badge badge-purple";
   }
 
   function scopeLabel(scope: string): string {
@@ -49,35 +47,32 @@
 <div class="flex flex-1 flex-col overflow-hidden">
   {#if !claudeMdStore.activeFile}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm text-gray-600">Select a CLAUDE.md file to view and edit</p>
+      <p class="text-sm" style="color: var(--text-muted)">Select a CLAUDE.md file to view and edit</p>
     </div>
   {:else}
     {@const file = claudeMdStore.activeFile}
-    <div class="border-b border-gray-800 px-6 py-4">
+    <div class="border-b px-6 py-4" style="border-color: var(--border-color)">
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
           <div class="flex items-center gap-2">
-            <h2 class="truncate text-sm font-semibold text-gray-100">
+            <h2 class="truncate text-sm font-semibold" style="color: var(--text-primary)">
               {file.filename}
             </h2>
-            <span class="flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-medium {scopeBadgeClass(file.scope)}">
+            <span class="flex-shrink-0 {scopeBadgeClass(file.scope)}">
               {scopeLabel(file.scope)}
             </span>
             {#if isDirty}
-              <span class="flex-shrink-0 rounded bg-orange-900 px-1.5 py-0.5 text-xs font-medium text-orange-300">
+              <span class="badge badge-warning flex-shrink-0">
                 unsaved
               </span>
             {/if}
           </div>
-          <p class="mt-0.5 font-mono text-xs text-gray-500">{file.path}</p>
+          <p class="mt-0.5 font-mono text-xs" style="color: var(--text-muted)">{file.path}</p>
         </div>
 
         <div class="flex flex-shrink-0 items-center gap-2">
           <button
-            class="rounded px-3 py-1.5 text-xs font-medium transition-colors
-              {isDirty && !claudeMdStore.saving
-              ? 'bg-blue-600 text-white hover:bg-blue-500'
-              : 'cursor-not-allowed bg-gray-700 text-gray-500'}"
+            class="btn-primary rounded px-3 py-1.5 text-xs font-medium"
             disabled={!isDirty || claudeMdStore.saving}
             onclick={handleSave}
           >
@@ -85,7 +80,7 @@
           </button>
           {#if file.scope !== "global" || originalContent !== ""}
             <button
-              class="rounded px-3 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-900/50 hover:text-red-300"
+              class="btn-danger-ghost rounded px-3 py-1.5 text-xs font-medium"
               onclick={handleDelete}
             >
               Delete
@@ -98,11 +93,12 @@
     <div class="flex flex-1 flex-col overflow-hidden p-4">
       {#if claudeMdStore.loading}
         <div class="flex flex-1 items-center justify-center">
-          <p class="text-sm text-gray-500">Loading...</p>
+          <p class="text-sm" style="color: var(--text-muted)">Loading...</p>
         </div>
       {:else}
         <textarea
-          class="flex-1 resize-none rounded border border-gray-700 bg-gray-950 p-3 font-mono text-xs text-gray-200 leading-relaxed focus:border-gray-600 focus:outline-none"
+          class="flex-1 resize-none font-mono text-xs leading-relaxed focus:outline-none"
+          style="background-color: var(--bg-code); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.25rem; padding: 0.75rem"
           bind:value={localContent}
           spellcheck={false}
         ></textarea>
@@ -110,7 +106,7 @@
     </div>
 
     {#if claudeMdStore.error}
-      <div class="border-t border-gray-800 px-6 py-2 text-xs text-red-400">
+      <div class="border-t px-6 py-2 text-xs" style="color: var(--status-error-text); border-color: var(--border-color)">
         {claudeMdStore.error}
       </div>
     {/if}

@@ -31,63 +31,90 @@
   });
 
   function scopeBadgeClass(scope: string): string {
-    return scope === "global"
-      ? "bg-blue-900 text-blue-300"
-      : "bg-purple-900 text-purple-300";
+    return scope === "global" ? "badge badge-info" : "badge badge-purple";
   }
 </script>
 
 <div class="flex flex-col overflow-hidden h-full">
   <ul class="flex-1 overflow-y-auto py-2">
     {#if claudeMdStore.loading && claudeMdStore.files.length === 0}
-      <li class="px-4 py-2 text-xs text-gray-500">Loading...</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">Loading...</li>
     {:else if visibleFiles.length === 0}
-      <li class="px-4 py-2 text-xs text-gray-600">No CLAUDE.md files for this scope</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">No CLAUDE.md files for this scope</li>
     {:else}
       <li class="px-4 pt-2 pb-1">
-        <span class="text-xs font-semibold uppercase tracking-wider text-gray-600">
+        <span class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">
           {isProjectScope ? "Project" : "Global"}
         </span>
       </li>
       {#each visibleFiles as file (file.id)}
         <li>
-          <button
-            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm transition-colors
-              {claudeMdStore.activeFile?.id === file.id
-              ? 'bg-gray-800 text-white'
-              : file.exists
-                ? 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
-                : 'text-gray-600 italic hover:bg-gray-800/50 hover:text-gray-400'}"
-            onclick={() => claudeMdStore.selectFile(file.id)}
-          >
-            <span class="flex items-center gap-1.5 truncate">
-              {#if claudeMdStore.activeFile?.id === file.id && claudeMdStore.activeFileDirty}
-                <span
-                  class="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-orange-500"
-                  aria-label="unsaved changes"
-                ></span>
-              {/if}
-              <span class="truncate">
-                {file.scope === "global"
-                  ? (file.exists ? "CLAUDE.md" : "CLAUDE.md (create)")
-                  : (file.projectName ?? file.projectId)}
+          {#if claudeMdStore.activeFile?.id === file.id}
+            <button
+              class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm transition-colors"
+              style="background-color: var(--accent-bg); color: var(--text-primary)"
+              onclick={() => claudeMdStore.selectFile(file.id)}
+            >
+              <span class="flex items-center gap-1.5 truncate">
+                {#if claudeMdStore.activeFileDirty}
+                  <span
+                    class="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                    style="background-color: var(--dirty-dot)"
+                    aria-label="unsaved changes"
+                  ></span>
+                {/if}
+                <span class="truncate">
+                  {file.scope === "global"
+                    ? (file.exists ? "CLAUDE.md" : "CLAUDE.md (create)")
+                    : (file.projectName ?? file.projectId)}
+                </span>
               </span>
-            </span>
-            {#if !file.exists}
-              <span class="ml-auto flex-shrink-0 text-xs text-gray-600">click to create</span>
-            {:else}
-              <span class="ml-auto flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-medium {scopeBadgeClass(file.scope)}">
+              {#if !file.exists}
+                <span class="ml-auto flex-shrink-0 text-xs" style="color: var(--text-muted)">click to create</span>
+              {:else}
+                <span class="ml-auto flex-shrink-0 {scopeBadgeClass(file.scope)}">
+                  {file.scope === "global" ? "全局" : "项目"}
+                </span>
+              {/if}
+            </button>
+          {:else if file.exists}
+            <button
+              class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm transition-colors hover:bg-[var(--bg-card-hover)]"
+              style="color: var(--text-secondary)"
+              onclick={() => claudeMdStore.selectFile(file.id)}
+            >
+              <span class="flex items-center gap-1.5 truncate">
+                <span class="truncate">
+                  {file.scope === "global"
+                    ? (file.exists ? "CLAUDE.md" : "CLAUDE.md (create)")
+                    : (file.projectName ?? file.projectId)}
+                </span>
+              </span>
+              <span class="ml-auto flex-shrink-0 {scopeBadgeClass(file.scope)}">
                 {file.scope === "global" ? "全局" : "项目"}
               </span>
-            {/if}
-          </button>
+            </button>
+          {:else}
+            <button
+              class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm transition-colors hover:bg-[var(--bg-card-hover)]"
+              style="color: var(--text-muted); font-style: italic"
+              onclick={() => claudeMdStore.selectFile(file.id)}
+            >
+              <span class="flex items-center gap-1.5 truncate">
+                <span class="truncate">
+                  {file.scope === "global" ? "CLAUDE.md (create)" : (file.projectName ?? file.projectId)}
+                </span>
+              </span>
+              <span class="ml-auto flex-shrink-0 text-xs" style="color: var(--text-muted)">click to create</span>
+            </button>
+          {/if}
         </li>
       {/each}
     {/if}
   </ul>
 
   {#if claudeMdStore.error}
-    <div class="px-4 py-2 text-xs text-red-400 border-t border-gray-800">
+    <div class="border-t px-4 py-2 text-xs" style="color: var(--status-error-text); border-color: var(--border-color)">
       {claudeMdStore.error}
     </div>
   {/if}
