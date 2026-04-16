@@ -1,4 +1,11 @@
 {
   "memory.noFilesYet": "",
-  "memory.dropdownDisabledInProjectScope": ""
+  "memory.dropdownDisabledInProjectScope": "",
+  "appsettings.appearance": "",
+  "appsettings.theme": "",
+  "appsettings.themeSystem": "",
+  "appsettings.themeDark": "",
+  "appsettings.themeLight": "",
+  "appsettings.fontSize": "",
+  "appsettings.languageLabel": ""
 }

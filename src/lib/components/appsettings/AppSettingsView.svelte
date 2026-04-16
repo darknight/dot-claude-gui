@@ -1,26 +1,27 @@
 <script lang="ts">
   import { appSettingsStore } from "$lib/stores/appsettings.svelte.js";
+  import { t, ACTIVE_LOCALES, localeDisplayName, type Locale } from "$lib/i18n";
 </script>
 
 <div class="p-6 space-y-8">
   <section class="space-y-4">
-    <h2 class="text-lg font-medium" style="color: var(--text-primary)">外观</h2>
+    <h2 class="text-lg font-medium" style="color: var(--text-primary)">{t("appsettings.appearance")}</h2>
 
     <div>
-      <label class="block text-sm mb-1" style="color: var(--text-muted)">主题</label>
+      <label class="block text-sm mb-1" style="color: var(--text-muted)">{t("appsettings.theme")}</label>
       <select
         class="input-base w-auto"
         value={appSettingsStore.preferences.theme}
         onchange={(e) => appSettingsStore.update({ theme: (e.target as HTMLSelectElement).value as "light" | "dark" | "system" })}
       >
-        <option value="system">跟随系统</option>
-        <option value="dark">深色</option>
-        <option value="light">浅色</option>
+        <option value="system">{t("appsettings.themeSystem")}</option>
+        <option value="dark">{t("appsettings.themeDark")}</option>
+        <option value="light">{t("appsettings.themeLight")}</option>
       </select>
     </div>
 
     <div>
-      <label class="block text-sm mb-1" style="color: var(--text-muted)">字体大小: {appSettingsStore.preferences.fontSize}px</label>
+      <label class="block text-sm mb-1" style="color: var(--text-muted)">{t("appsettings.fontSize", { size: appSettingsStore.preferences.fontSize })}</label>
       <input
         type="range"
         min="12"
@@ -32,14 +33,15 @@
     </div>
 
     <div>
-      <label class="block text-sm mb-1" style="color: var(--text-muted)">语言</label>
+      <label class="block text-sm mb-1" style="color: var(--text-muted)">{t("appsettings.languageLabel")}</label>
       <select
         class="input-base w-auto"
         value={appSettingsStore.preferences.language}
-        onchange={(e) => appSettingsStore.update({ language: (e.target as HTMLSelectElement).value })}
+        onchange={(e) => appSettingsStore.update({ language: (e.target as HTMLSelectElement).value as Locale })}
       >
-        <option value="zh-CN">简体中文</option>
-        <option value="en-US">English</option>
+        {#each ACTIVE_LOCALES as loc}
+          <option value={loc}>{localeDisplayName(loc)}</option>
+        {/each}
       </select>
     </div>
   </section>

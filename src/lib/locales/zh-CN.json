@@ -1,4 +1,11 @@
 {
   "memory.noFilesYet": "当前项目 {name} 还没有生成记忆文件。",
-  "memory.dropdownDisabledInProjectScope": "项目 scope 下由顶部 scope 选择器决定，切换到 User Scope 可手动选择。"
+  "memory.dropdownDisabledInProjectScope": "项目 scope 下由顶部 scope 选择器决定，切换到 User Scope 可手动选择。",
+  "appsettings.appearance": "外观",
+  "appsettings.theme": "主题",
+  "appsettings.themeSystem": "跟随系统",
+  "appsettings.themeDark": "深色",
+  "appsettings.themeLight": "浅色",
+  "appsettings.fontSize": "字体大小: {size}px",
+  "appsettings.languageLabel": "语言"
 }

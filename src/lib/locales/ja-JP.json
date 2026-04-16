@@ -1,4 +1,11 @@
 {
   "memory.noFilesYet": "このプロジェクト {name} にはまだメモリファイルがありません。",
-  "memory.dropdownDisabledInProjectScope": "プロジェクトスコープではメモリは右上のスコープセレクタに従います。手動で選ぶには User Scope に切り替えてください。"
+  "memory.dropdownDisabledInProjectScope": "プロジェクトスコープではメモリは右上のスコープセレクタに従います。手動で選ぶには User Scope に切り替えてください。",
+  "appsettings.appearance": "外観",
+  "appsettings.theme": "テーマ",
+  "appsettings.themeSystem": "システムに従う",
+  "appsettings.themeDark": "ダーク",
+  "appsettings.themeLight": "ライト",
+  "appsettings.fontSize": "フォントサイズ: {size}px",
+  "appsettings.languageLabel": "言語"
 }

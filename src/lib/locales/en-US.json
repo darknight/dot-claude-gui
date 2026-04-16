@@ -1,4 +1,11 @@
 {
   "memory.noFilesYet": "This project {name} has no memory files yet.",
-  "memory.dropdownDisabledInProjectScope": "In project scope, memory follows the top-right scope selector. Switch to User Scope to pick manually."
+  "memory.dropdownDisabledInProjectScope": "In project scope, memory follows the top-right scope selector. Switch to User Scope to pick manually.",
+  "appsettings.appearance": "Appearance",
+  "appsettings.theme": "Theme",
+  "appsettings.themeSystem": "Follow System",
+  "appsettings.themeDark": "Dark",
+  "appsettings.themeLight": "Light",
+  "appsettings.fontSize": "Font size: {size}px",
+  "appsettings.languageLabel": "Language"
 }
