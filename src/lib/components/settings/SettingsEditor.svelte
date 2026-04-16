@@ -1,6 +1,5 @@
 <script lang="ts">
   import { configStore } from "$lib/stores/config.svelte";
-  import ScopeSelector from "$lib/components/shared/ScopeSelector.svelte";
   import GeneralEditor from "./GeneralEditor.svelte";
   import PermissionsEditor from "./PermissionsEditor.svelte";
   import HooksEditor from "./HooksEditor.svelte";
@@ -12,13 +11,12 @@
   let { activeSection = "general" }: { activeSection: string } = $props();
 </script>
 
-<!-- Toolbar -->
-<div class="flex items-center justify-between border-b px-4 py-2" style="border-color: var(--border-color); background-color: var(--bg-secondary)">
-  <ScopeSelector />
-  {#if configStore.isDirty}
+<!-- Dirty indicator -->
+{#if configStore.isDirty}
+  <div class="flex items-center justify-end border-b px-4 py-2" style="border-color: var(--border-color); background-color: var(--bg-secondary)">
     <span class="text-xs" style="color: var(--status-warning-text)">{t("common.unsavedChanges")}</span>
-  {/if}
-</div>
+  </div>
+{/if}
 
 <!-- Error display -->
 {#if configStore.error}

@@ -72,7 +72,7 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="fixed inset-0 z-40" onclick={() => (open = false)} onkeydown={() => {}}></div>
 
-    <div class="absolute top-full right-0 mt-1 w-72 rounded-lg shadow-xl z-50 py-1" style="background-color: var(--bg-card); border: 1px solid var(--border-strong)">
+    <div class="absolute top-full left-0 mt-1 w-80 rounded-lg shadow-xl z-50 py-1" style="background-color: var(--bg-card); border: 1px solid var(--border-strong)">
       <button
         class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors"
         style="color: {!projectsStore.activeProjectId ? 'var(--accent-text)' : 'var(--text-secondary)'}"
@@ -95,6 +95,7 @@
           onmouseenter={(e) => (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-tertiary)'}
           onmouseleave={(e) => (e.currentTarget as HTMLElement).style.backgroundColor = ''}
           onclick={() => selectProject(project.id)}
+          title={project.path}
         >
           <span>📁</span>
           <span class="flex-1 truncate">{project.path}</span>

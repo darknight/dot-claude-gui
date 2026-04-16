@@ -205,12 +205,8 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
 <div class="flex h-screen w-screen flex-col overflow-hidden" style="background-color: var(--bg-primary); color: var(--text-primary)">
 
   <!-- ===== Header ===== -->
-  <header class="flex items-center justify-between px-4 py-2" style="background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-color)">
-    <span class="text-sm font-semibold" style="color: var(--text-primary)">dot-claude</span>
-
-    <div class="flex items-center gap-2">
-      <ScopeSelector />
-    </div>
+  <header class="flex items-center px-4 py-2" style="background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-color)">
+    <ScopeSelector />
   </header>
 
   <!-- ===== Body (three-panel layout) ===== -->
