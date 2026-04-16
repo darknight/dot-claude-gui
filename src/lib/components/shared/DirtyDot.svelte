@@ -10,7 +10,8 @@
 
 {#if dirty}
   <span
-    class="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-orange-500 align-middle ml-1.5"
+    class="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full align-middle ml-1.5"
+    style="background-color: var(--dirty-dot)"
     aria-label={title}
   ></span>
 {/if}

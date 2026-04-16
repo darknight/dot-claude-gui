@@ -36,7 +36,7 @@
 
 <div class="flex flex-col gap-2">
   {#if label}
-    <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">
+    <label class="text-xs font-medium uppercase tracking-wide" style="color: var(--text-muted)">
       {label}
       <DirtyDot {dirty} />
     </label>
@@ -45,10 +45,10 @@
   <ul class="flex flex-col gap-1">
     {#each items as item, i}
       <li class="group flex items-center gap-1">
-        <code class="flex-1 rounded bg-gray-800 px-2 py-1 text-xs text-gray-200 font-mono break-all">{item}</code>
+        <code class="flex-1 rounded px-2 py-1 text-xs font-mono break-all" style="background-color: var(--bg-tertiary); color: var(--text-primary)">{item}</code>
         <button
           onclick={() => removeItem(i)}
-          class="opacity-0 group-hover:opacity-100 transition-opacity rounded p-1 text-gray-500 hover:text-red-400 hover:bg-gray-700"
+          class="btn-danger-ghost opacity-0 group-hover:opacity-100 transition-opacity rounded p-1"
           aria-label="Remove {item}"
         >
           ×
@@ -63,11 +63,11 @@
       bind:value={inputValue}
       onkeydown={handleKeydown}
       {placeholder}
-      class="flex-1 rounded bg-gray-800 border border-gray-700 px-2 py-1 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+      class="input-base flex-1 rounded px-2 py-1 text-sm"
     />
     <button
       onclick={addItem}
-      class="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-500 active:bg-blue-700 transition-colors"
+      class="btn-primary rounded px-3 py-1 text-sm transition-colors"
     >
       Add
     </button>

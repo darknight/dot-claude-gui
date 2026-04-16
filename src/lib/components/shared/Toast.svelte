@@ -13,10 +13,10 @@
   };
 
   const borderColors: Record<string, string> = {
-    success: "#238636",
-    error: "#f85149",
-    warning: "#d29922",
-    info: "#58a6ff",
+    success: "var(--status-success-text)",
+    error: "var(--status-error-text)",
+    warning: "var(--status-warning-text)",
+    info: "var(--status-info-text)",
   };
 
   const iconColors: Record<string, string> = {
