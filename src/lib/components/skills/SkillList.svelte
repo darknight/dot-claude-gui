@@ -55,7 +55,8 @@
     </h2>
     <select
       bind:value={sortBy}
-      class="shrink-0 rounded bg-gray-800 px-1.5 py-1 text-xs text-gray-300 focus:outline-none"
+      class="input-base shrink-0 w-auto text-xs"
+      style="padding: 0.25rem 0.375rem"
     >
       <option value="name-asc">A→Z</option>
       <option value="name-desc">Z→A</option>
@@ -65,45 +66,64 @@
   <!-- Body -->
   <ul class="flex-1 overflow-y-auto py-1">
     {#if skillsStore.loading && skillsStore.skills.length === 0}
-      <li class="px-4 py-2 text-xs text-gray-500">Loading...</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">Loading...</li>
     {:else if skillsStore.error}
-      <li class="px-4 py-2 text-xs text-red-400">{skillsStore.error}</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--status-error-text)">{skillsStore.error}</li>
     {:else if skillsStore.skills.length === 0}
-      <li class="px-4 py-2 text-xs text-gray-600">No skills found</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">No skills found</li>
     {:else}
       {#each groups as [groupName, skills], groupIndex (groupName)}
         {@const isCollapsed = collapsed[groupName] ?? false}
         <li class={groupIndex === 0 ? "" : "mt-3"}>
           <button
             type="button"
-            class="flex w-full items-center gap-1 px-3 py-1.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300"
+            class="flex w-full items-center gap-1 px-3 py-1.5 text-left text-xs font-semibold uppercase tracking-wider hover:opacity-80"
+            style="color: var(--text-muted)"
             onclick={() => toggleGroup(groupName)}
           >
             <span class="inline-block w-3 text-center">{isCollapsed ? "▸" : "▾"}</span>
             <span class="truncate">{groupName}</span>
-            <span class="text-gray-600">({skills.length})</span>
+            <span style="color: var(--text-muted)">({skills.length})</span>
           </button>
         </li>
         {#if !isCollapsed}
           {#each skills as skill (skill.id + ":" + skill.source)}
             <li>
-              <button
-                class="flex w-full items-center justify-between gap-2 py-1.5 pl-8 pr-4 text-left text-sm transition-colors
-                  {skillsStore.selectedSkillId === skill.id
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-                onclick={() => skillsStore.selectSkill(skill.id)}
-              >
-                <span class="truncate">{skill.name}</span>
-                {#if skill.valid}
-                  <span class="flex-shrink-0 text-xs text-green-400">✓</span>
-                {:else}
-                  <span
-                    class="flex-shrink-0 cursor-help text-xs text-red-400"
-                    title={skill.validationError ?? "Invalid"}
-                  >✗</span>
-                {/if}
-              </button>
+              {#if skillsStore.selectedSkillId === skill.id}
+                <button
+                  class="flex w-full items-center justify-between gap-2 py-1.5 pl-8 pr-4 text-left text-sm transition-colors"
+                  style="background-color: var(--accent-bg); color: var(--text-primary)"
+                  onclick={() => skillsStore.selectSkill(skill.id)}
+                >
+                  <span class="truncate">{skill.name}</span>
+                  {#if skill.valid}
+                    <span class="flex-shrink-0 text-xs" style="color: var(--status-success-text)">✓</span>
+                  {:else}
+                    <span
+                      class="flex-shrink-0 cursor-help text-xs"
+                      style="color: var(--status-error-text)"
+                      title={skill.validationError ?? "Invalid"}
+                    >✗</span>
+                  {/if}
+                </button>
+              {:else}
+                <button
+                  class="flex w-full items-center justify-between gap-2 py-1.5 pl-8 pr-4 text-left text-sm transition-colors hover:bg-[var(--bg-card-hover)]"
+                  style="color: var(--text-secondary)"
+                  onclick={() => skillsStore.selectSkill(skill.id)}
+                >
+                  <span class="truncate">{skill.name}</span>
+                  {#if skill.valid}
+                    <span class="flex-shrink-0 text-xs" style="color: var(--status-success-text)">✓</span>
+                  {:else}
+                    <span
+                      class="flex-shrink-0 cursor-help text-xs"
+                      style="color: var(--status-error-text)"
+                      title={skill.validationError ?? "Invalid"}
+                    >✗</span>
+                  {/if}
+                </button>
+              {/if}
             </li>
           {/each}
         {/if}
