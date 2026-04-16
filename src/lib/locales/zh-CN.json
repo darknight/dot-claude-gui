@@ -186,5 +186,8 @@
   "launcher.launching": "启动中...",
   "launcher.launchButton": "启动 Claude Code",
   "launcher.launchSuccess": "Claude Code 已成功启动！",
-  "launcher.launchError": "错误：{message}"
+  "launcher.launchError": "错误：{message}",
+  "mcp.removeServer": "移除服务器",
+  "settings.statusLineType": "类型",
+  "settings.statusLinePadding": "内边距"
 }

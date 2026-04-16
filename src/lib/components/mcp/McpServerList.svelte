@@ -102,9 +102,9 @@
                     <button
                       class="btn-danger-ghost hidden text-xs transition-colors group-hover:block"
                       onclick={() => handleRemove(server.name, server.scope)}
-                      title="Remove server"
+                      title={t("mcp.removeServer")}
                     >
-                      Remove
+                      {t("common.remove")}
                     </button>
                   </div>
                 </div>

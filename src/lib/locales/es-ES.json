@@ -186,5 +186,8 @@
   "launcher.launching": "",
   "launcher.launchButton": "",
   "launcher.launchSuccess": "",
-  "launcher.launchError": ""
+  "launcher.launchError": "",
+  "mcp.removeServer": "",
+  "settings.statusLineType": "",
+  "settings.statusLinePadding": ""
 }

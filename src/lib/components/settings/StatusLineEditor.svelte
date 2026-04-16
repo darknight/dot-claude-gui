@@ -47,7 +47,7 @@
       for="statusType"
       class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
-      Type
+      {t("settings.statusLineType")}
       <DirtyDot dirty={typeDirty} />
     </label>
     <select
@@ -66,7 +66,7 @@
       for="command"
       class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
-      Command
+      {t("settings.commandLabel")}
       <DirtyDot dirty={commandDirty} />
     </label>
     <input
@@ -85,7 +85,7 @@
       for="padding"
       class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
-      Padding
+      {t("settings.statusLinePadding")}
       <DirtyDot dirty={paddingDirty} />
     </label>
     <input

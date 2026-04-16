@@ -186,5 +186,8 @@
   "launcher.launching": "起動中...",
   "launcher.launchButton": "Claude Code を起動",
   "launcher.launchSuccess": "Claude Code が正常に起動しました！",
-  "launcher.launchError": "エラー：{message}"
+  "launcher.launchError": "エラー：{message}",
+  "mcp.removeServer": "サーバーを削除",
+  "settings.statusLineType": "タイプ",
+  "settings.statusLinePadding": "パディング"
 }

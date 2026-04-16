@@ -186,5 +186,8 @@
   "launcher.launching": "Launching...",
   "launcher.launchButton": "Launch Claude Code",
   "launcher.launchSuccess": "Claude Code launched successfully!",
-  "launcher.launchError": "Error: {message}"
+  "launcher.launchError": "Error: {message}",
+  "mcp.removeServer": "Remove server",
+  "settings.statusLineType": "Type",
+  "settings.statusLinePadding": "Padding"
 }
