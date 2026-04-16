@@ -3,6 +3,7 @@
   import { projectsStore } from "$lib/stores/projects.svelte";
   import { ipcClient } from "$lib/ipc/client.js";
   import type { Settings } from "$lib/api/types";
+  import { t } from "$lib/i18n";
 
   let projectSettings = $state<Settings>({});
   let loading = $state(false);
@@ -105,25 +106,27 @@
 <div class="flex flex-1 flex-col overflow-hidden">
   {#if !activeProject}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm" style="color: var(--text-muted)">Select a project to configure per-project plugin activation.</p>
+      <p class="text-sm" style="color: var(--text-muted)">{t("plugins.selectProjectHint")}</p>
     </div>
   {:else}
     <div class="flex-1 overflow-auto p-6">
       <div class="mb-4">
-        <h2 class="text-sm font-semibold" style="color: var(--text-primary)">Plugin Activation</h2>
+        <h2 class="text-sm font-semibold" style="color: var(--text-primary)">{t("plugins.activationTitle")}</h2>
         <p class="mt-1 text-xs" style="color: var(--text-muted)">
-          Configure plugins globally or override per project.
-          Project column: <span style="color: var(--status-success-text)">On</span> /
-          <span style="color: var(--status-error-text)">Off</span> /
-          <span style="color: var(--text-muted)">Inherit</span> (click to cycle).
+          {t("plugins.activationDesc")}
+          {t("plugins.activationProjectCol")}
+          <span style="color: var(--status-success-text)">{t("plugins.stateOn")}</span> /
+          <span style="color: var(--status-error-text)">{t("plugins.stateOff")}</span> /
+          <span style="color: var(--text-muted)">{t("plugins.stateInherit")}</span>
+          {t("plugins.activationCycleHint")}
         </p>
       </div>
 
       {#if loading}
-        <p class="text-sm" style="color: var(--text-muted)">Loading project settings...</p>
+        <p class="text-sm" style="color: var(--text-muted)">{t("plugins.loadingProjectSettings")}</p>
       {:else if pluginsStore.plugins.length === 0}
         <div class="flex h-40 items-center justify-center">
-          <p class="text-sm" style="color: var(--text-muted)">No plugins installed</p>
+          <p class="text-sm" style="color: var(--text-muted)">{t("plugins.noPlugins")}</p>
         </div>
       {:else}
         <div class="overflow-hidden rounded-lg" style="border: 1px solid var(--border-color)">
@@ -131,10 +134,10 @@
             <thead>
               <tr style="border-bottom: 1px solid var(--border-color); background-color: var(--bg-card)">
                 <th class="px-4 py-2.5 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--text-muted)">
-                  Plugin
+                  {t("plugins.colPlugin")}
                 </th>
                 <th class="w-24 px-4 py-2.5 text-center text-xs font-medium uppercase tracking-wider" style="color: var(--text-muted)">
-                  Global
+                  {t("plugins.colGlobal")}
                 </th>
                 <th class="w-32 px-4 py-2.5 text-center text-xs font-medium uppercase tracking-wider" style="color: var(--text-muted)">
                   {activeProject.name}
@@ -152,7 +155,7 @@
                       <span class="font-medium" style="color: var(--text-primary)">{plugin.name}</span>
                       {#if plugin.blocked}
                         <span class="badge badge-error">
-                          Blocked
+                          {t("plugins.blocked")}
                         </span>
                       {/if}
                     </div>
@@ -167,7 +170,7 @@
                       class="toggle-track"
                       role="switch"
                       aria-checked={plugin.enabled}
-                      aria-label="Toggle {plugin.name} globally"
+                      aria-label={t("plugins.toggleGloballyAriaLabel", { name: plugin.name })}
                       onclick={() => toggleGlobal(plugin.id, !plugin.enabled)}
                     >
                       <span class="toggle-knob"></span>
@@ -186,10 +189,10 @@
                       onclick={() => cycleProjectState(plugin.id)}
                       disabled={isSaving}
                       title={projectOverride === true
-                        ? 'Project: Enabled — click to disable'
+                        ? t("plugins.titleEnabled")
                         : projectOverride === false
-                          ? 'Project: Disabled — click to inherit'
-                          : 'Inheriting global — click to enable'}
+                          ? t("plugins.titleDisabled")
+                          : t("plugins.titleInherit")}
                     >
                       {#if isSaving}
                         <span class="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent"></span>
@@ -197,15 +200,15 @@
                         <svg class="h-3 w-3" viewBox="0 0 12 12" fill="currentColor">
                           <path d="M10 3L5 8.5 2 5.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        On
+                        {t("plugins.stateOn")}
                       {:else if projectOverride === false}
                         <svg class="h-3 w-3" viewBox="0 0 12 12" fill="currentColor">
                           <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
                         </svg>
-                        Off
+                        {t("plugins.stateOff")}
                       {:else}
                         <span class="text-[10px]">—</span>
-                        Inherit
+                        {t("plugins.stateInherit")}
                       {/if}
                     </button>
                   </td>

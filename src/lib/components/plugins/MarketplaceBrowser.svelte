@@ -1,6 +1,7 @@
 <script lang="ts">
   import { pluginsStore } from "$lib/stores/plugins.svelte";
   import { onCommandOutput, onCommandCompleted } from "$lib/ipc/events.js";
+  import { t } from "$lib/i18n";
 
   let selectedMarketplace = $state("");
   let installing = $state<string | null>(null); // plugin name being installed
@@ -44,17 +45,17 @@
   <!-- Marketplace selector -->
   <div class="mb-4">
     <label for="marketplace-select" class="mb-1 block text-xs font-medium" style="color: var(--text-muted)">
-      Marketplace
+      {t("plugins.marketplaceLabel")}
     </label>
     {#if pluginsStore.marketplaces.length === 0}
-      <p class="text-sm" style="color: var(--text-muted)">No marketplaces registered. Add one in the Manage Marketplaces tab.</p>
+      <p class="text-sm" style="color: var(--text-muted)">{t("plugins.noMarketplacesHint")}</p>
     {:else}
       <select
         id="marketplace-select"
         bind:value={selectedMarketplace}
         class="input-base"
       >
-        <option value="">— select a marketplace —</option>
+        <option value="">{t("plugins.selectMarketplacePlaceholder")}</option>
         {#each pluginsStore.marketplaces as mp (mp.id)}
           <option value={mp.id}>{mp.id} ({mp.repo})</option>
         {/each}
@@ -66,7 +67,7 @@
   {#if selectedMarketplace}
     {#if pluginsStore.availablePlugins.length === 0}
       <div class="flex flex-1 items-center justify-center">
-        <p class="text-sm" style="color: var(--text-muted)">No plugins found in this marketplace.</p>
+        <p class="text-sm" style="color: var(--text-muted)">{t("plugins.noPluginsInMarketplace")}</p>
       </div>
     {:else}
       <div class="flex-1 overflow-auto">
@@ -104,7 +105,7 @@
                       disabled
                       class="btn-primary"
                     >
-                      Installing…
+                      {t("plugins.installing")}
                     </button>
                   {:else if !plugin.installed}
                     <button
@@ -112,7 +113,7 @@
                       disabled={installing !== null}
                       onclick={() => handleInstall(plugin.name, plugin.marketplace)}
                     >
-                      Install
+                      {t("plugins.install")}
                     </button>
                   {:else if plugin.version && plugin.installedVersion && plugin.version !== plugin.installedVersion}
                     <span class="text-xs" style="color: var(--text-muted)">
@@ -123,7 +124,7 @@
                       disabled={installing !== null}
                       onclick={() => handleInstall(plugin.name, plugin.marketplace)}
                     >
-                      Upgrade
+                      {t("plugins.upgrade")}
                     </button>
                   {:else}
                     <button
@@ -131,7 +132,7 @@
                       disabled={installing !== null}
                       onclick={() => handleInstall(plugin.name, plugin.marketplace)}
                     >
-                      Re-install
+                      {t("plugins.reinstall")}
                     </button>
                   {/if}
                 </div>
@@ -147,7 +148,7 @@
   {#if installing !== null || installOutput.length > 0}
     <div class="code-block mt-4">
       <p class="mb-1 text-xs font-medium">
-        {installing ? `Installing ${installing}…` : "Install complete"}
+        {installing ? t("plugins.installingName", { name: installing }) : t("plugins.installComplete")}
       </p>
       {#if installOutput.length > 0}
         <div class="max-h-32 overflow-auto">

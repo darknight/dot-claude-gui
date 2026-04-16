@@ -1,6 +1,7 @@
 <script lang="ts">
   import { pluginsStore } from "$lib/stores/plugins.svelte";
   import { onCommandOutput, onCommandCompleted } from "$lib/ipc/events.js";
+  import { t } from "$lib/i18n";
 
   let newRepo = $state("");
   let adding = $state(false);
@@ -72,7 +73,7 @@
 <div class="flex flex-1 flex-col overflow-hidden p-6">
   <!-- Add marketplace form -->
   <div class="card mb-6 p-4">
-    <h3 class="mb-3 text-sm font-semibold" style="color: var(--text-primary)">Add Marketplace</h3>
+    <h3 class="mb-3 text-sm font-semibold" style="color: var(--text-primary)">{t("plugins.addMarketplace")}</h3>
     <div class="flex gap-2">
       <input
         type="text"
@@ -87,7 +88,7 @@
         disabled={adding || !newRepo.trim()}
         onclick={handleAdd}
       >
-        {adding ? "Adding…" : "Add"}
+        {adding ? t("plugins.adding") : t("common.add")}
       </button>
     </div>
 
@@ -95,7 +96,7 @@
     {#if adding || addOutput.length > 0}
       <div class="code-block mt-3">
         <p class="mb-1 text-xs font-medium" style="color: var(--text-muted)">
-          {adding ? "Adding marketplace…" : "Done"}
+          {adding ? t("plugins.addingMarketplace") : t("plugins.done")}
         </p>
         {#if addOutput.length > 0}
           <div class="max-h-24 overflow-auto" style="color: var(--text-secondary)">
@@ -111,7 +112,7 @@
   <!-- Marketplace list -->
   {#if pluginsStore.marketplaces.length === 0}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm" style="color: var(--text-muted)">No marketplaces registered yet.</p>
+      <p class="text-sm" style="color: var(--text-muted)">{t("plugins.noMarketplacesYet")}</p>
     </div>
   {:else}
     <div class="flex-1 overflow-auto">
@@ -128,11 +129,11 @@
                   <span>{mp.repo}</span>
                   {#if mp.pluginCount !== undefined}
                     <span>·</span>
-                    <span>{mp.pluginCount} plugin{mp.pluginCount === 1 ? "" : "s"}</span>
+                    <span>{t("plugins.pluginCount", { count: mp.pluginCount })}</span>
                   {/if}
                   {#if mp.lastUpdated}
                     <span>·</span>
-                    <span>updated {mp.lastUpdated}</span>
+                    <span>{t("plugins.lastUpdated", { date: mp.lastUpdated })}</span>
                   {/if}
                 </div>
                 {#if mp.description}
@@ -143,15 +144,15 @@
               <!-- Remove button -->
               <div class="flex-shrink-0">
                 {#if removingId === mp.id}
-                  <span class="text-xs" style="color: var(--text-muted)">Removing…</span>
+                  <span class="text-xs" style="color: var(--text-muted)">{t("plugins.removing")}</span>
                 {:else}
                   <button
                     class="btn-danger-ghost hidden group-hover:block disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={removingId !== null}
                     onclick={() => handleRemove(mp.id)}
-                    title="Remove marketplace"
+                    title={t("plugins.removeMarketplaceTitle")}
                   >
-                    Remove
+                    {t("plugins.removeMarketplace")}
                   </button>
                 {/if}
               </div>
