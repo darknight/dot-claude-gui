@@ -181,6 +181,12 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   const SIDEBAR_EXPANDED = 140;
   let sidebarCollapsed = $derived(appSettingsStore.preferences.sidebarWidth <= SIDEBAR_COLLAPSED);
 
+  // Active nav button label — derived once, avoids array spread in template
+  const activeNavLabelKey = $derived(
+    (navButtons.find((b) => b.id === activeNav)?.labelKey ??
+      (activeNav === appSettingsButton.id ? appSettingsButton.labelKey : undefined)) as MessageKey | undefined
+  );
+
   function toggleSidebar() {
     const next = sidebarCollapsed ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED;
     appSettingsStore.update({ sidebarWidth: next });
@@ -271,7 +277,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
         {#if activeNav !== "K"}
           <div class="px-4 py-3" style="border-bottom: 1px solid var(--border-color)">
             <h2 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">
-              {t(([...navButtons, appSettingsButton].find((b) => b.id === activeNav)?.labelKey) ?? "nav.settings")}
+              {activeNavLabelKey ? t(activeNavLabelKey) : ""}
             </h2>
           </div>
         {/if}
