@@ -142,7 +142,7 @@
   <div class="space-y-1">
     <label
       for="eventType"
-      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
       Event Type
       <DirtyDot dirty={isEventDirty(selectedEvent)} />
@@ -150,7 +150,7 @@
     <select
       id="eventType"
       bind:value={selectedEvent}
-      class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      class="input-base"
     >
       {#each validEvents as event}
         {@const count = eventCount(event)}
@@ -165,17 +165,17 @@
   <!-- Hook Rules List -->
   <div class="space-y-3">
     {#each getGroups() as group, groupIndex}
-      <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-3">
+      <div class="card space-y-3">
         <!-- Header row with delete button -->
         <div class="flex items-center justify-between">
-          <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+          <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-muted)">
             Rule {groupIndex + 1}
             <DirtyDot dirty={isRuleDirty(groupIndex, group)} />
           </span>
           <button
             type="button"
             onclick={() => removeRule(groupIndex)}
-            class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400"
+            class="btn-danger-ghost text-xs"
           >
             Delete Rule
           </button>
@@ -185,7 +185,7 @@
         <div class="space-y-1">
           <label
             for="matcher-{groupIndex}"
-            class="block text-xs font-medium text-gray-600 dark:text-gray-400"
+            class="block text-xs font-medium" style="color: var(--text-muted)"
           >
             Matcher
           </label>
@@ -195,7 +195,7 @@
             value={group.matcher ?? ""}
             oninput={(e) => updateMatcher(groupIndex, (e.target as HTMLInputElement).value)}
             placeholder="e.g. Bash or * to match all"
-            class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="input-base"
           />
         </div>
 
@@ -203,7 +203,7 @@
         <div class="space-y-1">
           <label
             for="condition-{groupIndex}"
-            class="block text-xs font-medium text-gray-600 dark:text-gray-400"
+            class="block text-xs font-medium" style="color: var(--text-muted)"
           >
             Condition (optional)
           </label>
@@ -213,17 +213,17 @@
             value={group.if ?? ""}
             oninput={(e) => updateCondition(groupIndex, (e.target as HTMLInputElement).value)}
             placeholder="e.g. tool_name == 'Bash'"
-            class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="input-base"
           />
         </div>
 
         <!-- Hook Definitions -->
         <div class="space-y-2">
-          <span class="block text-xs font-medium text-gray-600 dark:text-gray-400">
+          <span class="block text-xs font-medium" style="color: var(--text-muted)">
             Hooks
           </span>
           {#each (group.hooks ?? []) as hookDef, hookIndex}
-            <div class="ml-3 pl-3 border-l-2 border-gray-200 dark:border-gray-600 space-y-2">
+            <div class="ml-3 pl-3 border-l-2 space-y-2" style="border-color: var(--border-color)">
               <!-- Type toggle + remove -->
               <div class="flex items-center gap-4">
                 <label class="flex items-center gap-1.5 text-sm cursor-pointer">
@@ -233,9 +233,9 @@
                     value="command"
                     checked={hookDef.type === "command"}
                     onchange={() => updateHookType(groupIndex, hookIndex, "command")}
-                    class="accent-blue-500"
+                    style="accent-color: var(--accent-primary)"
                   />
-                  <span class="text-gray-700 dark:text-gray-300">Command</span>
+                  <span style="color: var(--text-secondary)">Command</span>
                 </label>
                 <label class="flex items-center gap-1.5 text-sm cursor-pointer">
                   <input
@@ -244,15 +244,15 @@
                     value="http"
                     checked={hookDef.type === "http"}
                     onchange={() => updateHookType(groupIndex, hookIndex, "http")}
-                    class="accent-blue-500"
+                    style="accent-color: var(--accent-primary)"
                   />
-                  <span class="text-gray-700 dark:text-gray-300">HTTP</span>
+                  <span style="color: var(--text-secondary)">HTTP</span>
                 </label>
                 {#if (group.hooks ?? []).length > 1}
                   <button
                     type="button"
                     onclick={() => removeHookDefinition(groupIndex, hookIndex)}
-                    class="ml-auto text-xs text-red-400 hover:text-red-600"
+                    class="btn-danger-ghost ml-auto text-xs"
                   >
                     Remove
                   </button>
@@ -264,7 +264,7 @@
                 <div class="space-y-1">
                   <label
                     for="command-{groupIndex}-{hookIndex}"
-                    class="block text-xs text-gray-500 dark:text-gray-400"
+                    class="block text-xs" style="color: var(--text-muted)"
                   >
                     Command
                   </label>
@@ -275,7 +275,7 @@
                     oninput={(e) =>
                       updateHookField(groupIndex, hookIndex, "command", (e.target as HTMLInputElement).value)}
                     placeholder="/path/to/script.sh"
-                    class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="input-base"
                   />
                 </div>
               {/if}
@@ -286,7 +286,7 @@
                   <div class="space-y-1">
                     <label
                       for="url-{groupIndex}-{hookIndex}"
-                      class="block text-xs text-gray-500 dark:text-gray-400"
+                      class="block text-xs" style="color: var(--text-muted)"
                     >
                       URL
                     </label>
@@ -297,14 +297,14 @@
                       oninput={(e) =>
                         updateHookField(groupIndex, hookIndex, "url", (e.target as HTMLInputElement).value)}
                       placeholder="https://example.com/webhook"
-                      class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="input-base"
                     />
                   </div>
                   <div class="flex gap-3">
                     <div class="space-y-1 flex-1">
                       <label
                         for="method-{groupIndex}-{hookIndex}"
-                        class="block text-xs text-gray-500 dark:text-gray-400"
+                        class="block text-xs" style="color: var(--text-muted)"
                       >
                         Method
                       </label>
@@ -313,7 +313,7 @@
                         value={hookDef.method ?? "POST"}
                         onchange={(e) =>
                           updateHookField(groupIndex, hookIndex, "method", (e.target as HTMLSelectElement).value)}
-                        class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="input-base"
                       >
                         <option value="GET">GET</option>
                         <option value="POST">POST</option>
@@ -323,7 +323,7 @@
                     <div class="space-y-1 w-32">
                       <label
                         for="timeout-{groupIndex}-{hookIndex}"
-                        class="block text-xs text-gray-500 dark:text-gray-400"
+                        class="block text-xs" style="color: var(--text-muted)"
                       >
                         Timeout (ms)
                       </label>
@@ -342,7 +342,7 @@
                           );
                         }}
                         placeholder="5000"
-                        class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="input-base"
                       />
                     </div>
                   </div>
@@ -355,7 +355,7 @@
           <button
             type="button"
             onclick={() => addHookDefinition(groupIndex)}
-            class="ml-3 text-xs text-blue-500 hover:text-blue-700 dark:hover:text-blue-400"
+            class="ml-3 text-xs" style="color: var(--accent-text)"
           >
             + Add Hook
           </button>
@@ -368,18 +368,18 @@
   <button
     type="button"
     onclick={addRule}
-    class="text-sm px-3 py-1.5 border border-dashed border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+    class="btn-secondary text-sm px-3 py-1.5" style="border-style: dashed"
   >
     + Add Hook Rule
   </button>
 
   <!-- Save / Revert -->
-  <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+  <div class="flex gap-2 pt-4 border-t" style="border-color: var(--border-color)">
     <button
       type="button"
       onclick={save}
       disabled={!configStore.isDirty || configStore.saving}
-      class="text-sm px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-40"
+      class="btn-primary text-sm px-4 py-2"
     >
       {configStore.saving ? "Saving..." : "Save"}
     </button>
@@ -387,7 +387,7 @@
       type="button"
       onclick={() => configStore.revert()}
       disabled={!configStore.isDirty}
-      class="text-sm px-4 py-2 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40"
+      class="btn-secondary text-sm px-4 py-2"
     >
       Revert
     </button>

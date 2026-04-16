@@ -68,7 +68,7 @@
   <div class="space-y-1">
     <label
       for="language"
-      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
       Language
       <DirtyDot dirty={languageDirty} />
@@ -79,7 +79,7 @@
       bind:value={language}
       oninput={() => configStore.markDirty()}
       placeholder="e.g. Simplified Chinese"
-      class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      class="input-base"
     />
   </div>
 
@@ -89,9 +89,9 @@
       type="checkbox"
       bind:checked={alwaysThinkingEnabled}
       onchange={() => configStore.markDirty()}
-      class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500"
+      class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)"
     />
-    <span class="text-sm text-gray-700 dark:text-gray-300">
+    <span class="text-sm" style="color: var(--text-secondary)">
       Always thinking enabled
       <DirtyDot dirty={thinkingDirty} />
     </span>
@@ -101,7 +101,7 @@
   <div class="space-y-1">
     <label
       for="autoUpdatesChannel"
-      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
       Auto Updates Channel
       <DirtyDot dirty={channelDirty} />
@@ -110,7 +110,7 @@
       id="autoUpdatesChannel"
       bind:value={autoUpdatesChannel}
       onchange={() => configStore.markDirty()}
-      class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      class="input-base"
     >
       <option value="stable">stable</option>
       <option value="latest">latest</option>
@@ -121,7 +121,7 @@
   <div class="space-y-1">
     <label
       for="minimumVersion"
-      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
       Minimum Version
       <DirtyDot dirty={versionDirty} />
@@ -132,7 +132,7 @@
       bind:value={minimumVersion}
       oninput={() => configStore.markDirty()}
       placeholder="e.g. 2.1.63"
-      class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      class="input-base"
     />
   </div>
 
@@ -142,9 +142,9 @@
       type="checkbox"
       bind:checked={includeCoAuthoredBy}
       onchange={() => configStore.markDirty()}
-      class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500"
+      class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)"
     />
-    <span class="text-sm text-gray-700 dark:text-gray-300">
+    <span class="text-sm" style="color: var(--text-secondary)">
       Include Co-authored-by in commits
       <DirtyDot dirty={coauthorDirty} />
     </span>
@@ -156,21 +156,21 @@
       type="checkbox"
       bind:checked={skipDangerousModePermissionPrompt}
       onchange={() => configStore.markDirty()}
-      class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500"
+      class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)"
     />
-    <span class="text-sm text-gray-700 dark:text-gray-300">
+    <span class="text-sm" style="color: var(--text-secondary)">
       Skip dangerous mode permission prompt
       <DirtyDot dirty={skipDangerousDirty} />
     </span>
   </label>
 
   <!-- Save / Revert -->
-  <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+  <div class="flex gap-2 pt-4 border-t" style="border-color: var(--border-color)">
     <button
       type="button"
       onclick={save}
       disabled={!configStore.isDirty || configStore.saving}
-      class="text-sm px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-40"
+      class="btn-primary text-sm px-4 py-2"
     >
       {configStore.saving ? "Saving..." : "Save"}
     </button>
@@ -178,7 +178,7 @@
       type="button"
       onclick={() => configStore.revert()}
       disabled={!configStore.isDirty}
-      class="text-sm px-4 py-2 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40"
+      class="btn-secondary text-sm px-4 py-2"
     >
       Revert
     </button>

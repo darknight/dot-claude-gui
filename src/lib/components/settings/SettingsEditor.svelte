@@ -12,17 +12,17 @@
 </script>
 
 <!-- Toolbar -->
-<div class="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-4 py-2">
+<div class="flex items-center justify-between border-b px-4 py-2" style="border-color: var(--border-color); background-color: var(--bg-secondary)">
   <ScopeSelector />
   {#if configStore.isDirty}
-    <span class="text-xs text-yellow-400">Unsaved changes</span>
+    <span class="text-xs" style="color: var(--status-warning-text)">Unsaved changes</span>
   {/if}
 </div>
 
 <!-- Error display -->
 {#if configStore.error}
-  <div class="border-b border-red-800 bg-red-950 px-4 py-2">
-    <p class="text-xs text-red-400">{configStore.error}</p>
+  <div class="border-b px-4 py-2" style="border-color: var(--status-error-text); background-color: var(--status-error-bg)">
+    <p class="text-xs" style="color: var(--status-error-text)">{configStore.error}</p>
   </div>
 {/if}
 
@@ -41,6 +41,6 @@
   {:else if activeSection === "statusline"}
     <StatusLineEditor />
   {:else}
-    <p class="text-sm text-gray-600">Unknown section: {activeSection}</p>
+    <p class="text-sm" style="color: var(--text-muted)">Unknown section: {activeSection}</p>
   {/if}
 </div>

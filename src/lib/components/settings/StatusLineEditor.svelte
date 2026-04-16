@@ -44,7 +44,7 @@
   <div class="space-y-1">
     <label
       for="statusType"
-      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
       Type
       <DirtyDot dirty={typeDirty} />
@@ -53,7 +53,7 @@
       id="statusType"
       bind:value={statusType}
       onchange={() => configStore.markDirty()}
-      class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      class="input-base"
     >
       <option value="command">command</option>
     </select>
@@ -63,7 +63,7 @@
   <div class="space-y-1">
     <label
       for="command"
-      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
       Command
       <DirtyDot dirty={commandDirty} />
@@ -74,7 +74,7 @@
       bind:value={command}
       oninput={() => configStore.markDirty()}
       placeholder="e.g. bunx -y ccstatusline@latest"
-      class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm font-mono text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      class="input-base font-mono"
     />
   </div>
 
@@ -82,7 +82,7 @@
   <div class="space-y-1">
     <label
       for="padding"
-      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
       Padding
       <DirtyDot dirty={paddingDirty} />
@@ -93,17 +93,17 @@
       min="0"
       bind:value={padding}
       oninput={() => configStore.markDirty()}
-      class="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      class="input-base"
     />
   </div>
 
   <!-- Save / Revert -->
-  <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+  <div class="flex gap-2 pt-4 border-t" style="border-color: var(--border-color)">
     <button
       type="button"
       onclick={save}
       disabled={!configStore.isDirty || configStore.saving}
-      class="text-sm px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-40"
+      class="btn-primary text-sm px-4 py-2"
     >
       {configStore.saving ? "Saving..." : "Save"}
     </button>
@@ -111,7 +111,7 @@
       type="button"
       onclick={() => configStore.revert()}
       disabled={!configStore.isDirty}
-      class="text-sm px-4 py-2 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40"
+      class="btn-secondary text-sm px-4 py-2"
     >
       Revert
     </button>
