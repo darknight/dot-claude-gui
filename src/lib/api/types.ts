@@ -1,6 +1,8 @@
 // TypeScript interfaces matching the Rust claude-types crate.
 // All camelCase field names mirror the #[serde(rename_all = "camelCase")] on Rust structs.
 
+import type { Locale } from "$lib/i18n";
+
 // ---------------------------------------------------------------------------
 // Settings
 // ---------------------------------------------------------------------------
@@ -357,7 +359,7 @@ export interface ConnectionsFile {
 
 export interface AppConfig {
   theme: "light" | "dark" | "system";
-  language: string;
+  language?: Locale;
   fontSize: number;
   sidebarWidth: number;
   subpanelWidth: number;

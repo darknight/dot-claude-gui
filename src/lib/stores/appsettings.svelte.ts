@@ -1,19 +1,22 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { AppConfig } from "$lib/api/types.js";
+import { detectInitialLocale, isSupportedLocale } from "$lib/i18n";
 
 class AppSettingsStore {
   preferences = $state<AppConfig>({
     theme: "system",
-    language: "zh-CN",
+    language: undefined,
     fontSize: 14,
     sidebarWidth: 140,
     subpanelWidth: 240,
   });
 
+  loaded = $state(false);
+
   async load(): Promise<void> {
     try {
       const json = await invoke<string>("read_app_config");
-      const saved: AppConfig = JSON.parse(json);
+      const saved: Partial<AppConfig> = JSON.parse(json);
       this.preferences = { ...this.preferences, ...saved };
     } catch {
       // Use defaults on error
@@ -33,6 +36,14 @@ class AppSettingsStore {
     } catch {
       // Ignore migration errors
     }
+
+    // Dirty-data self-heal + cold-start detection
+    if (!isSupportedLocale(this.preferences.language)) {
+      this.preferences.language = detectInitialLocale();
+      await this.save();
+    }
+
+    this.loaded = true;
   }
 
   async save(): Promise<void> {
