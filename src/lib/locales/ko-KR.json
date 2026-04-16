@@ -189,5 +189,6 @@
   "launcher.launchError": "",
   "mcp.removeServer": "",
   "settings.statusLineType": "",
-  "settings.statusLinePadding": ""
+  "settings.statusLinePadding": "",
+  "settings.hooksEmptyDirtyHint": ""
 }

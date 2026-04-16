@@ -80,11 +80,14 @@ class ConfigStore {
     this.isDirty = false;
   }
 
-  revert() {
-    this.isDirty = false;
-    this.error = "";
-    // Trigger re-render by re-loading from cache
-    // The sub-editors will re-sync from activeSettings via $effect
+  async revert(): Promise<void> {
+    // Re-fetch saved settings from backend so sub-editors' $effect resync
+    // their local state. Clearing isDirty alone does not trigger those effects.
+    if (this.activeScope === "project" && projectsStore.activeProjectId) {
+      await this.loadProjectConfig(projectsStore.activeProjectId);
+    } else {
+      await this.loadUserConfig();
+    }
   }
 
   reset(): void {

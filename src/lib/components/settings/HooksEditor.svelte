@@ -163,6 +163,13 @@
     </select>
   </div>
 
+  <!-- Empty-but-dirty hint: local cleared all rules but disk still has them -->
+  {#if getGroups().length === 0 && isEventDirty(selectedEvent)}
+    <div class="card text-xs" style="color: var(--text-muted); border-left: 3px solid var(--status-warning-text)">
+      {t("settings.hooksEmptyDirtyHint")}
+    </div>
+  {/if}
+
   <!-- Hook Rules List -->
   <div class="space-y-3">
     {#each getGroups() as group, groupIndex}

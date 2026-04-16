@@ -189,5 +189,6 @@
   "launcher.launchError": "エラー：{message}",
   "mcp.removeServer": "サーバーを削除",
   "settings.statusLineType": "タイプ",
-  "settings.statusLinePadding": "パディング"
+  "settings.statusLinePadding": "パディング",
+  "settings.hooksEmptyDirtyHint": "このイベントのルールはローカルで消去されていますが、保存済みファイルにはまだ残っています。「保存」で適用、「元に戻す」で復元します。"
 }

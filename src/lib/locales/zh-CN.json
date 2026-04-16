@@ -189,5 +189,6 @@
   "launcher.launchError": "错误：{message}",
   "mcp.removeServer": "移除服务器",
   "settings.statusLineType": "类型",
-  "settings.statusLinePadding": "内边距"
+  "settings.statusLinePadding": "内边距",
+  "settings.hooksEmptyDirtyHint": "本地已清空该事件的规则，磁盘上仍保留原始内容。点击「保存」以应用清空操作，或「还原」恢复磁盘内容。"
 }
