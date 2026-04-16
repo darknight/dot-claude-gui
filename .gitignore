@@ -20,3 +20,7 @@ src-tauri/binaries/
 
 # Superpowers brainstorm sessions
 .superpowers/
+
+# Claude Code local session artifacts
+.claude/
+.playwright-mcp/
