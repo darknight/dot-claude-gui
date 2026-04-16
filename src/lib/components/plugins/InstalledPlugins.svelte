@@ -5,6 +5,7 @@
   import type { CommandOutputPayload, CommandCompletedPayload } from "$lib/ipc/events";
 
   import type { PluginInfo } from "$lib/api/types";
+  import { t } from "$lib/i18n";
 
   let pendingId = $state<string | null>(null);
   let outputLines = $state<string[]>([]);
@@ -56,7 +57,7 @@
 
 <div class="flex-1 overflow-auto p-6">
   {#if pluginsStore.loading}
-    <p class="text-sm" style="color: var(--text-muted)">Loading plugins...</p>
+    <p class="text-sm" style="color: var(--text-muted)">{t("common.loading")}</p>
   {:else if pluginsStore.error}
     <div class="alert-error mb-4">
       {pluginsStore.error}
@@ -65,7 +66,7 @@
 
   {#if pluginsStore.plugins.length === 0 && !pluginsStore.loading}
     <div class="flex h-full items-center justify-center">
-      <p class="text-sm" style="color: var(--text-muted)">No plugins installed</p>
+      <p class="text-sm" style="color: var(--text-muted)">{t("plugins.noPlugins")}</p>
     </div>
   {:else}
     <div class="space-y-1">

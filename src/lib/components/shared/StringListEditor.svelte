@@ -1,5 +1,6 @@
 <script lang="ts">
   import DirtyDot from "./DirtyDot.svelte";
+  import { t } from "$lib/i18n";
 
   let {
     items = $bindable([]),
@@ -69,7 +70,7 @@
       onclick={addItem}
       class="btn-primary rounded px-3 py-1 text-sm transition-colors"
     >
-      Add
+      {t("common.add")}
     </button>
   </div>
 </div>

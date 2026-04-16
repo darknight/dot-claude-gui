@@ -63,5 +63,17 @@
   "memory.noProjects": "メモリプロジェクトがありません",
   "memory.selectProject": "プロジェクトを選択...",
   "memory.selectProjectAbove": "上のプロジェクトを選択してください",
-  "memory.noFiles": "メモリファイルがありません"
+  "memory.noFiles": "メモリファイルがありません",
+  "common.revert": "元に戻す",
+  "common.add": "追加",
+  "common.remove": "削除",
+  "skills.selectSkill": "スキルを選択して詳細を表示",
+  "skills.noContent": "コンテンツがありません",
+  "plugins.noPlugins": "プラグインがインストールされていません",
+  "mcp.noServers": "MCP サーバーが設定されていません",
+  "effective.selectProject": "ヘッダーのドロップダウンからプロジェクトを選択して有効な設定を表示",
+  "effective.noConfig": "有効な設定がありません。",
+  "effective.noValue": "このセクションには値が設定されていません。",
+  "settings.noEnvVars": "環境変数が定義されていません。",
+  "memory.selectFileHint": "メモリファイルを選択して表示・編集"
 }

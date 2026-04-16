@@ -63,5 +63,17 @@
   "memory.noProjects": "暂无记忆项目",
   "memory.selectProject": "选择项目...",
   "memory.selectProjectAbove": "请在上方选择项目",
-  "memory.noFiles": "暂无记忆文件"
+  "memory.noFiles": "暂无记忆文件",
+  "common.revert": "还原",
+  "common.add": "添加",
+  "common.remove": "移除",
+  "skills.selectSkill": "选择一个技能以查看详情",
+  "skills.noContent": "暂无内容",
+  "plugins.noPlugins": "未安装任何插件",
+  "mcp.noServers": "未配置 MCP 服务器",
+  "effective.selectProject": "请在顶部下拉菜单中选择项目以查看有效配置",
+  "effective.noConfig": "暂无有效配置。",
+  "effective.noValue": "此部分未配置任何值。",
+  "settings.noEnvVars": "尚未定义任何环境变量。",
+  "memory.selectFileHint": "选择一个记忆文件进行查看和编辑"
 }

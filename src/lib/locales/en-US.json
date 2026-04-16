@@ -63,5 +63,17 @@
   "memory.noProjects": "No memory projects",
   "memory.selectProject": "Select project...",
   "memory.selectProjectAbove": "Select a project above",
-  "memory.noFiles": "No memory files"
+  "memory.noFiles": "No memory files",
+  "common.revert": "Revert",
+  "common.add": "Add",
+  "common.remove": "Remove",
+  "skills.selectSkill": "Select a skill to view details",
+  "skills.noContent": "No content available",
+  "plugins.noPlugins": "No plugins installed",
+  "mcp.noServers": "No MCP servers configured",
+  "effective.selectProject": "Select a project from the header dropdown to view effective config",
+  "effective.noConfig": "No effective config available.",
+  "effective.noValue": "No value configured for this section.",
+  "settings.noEnvVars": "No environment variables defined.",
+  "memory.selectFileHint": "Select a memory file to view and edit"
 }

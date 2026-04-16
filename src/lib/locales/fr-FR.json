@@ -63,5 +63,17 @@
   "memory.noProjects": "",
   "memory.selectProject": "",
   "memory.selectProjectAbove": "",
-  "memory.noFiles": ""
+  "memory.noFiles": "",
+  "common.revert": "",
+  "common.add": "",
+  "common.remove": "",
+  "skills.selectSkill": "",
+  "skills.noContent": "",
+  "plugins.noPlugins": "",
+  "mcp.noServers": "",
+  "effective.selectProject": "",
+  "effective.noConfig": "",
+  "effective.noValue": "",
+  "settings.noEnvVars": "",
+  "memory.selectFileHint": ""
 }

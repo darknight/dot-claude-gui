@@ -7,6 +7,7 @@
   import SandboxEditor from "./SandboxEditor.svelte";
   import EnvVarEditor from "./EnvVarEditor.svelte";
   import StatusLineEditor from "./StatusLineEditor.svelte";
+  import { t } from "$lib/i18n";
 
   let { activeSection = "general" }: { activeSection: string } = $props();
 </script>
@@ -15,7 +16,7 @@
 <div class="flex items-center justify-between border-b px-4 py-2" style="border-color: var(--border-color); background-color: var(--bg-secondary)">
   <ScopeSelector />
   {#if configStore.isDirty}
-    <span class="text-xs" style="color: var(--status-warning-text)">Unsaved changes</span>
+    <span class="text-xs" style="color: var(--status-warning-text)">{t("common.unsavedChanges")}</span>
   {/if}
 </div>
 

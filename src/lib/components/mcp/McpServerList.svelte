@@ -1,5 +1,6 @@
 <script lang="ts">
   import { mcpStore } from "$lib/stores/mcp.svelte";
+  import { t } from "$lib/i18n";
 
   // Group servers by origin (derived from name prefix / scope).
   // Claude Code's `claude mcp list` doesn't expose per-server scope, so
@@ -61,11 +62,11 @@
   {#if mcpStore.loading}
     <div class="flex items-center gap-2 py-4 text-sm" style="color: var(--text-muted)">
       <span class="inline-block h-4 w-4 animate-spin rounded-full border-2" style="border-color: var(--border-strong); border-top-color: var(--accent-primary)"></span>
-      Loading servers...
+      {t("common.loading")}
     </div>
   {:else if mcpStore.servers.length === 0}
     <div class="flex h-64 items-center justify-center">
-      <p class="text-sm" style="color: var(--text-muted)">No MCP servers configured</p>
+      <p class="text-sm" style="color: var(--text-muted)">{t("mcp.noServers")}</p>
     </div>
   {:else}
     <div class="space-y-6">

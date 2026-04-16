@@ -2,6 +2,7 @@
   import { ipcClient } from "$lib/ipc/client.js";
   import { projectsStore } from "$lib/stores/projects.svelte";
   import type { EffectiveConfig } from "$lib/api/types";
+  import { t } from "$lib/i18n";
 
   let effective = $state<EffectiveConfig | null>(null);
   let loading = $state(false);
@@ -77,13 +78,13 @@
     <!-- No project selected -->
     <div class="flex flex-1 items-center justify-center">
       <p class="text-sm" style="color: var(--text-muted)">
-        Select a project from the header dropdown to view effective config
+        {t("effective.selectProject")}
       </p>
     </div>
 
   {:else if loading}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm" style="color: var(--text-muted)">Loading effective config...</p>
+      <p class="text-sm" style="color: var(--text-muted)">{t("common.loading")}</p>
     </div>
 
   {:else if error}
@@ -136,7 +137,7 @@
               {#if hasValue(value)}
                 <pre class="code-block overflow-x-auto leading-relaxed">{formatJson(value)}</pre>
               {:else}
-                <p class="text-xs italic" style="color: var(--text-muted)">No value configured for this section.</p>
+                <p class="text-xs italic" style="color: var(--text-muted)">{t("effective.noValue")}</p>
               {/if}
             </div>
           {/if}
@@ -162,7 +163,7 @@
     </div>
   {:else}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm" style="color: var(--text-muted)">No effective config available.</p>
+      <p class="text-sm" style="color: var(--text-muted)">{t("effective.noConfig")}</p>
     </div>
   {/if}
 </div>

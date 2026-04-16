@@ -1,11 +1,12 @@
 <script lang="ts">
   import { skillsStore } from "$lib/stores/skills.svelte";
+  import { t } from "$lib/i18n";
 </script>
 
 <div class="flex flex-1 flex-col overflow-hidden">
   {#if !skillsStore.selectedSkill}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm" style="color: var(--text-muted)">Select a skill to view details</p>
+      <p class="text-sm" style="color: var(--text-muted)">{t("skills.selectSkill")}</p>
     </div>
   {:else}
     {@const skill = skillsStore.selectedSkill}
@@ -70,11 +71,11 @@
         </h3>
         <div class="rounded-lg">
           {#if skillsStore.contentLoading}
-            <div class="code-block p-4 text-xs" style="color: var(--text-muted)">Loading...</div>
+            <div class="code-block p-4 text-xs" style="color: var(--text-muted)">{t("common.loading")}</div>
           {:else if skillsStore.skillContent != null}
             <pre class="code-block overflow-auto p-4 text-xs leading-relaxed whitespace-pre-wrap">{skillsStore.skillContent}</pre>
           {:else}
-            <div class="code-block p-4 text-xs" style="color: var(--text-muted)">No content available</div>
+            <div class="code-block p-4 text-xs" style="color: var(--text-muted)">{t("skills.noContent")}</div>
           {/if}
         </div>
       </div>

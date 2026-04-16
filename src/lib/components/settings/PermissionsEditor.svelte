@@ -4,6 +4,7 @@
   import DirtyDot from "$lib/components/shared/DirtyDot.svelte";
   import { arraysEqual } from "$lib/utils/diff";
   import JsonPreview from "./JsonPreview.svelte";
+  import { t } from "$lib/i18n";
 
   const settings = $derived(configStore.activeSettings);
   const perms = $derived(settings.permissions);
@@ -109,7 +110,7 @@
       disabled={!configStore.isDirty || configStore.saving}
       class="btn-primary text-sm px-4 py-2"
     >
-      {configStore.saving ? "Saving..." : "Save"}
+      {configStore.saving ? t("common.saving") : t("common.save")}
     </button>
     <button
       type="button"
@@ -117,7 +118,7 @@
       disabled={!configStore.isDirty}
       class="btn-secondary text-sm px-4 py-2"
     >
-      Revert
+      {t("common.revert")}
     </button>
   </div>
 

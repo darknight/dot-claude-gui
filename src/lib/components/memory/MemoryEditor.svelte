@@ -1,5 +1,6 @@
 <script lang="ts">
   import { memoryStore } from "$lib/stores/memory.svelte";
+  import { t } from "$lib/i18n";
 
   // Local editable content — tracks dirty state against the saved original
   let localContent = $state("");
@@ -53,7 +54,7 @@
 <div class="flex flex-1 flex-col overflow-hidden">
   {#if !memoryStore.activeFile}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm" style="color: var(--text-muted)">Select a memory file to view and edit</p>
+      <p class="text-sm" style="color: var(--text-muted)">{t("memory.selectFileHint")}</p>
     </div>
   {:else}
     {@const file = memoryStore.activeFile}
@@ -72,7 +73,7 @@
             {/if}
             {#if isDirty}
               <span class="badge badge-warning flex-shrink-0">
-                unsaved
+                {t("common.unsaved")}
               </span>
             {/if}
           </div>
@@ -91,13 +92,13 @@
             disabled={!isDirty || memoryStore.saving}
             onclick={handleSave}
           >
-            {memoryStore.saving ? "Saving..." : "Save"}
+            {memoryStore.saving ? t("common.saving") : t("common.save")}
           </button>
           <button
             class="btn-danger-ghost rounded px-3 py-1.5 text-xs font-medium"
             onclick={handleDelete}
           >
-            Delete
+            {t("common.delete")}
           </button>
         </div>
       </div>
@@ -107,7 +108,7 @@
     <div class="flex flex-1 flex-col overflow-hidden p-4">
       {#if memoryStore.loading}
         <div class="flex flex-1 items-center justify-center">
-          <p class="text-sm" style="color: var(--text-muted)">Loading...</p>
+          <p class="text-sm" style="color: var(--text-muted)">{t("common.loading")}</p>
         </div>
       {:else}
         <textarea

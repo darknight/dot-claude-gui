@@ -4,6 +4,7 @@
   import { deepEqual } from "$lib/utils/diff";
   import JsonPreview from "./JsonPreview.svelte";
   import type { HookGroup, HookDefinition } from "$lib/api/types";
+  import { t } from "$lib/i18n";
 
   const validEvents = [
     "PreToolUse", "PostToolUse", "PostToolUseFailure", "Notification", "UserPromptSubmit",
@@ -381,7 +382,7 @@
       disabled={!configStore.isDirty || configStore.saving}
       class="btn-primary text-sm px-4 py-2"
     >
-      {configStore.saving ? "Saving..." : "Save"}
+      {configStore.saving ? t("common.saving") : t("common.save")}
     </button>
     <button
       type="button"
@@ -389,7 +390,7 @@
       disabled={!configStore.isDirty}
       class="btn-secondary text-sm px-4 py-2"
     >
-      Revert
+      {t("common.revert")}
     </button>
   </div>
 

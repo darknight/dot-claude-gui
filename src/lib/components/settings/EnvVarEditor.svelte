@@ -1,6 +1,7 @@
 <script lang="ts">
   import { configStore } from "$lib/stores/config.svelte";
   import JsonPreview from "./JsonPreview.svelte";
+  import { t } from "$lib/i18n";
 
   const settings = $derived(configStore.activeSettings);
 
@@ -99,13 +100,13 @@
             class="btn-danger-ghost shrink-0 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
             aria-label="Remove {entry.key}"
           >
-            Remove
+            {t("common.remove")}
           </button>
         </div>
       {/each}
     </div>
   {:else}
-    <p class="text-sm italic" style="color: var(--text-muted)">No environment variables defined.</p>
+    <p class="text-sm italic" style="color: var(--text-muted)">{t("settings.noEnvVars")}</p>
   {/if}
 
   <!-- Add new entry -->
@@ -133,7 +134,7 @@
         onclick={addEntry}
         class="btn-primary shrink-0 text-sm px-3 py-1.5"
       >
-        Add
+        {t("common.add")}
       </button>
     </div>
     {#if addError}
@@ -149,7 +150,7 @@
       disabled={!configStore.isDirty || configStore.saving}
       class="btn-primary text-sm px-4 py-2"
     >
-      {configStore.saving ? "Saving..." : "Save"}
+      {configStore.saving ? t("common.saving") : t("common.save")}
     </button>
     <button
       type="button"
@@ -157,7 +158,7 @@
       disabled={!configStore.isDirty}
       class="btn-secondary text-sm px-4 py-2"
     >
-      Revert
+      {t("common.revert")}
     </button>
   </div>
 
