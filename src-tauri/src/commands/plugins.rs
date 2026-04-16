@@ -402,9 +402,9 @@ mod tests {
         let installed_json = r#"{
             "version": 1,
             "plugins": {
-                "claude-plugins-official": [
+                "superpowers@claude-plugins-official": [
                     {
-                        "scope": "superpowers",
+                        "scope": "user",
                         "installPath": "/tmp/superpowers",
                         "version": "1.2.3",
                         "installedAt": "2024-01-01T00:00:00Z",
@@ -439,9 +439,9 @@ mod tests {
         let installed_json = r#"{
             "version": 1,
             "plugins": {
-                "my-marketplace": [
+                "my-plugin@my-marketplace": [
                     {
-                        "scope": "my-plugin",
+                        "scope": "user",
                         "installPath": "/tmp/my-plugin",
                         "version": "0.1.0",
                         "installedAt": "2024-06-01T00:00:00Z",
@@ -474,9 +474,9 @@ mod tests {
         let installed_json = r#"{
             "version": 1,
             "plugins": {
-                "evil-marketplace": [
+                "bad-plugin@evil-marketplace": [
                     {
-                        "scope": "bad-plugin",
+                        "scope": "user",
                         "installPath": "/tmp/bad-plugin",
                         "version": "9.9.9",
                         "installedAt": "2024-01-01T00:00:00Z",

@@ -28,7 +28,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="w-1 cursor-col-resize transition-colors hover:bg-blue-500/50 {dragging ? 'bg-blue-500/50' : ''}"
+  class="w-1 cursor-col-resize transition-colors hover:bg-[var(--accent-primary)]/50 {dragging ? 'bg-[var(--accent-primary)]/50' : ''}"
   style="flex-shrink: 0"
   onpointerdown={onPointerDown}
   onpointermove={onPointerMove}

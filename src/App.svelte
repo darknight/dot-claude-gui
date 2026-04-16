@@ -213,7 +213,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
             <button
               class="flex items-center gap-2 h-9 px-2 rounded-lg text-sm transition-colors overflow-hidden whitespace-nowrap
                 {activeNav === btn.id
-                ? 'text-white'
+                ? ''
                 : 'hover:text-[var(--text-primary)]'}"
               style="{activeNav === btn.id ? 'background-color: var(--nav-active-bg)' : ''} color: {activeNav === btn.id ? 'var(--nav-active-text)' : 'var(--text-secondary)'}"
               title={btn.label}
