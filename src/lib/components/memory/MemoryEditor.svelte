@@ -42,14 +42,10 @@
 
   function typeBadgeClass(memoryType?: string): string {
     switch (memoryType) {
-      case "core":
-        return "bg-blue-900 text-blue-300";
-      case "project":
-        return "bg-purple-900 text-purple-300";
-      case "session":
-        return "bg-yellow-900 text-yellow-300";
-      default:
-        return "bg-gray-700 text-gray-300";
+      case "core": return "badge badge-info";
+      case "project": return "badge badge-purple";
+      case "session": return "badge badge-warning";
+      default: return "badge badge-neutral";
     }
   }
 </script>
@@ -57,51 +53,48 @@
 <div class="flex flex-1 flex-col overflow-hidden">
   {#if !memoryStore.activeFile}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm text-gray-600">Select a memory file to view and edit</p>
+      <p class="text-sm" style="color: var(--text-muted)">Select a memory file to view and edit</p>
     </div>
   {:else}
     {@const file = memoryStore.activeFile}
     <!-- Header -->
-    <div class="border-b border-gray-800 px-6 py-4">
+    <div class="border-b px-6 py-4" style="border-color: var(--border-color)">
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
           <div class="flex items-center gap-2">
-            <h2 class="truncate text-sm font-semibold text-gray-100">
+            <h2 class="truncate text-sm font-semibold" style="color: var(--text-primary)">
               {file.name ?? file.filename}
             </h2>
             {#if file.memoryType}
-              <span class="flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-medium {typeBadgeClass(file.memoryType)}">
+              <span class="flex-shrink-0 {typeBadgeClass(file.memoryType)}">
                 {file.memoryType}
               </span>
             {/if}
             {#if isDirty}
-              <span class="flex-shrink-0 rounded bg-orange-900 px-1.5 py-0.5 text-xs font-medium text-orange-300">
+              <span class="badge badge-warning flex-shrink-0">
                 unsaved
               </span>
             {/if}
           </div>
           {#if file.name && file.filename !== file.name}
-            <p class="mt-0.5 font-mono text-xs text-gray-500">{file.filename}</p>
+            <p class="mt-0.5 font-mono text-xs" style="color: var(--text-muted)">{file.filename}</p>
           {/if}
           {#if file.description}
-            <p class="mt-1 text-xs text-gray-400">{file.description}</p>
+            <p class="mt-1 text-xs" style="color: var(--text-secondary)">{file.description}</p>
           {/if}
         </div>
 
         <!-- Action buttons -->
         <div class="flex flex-shrink-0 items-center gap-2">
           <button
-            class="rounded px-3 py-1.5 text-xs font-medium transition-colors
-              {isDirty && !memoryStore.saving
-              ? 'bg-blue-600 text-white hover:bg-blue-500'
-              : 'cursor-not-allowed bg-gray-700 text-gray-500'}"
+            class="btn-primary rounded px-3 py-1.5 text-xs font-medium"
             disabled={!isDirty || memoryStore.saving}
             onclick={handleSave}
           >
             {memoryStore.saving ? "Saving..." : "Save"}
           </button>
           <button
-            class="rounded px-3 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-900/50 hover:text-red-300"
+            class="btn-danger-ghost rounded px-3 py-1.5 text-xs font-medium"
             onclick={handleDelete}
           >
             Delete
@@ -114,11 +107,12 @@
     <div class="flex flex-1 flex-col overflow-hidden p-4">
       {#if memoryStore.loading}
         <div class="flex flex-1 items-center justify-center">
-          <p class="text-sm text-gray-500">Loading...</p>
+          <p class="text-sm" style="color: var(--text-muted)">Loading...</p>
         </div>
       {:else}
         <textarea
-          class="flex-1 resize-none rounded border border-gray-700 bg-gray-950 p-3 font-mono text-xs text-gray-200 leading-relaxed focus:border-gray-600 focus:outline-none"
+          class="flex-1 resize-none font-mono text-xs leading-relaxed focus:outline-none"
+          style="background-color: var(--bg-code); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.25rem; padding: 0.75rem"
           bind:value={localContent}
           spellcheck={false}
         ></textarea>
@@ -126,7 +120,7 @@
     </div>
 
     {#if memoryStore.error}
-      <div class="border-t border-gray-800 px-6 py-2 text-xs text-red-400">
+      <div class="alert-error border-t px-6 py-2 text-xs" style="border-color: var(--border-color)">
         {memoryStore.error}
       </div>
     {/if}
