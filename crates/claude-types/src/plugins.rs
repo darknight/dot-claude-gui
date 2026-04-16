@@ -138,6 +138,8 @@ pub struct AvailablePlugin {
     pub marketplace: String,
     pub installed: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub installed_version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,

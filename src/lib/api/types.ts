@@ -229,6 +229,7 @@ export interface AvailablePlugin {
   name: string;
   marketplace: string;
   installed: boolean;
+  installedVersion?: string;
   description?: string;
   version?: string;
   category?: string;

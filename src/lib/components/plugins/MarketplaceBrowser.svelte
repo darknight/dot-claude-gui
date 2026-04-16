@@ -82,13 +82,13 @@
                       <span class="text-xs text-gray-500">v{plugin.version}</span>
                     {/if}
                     {#if plugin.category}
-                      <span class="rounded bg-blue-900 px-1.5 py-0.5 text-xs font-medium text-blue-300">
+                      <span class="rounded bg-blue-900 px-1.5 py-0.5 text-xs font-medium text-blue-300 dark:bg-blue-900 dark:text-blue-300">
                         {plugin.category}
                       </span>
                     {/if}
-                    {#if plugin.installed}
-                      <span class="rounded bg-green-900 px-1.5 py-0.5 text-xs font-medium text-green-300">
-                        Installed
+                    {#if plugin.installed && plugin.installedVersion}
+                      <span class="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                        ✓ v{plugin.installedVersion}
                       </span>
                     {/if}
                   </div>
@@ -98,24 +98,41 @@
                 </div>
 
                 <!-- Action -->
-                <div class="flex-shrink-0">
-                  {#if !plugin.installed}
-                    {#if installing === plugin.name}
-                      <button
-                        disabled
-                        class="rounded bg-gray-700 px-3 py-1 text-xs text-gray-400 cursor-not-allowed"
-                      >
-                        Installing…
-                      </button>
-                    {:else}
-                      <button
-                        class="rounded bg-blue-700 px-3 py-1 text-xs text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={installing !== null}
-                        onclick={() => handleInstall(plugin.name, plugin.marketplace)}
-                      >
-                        Install
-                      </button>
-                    {/if}
+                <div class="flex flex-shrink-0 items-center gap-2">
+                  {#if installing === plugin.name}
+                    <button
+                      disabled
+                      class="rounded bg-gray-700 px-3 py-1 text-xs text-gray-400 cursor-not-allowed"
+                    >
+                      Installing…
+                    </button>
+                  {:else if !plugin.installed}
+                    <button
+                      class="rounded bg-blue-600 px-3 py-1 text-xs text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={installing !== null}
+                      onclick={() => handleInstall(plugin.name, plugin.marketplace)}
+                    >
+                      Install
+                    </button>
+                  {:else if plugin.version && plugin.installedVersion && plugin.version !== plugin.installedVersion}
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                      {plugin.installedVersion} → {plugin.version}
+                    </span>
+                    <button
+                      class="rounded bg-emerald-600 px-3 py-1 text-xs text-white transition-colors hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={installing !== null}
+                      onclick={() => handleInstall(plugin.name, plugin.marketplace)}
+                    >
+                      Upgrade
+                    </button>
+                  {:else}
+                    <button
+                      class="rounded border border-gray-300 px-3 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={installing !== null}
+                      onclick={() => handleInstall(plugin.name, plugin.marketplace)}
+                    >
+                      Re-install
+                    </button>
                   {/if}
                 </div>
               </div>

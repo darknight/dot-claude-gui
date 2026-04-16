@@ -89,12 +89,12 @@ pub(crate) async fn list_plugins_logic(state: &AppState) -> Vec<PluginInfo> {
 
     let mut result = Vec::new();
 
-    // installed.plugins maps marketplace_id -> Vec<InstalledPlugin>.
-    // Each InstalledPlugin has a `scope` field which is the plugin name.
-    // The canonical id is `{scope}@{marketplace_id}`.
-    for (marketplace_id, plugins) in &installed.plugins {
+    // installed.plugins maps plugin_key -> Vec<InstalledPlugin>.
+    // Keys are "{plugin-name}@{marketplace-id}" (e.g. "superpowers@claude-plugins-official").
+    // plugin.scope is the install scope ("user" | "project"), not the plugin name.
+    for (plugin_key, plugins) in &installed.plugins {
         for plugin in plugins {
-            let id = format!("{}@{}", plugin.scope, marketplace_id);
+            let id = plugin_key.clone();
             let (name, marketplace) = split_plugin_id(&id);
             let enabled = enabled_map.get(&id).copied().unwrap_or(true);
             let blocked = blocked_ids.contains(&id);
@@ -203,28 +203,35 @@ pub(crate) fn get_marketplace_plugins_logic(
         )
     })?;
 
-    // Build a set of installed plugin scopes for this marketplace.
+    // Build name -> installed_version map for plugins from this marketplace.
+    // Keys in installed_plugins.json are "name@marketplace" (e.g. "superpowers@claude-plugins-official").
     let installed: InstalledPluginsFile =
         read_json_file_opt(&plugins_dir.join("installed_plugins.json"))
             .unwrap_or_else(|| InstalledPluginsFile {
                 version: 1,
                 plugins: HashMap::new(),
             });
-    let installed_scopes: HashSet<String> = installed
+    let suffix = format!("@{}", marketplace_id);
+    let installed_versions: HashMap<String, String> = installed
         .plugins
-        .get(&marketplace_id)
-        .map(|plugins| plugins.iter().map(|p| p.scope.clone()).collect())
-        .unwrap_or_default();
+        .iter()
+        .filter(|(key, _)| key.ends_with(&suffix))
+        .flat_map(|(key, plugins)| {
+            let name = key.split('@').next().unwrap_or(key).to_string();
+            plugins.iter().map(move |p| (name.clone(), p.version.clone()))
+        })
+        .collect();
 
     let available: Vec<AvailablePlugin> = manifest
         .plugins
         .into_iter()
         .map(|p| {
-            let installed_flag = installed_scopes.contains(&p.name);
+            let installed_ver = installed_versions.get(&p.name);
             AvailablePlugin {
                 name: p.name,
                 marketplace: marketplace_id.clone(),
-                installed: installed_flag,
+                installed: installed_ver.is_some(),
+                installed_version: installed_ver.cloned(),
                 description: p.description,
                 version: p.version,
                 category: p.category,
@@ -290,13 +297,12 @@ pub async fn install_plugin(
     name: String,
     marketplace: String,
 ) -> Result<CommandRequest, String> {
-    // Mirror daemon: claude plugin install <name> --marketplace <marketplace>
+    // claude plugin install <name>@<marketplace>
+    let plugin_spec = format!("{}@{}", name, marketplace);
     let args = vec![
         "plugin".to_string(),
         "install".to_string(),
-        name,
-        "--marketplace".to_string(),
-        marketplace,
+        plugin_spec,
     ];
     let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
     Ok(CommandRequest { request_id })
