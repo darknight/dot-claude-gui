@@ -59,5 +59,9 @@
   "claudemd.groupProject": "项目",
   "claudemd.groupGlobal": "全局",
   "claudemd.createLabel": "CLAUDE.md（待创建）",
-  "claudemd.clickToCreate": "点击创建"
+  "claudemd.clickToCreate": "点击创建",
+  "memory.noProjects": "暂无记忆项目",
+  "memory.selectProject": "选择项目...",
+  "memory.selectProjectAbove": "请在上方选择项目",
+  "memory.noFiles": "暂无记忆文件"
 }

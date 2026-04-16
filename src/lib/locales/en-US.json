@@ -59,5 +59,9 @@
   "claudemd.groupProject": "Project",
   "claudemd.groupGlobal": "Global",
   "claudemd.createLabel": "CLAUDE.md (create)",
-  "claudemd.clickToCreate": "click to create"
+  "claudemd.clickToCreate": "click to create",
+  "memory.noProjects": "No memory projects",
+  "memory.selectProject": "Select project...",
+  "memory.selectProjectAbove": "Select a project above",
+  "memory.noFiles": "No memory files"
 }

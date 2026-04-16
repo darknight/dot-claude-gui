@@ -61,7 +61,7 @@
   <!-- Project selector -->
   <div class="px-4 py-3 border-b" style="border-color: var(--border-color)">
     {#if memoryStore.projects.length === 0}
-      <span class="text-xs" style="color: var(--text-muted)">No memory projects</span>
+      <span class="text-xs" style="color: var(--text-muted)">{t("memory.noProjects")}</span>
     {:else}
       <select
         class="input-base w-full text-xs disabled:cursor-not-allowed disabled:opacity-60"
@@ -74,7 +74,7 @@
           if (val) memoryStore.selectProject(val);
         }}
       >
-        <option value="">Select project...</option>
+        <option value="">{t("memory.selectProject")}</option>
         {#each memoryStore.projects as project (project.id)}
           <option value={project.id}>{project.projectPath}</option>
         {/each}
@@ -85,7 +85,7 @@
   <!-- File list -->
   <ul class="flex-1 overflow-y-auto py-2">
     {#if memoryStore.loading && memoryStore.activeProjectId && memoryStore.files.length === 0}
-      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">Loading...</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("common.loading")}</li>
     {:else if activeProjectHasNoMemory}
       <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">
         {t("memory.noFilesYet", {
@@ -93,9 +93,9 @@
         })}
       </li>
     {:else if !memoryStore.activeProjectId}
-      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">Select a project above</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("memory.selectProjectAbove")}</li>
     {:else if memoryStore.files.length === 0}
-      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">No memory files</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("memory.noFiles")}</li>
     {:else}
       {#each memoryStore.files as file (file.filename)}
         <li>
@@ -111,7 +111,7 @@
                     <span
                       class="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full"
                       style="background-color: var(--dirty-dot)"
-                      aria-label="unsaved changes"
+                      aria-label={t("common.unsavedChanges")}
                     ></span>
                   {/if}
                   <span class="truncate">{file.name ?? file.filename}</span>

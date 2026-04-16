@@ -59,5 +59,9 @@
   "claudemd.groupProject": "",
   "claudemd.groupGlobal": "",
   "claudemd.createLabel": "",
-  "claudemd.clickToCreate": ""
+  "claudemd.clickToCreate": "",
+  "memory.noProjects": "",
+  "memory.selectProject": "",
+  "memory.selectProjectAbove": "",
+  "memory.noFiles": ""
 }

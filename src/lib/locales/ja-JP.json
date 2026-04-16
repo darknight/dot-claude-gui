@@ -59,5 +59,9 @@
   "claudemd.groupProject": "プロジェクト",
   "claudemd.groupGlobal": "グローバル",
   "claudemd.createLabel": "CLAUDE.md（作成）",
-  "claudemd.clickToCreate": "クリックして作成"
+  "claudemd.clickToCreate": "クリックして作成",
+  "memory.noProjects": "メモリプロジェクトがありません",
+  "memory.selectProject": "プロジェクトを選択...",
+  "memory.selectProjectAbove": "上のプロジェクトを選択してください",
+  "memory.noFiles": "メモリファイルがありません"
 }
