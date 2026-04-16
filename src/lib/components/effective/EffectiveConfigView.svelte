@@ -36,10 +36,10 @@
   }
 
   const sourceBadgeClass: Record<string, string> = {
-    user: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-    project: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-    local: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
-    managed: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+    user: "badge badge-info",
+    project: "badge badge-success",
+    local: "badge badge-warning",
+    managed: "badge badge-error",
   };
 
   const sections = [
@@ -76,19 +76,19 @@
   {#if !activeProject}
     <!-- No project selected -->
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm text-gray-500">
+      <p class="text-sm" style="color: var(--text-muted)">
         Select a project from the header dropdown to view effective config
       </p>
     </div>
 
   {:else if loading}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm text-gray-500">Loading effective config...</p>
+      <p class="text-sm" style="color: var(--text-muted)">Loading effective config...</p>
     </div>
 
   {:else if error}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm text-red-400">{error}</p>
+      <p class="text-sm" style="color: var(--status-error-text)">{error}</p>
     </div>
 
   {:else if effective}
@@ -96,10 +96,10 @@
 
       <!-- Section heading -->
       <div class="mb-4">
-        <h2 class="text-sm font-semibold text-gray-200">
+        <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
           Effective Config — {activeProject.name}
         </h2>
-        <p class="mt-1 text-xs text-gray-500">
+        <p class="mt-1 text-xs" style="color: var(--text-muted)">
           Merged settings with per-field source annotations.
         </p>
       </div>
@@ -110,35 +110,33 @@
         {@const source = getSource(section.key)}
         {@const isExpanded = expandedSections[section.key] ?? false}
 
-        <div class="rounded-lg border border-gray-700 bg-gray-900 overflow-hidden">
+        <div class="card overflow-hidden" style="padding: 0;">
           <!-- Section header (always visible, clickable) -->
           <button
-            class="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-800/50 transition-colors"
+            class="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-[var(--bg-card-hover)] transition-colors"
             onclick={() => toggleSection(section.key)}
           >
             <div class="flex items-center gap-2">
-              <span class="text-sm font-medium text-gray-200">{section.label}</span>
+              <span class="text-sm font-medium" style="color: var(--text-primary)">{section.label}</span>
               {#if source}
-                <span
-                  class="rounded px-1.5 py-0.5 text-xs font-medium capitalize {sourceBadgeClass[source] ?? 'bg-gray-700 text-gray-300'}"
-                >
+                <span class="capitalize {sourceBadgeClass[source] ?? 'badge badge-neutral'}">
                   {source}
                 </span>
               {/if}
               {#if !hasValue(value)}
-                <span class="text-xs text-gray-600">(not set)</span>
+                <span class="text-xs" style="color: var(--text-muted)">(not set)</span>
               {/if}
             </div>
-            <span class="text-xs text-gray-500">{isExpanded ? "▲" : "▼"}</span>
+            <span class="text-xs" style="color: var(--text-muted)">{isExpanded ? "▲" : "▼"}</span>
           </button>
 
           <!-- Section content (collapsible) -->
           {#if isExpanded}
-            <div class="border-t border-gray-700 px-4 py-3">
+            <div class="border-t px-4 py-3" style="border-color: var(--border-color)">
               {#if hasValue(value)}
-                <pre class="overflow-x-auto rounded bg-gray-950 p-3 text-xs text-gray-300 leading-relaxed">{formatJson(value)}</pre>
+                <pre class="code-block overflow-x-auto leading-relaxed">{formatJson(value)}</pre>
               {:else}
-                <p class="text-xs text-gray-600 italic">No value configured for this section.</p>
+                <p class="text-xs italic" style="color: var(--text-muted)">No value configured for this section.</p>
               {/if}
             </div>
           {/if}
@@ -146,17 +144,17 @@
       {/each}
 
       <!-- Raw effective JSON -->
-      <div class="rounded-lg border border-gray-700 bg-gray-900 overflow-hidden">
+      <div class="card overflow-hidden" style="padding: 0;">
         <button
-          class="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-800/50 transition-colors"
+          class="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-[var(--bg-card-hover)] transition-colors"
           onclick={() => { rawExpanded = !rawExpanded; }}
         >
-          <span class="text-sm font-medium text-gray-200">Raw Effective JSON</span>
-          <span class="text-xs text-gray-500">{rawExpanded ? "▲" : "▼"}</span>
+          <span class="text-sm font-medium" style="color: var(--text-primary)">Raw Effective JSON</span>
+          <span class="text-xs" style="color: var(--text-muted)">{rawExpanded ? "▲" : "▼"}</span>
         </button>
         {#if rawExpanded}
-          <div class="border-t border-gray-700 px-4 py-3">
-            <pre class="overflow-x-auto rounded bg-gray-950 p-3 text-xs text-gray-300 leading-relaxed">{formatJson(effective.settings)}</pre>
+          <div class="border-t px-4 py-3" style="border-color: var(--border-color)">
+            <pre class="code-block overflow-x-auto leading-relaxed">{formatJson(effective.settings)}</pre>
           </div>
         {/if}
       </div>
@@ -164,7 +162,7 @@
     </div>
   {:else}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm text-gray-600">No effective config available.</p>
+      <p class="text-sm" style="color: var(--text-muted)">No effective config available.</p>
     </div>
   {/if}
 </div>

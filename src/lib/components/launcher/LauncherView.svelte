@@ -79,23 +79,23 @@
 
   <!-- Section heading -->
   <div>
-    <h2 class="text-sm font-semibold text-gray-200">Launch Claude Code</h2>
-    <p class="mt-1 text-xs text-gray-500">
+    <h2 class="text-sm font-semibold" style="color: var(--text-primary)">Launch Claude Code</h2>
+    <p class="mt-1 text-xs" style="color: var(--text-muted)">
       Select a project, configure environment variables, and launch.
     </p>
   </div>
 
   <!-- Project selector -->
   <div class="space-y-1.5">
-    <label for="launcher-project" class="block text-xs font-medium text-gray-400">
+    <label for="launcher-project" class="block text-xs font-medium" style="color: var(--text-muted)">
       Project
     </label>
     {#if projectsStore.projects.length === 0}
-      <p class="text-xs text-gray-600">No projects registered. Add one via the Projects section.</p>
+      <p class="text-xs" style="color: var(--text-muted)">No projects registered. Add one via the Projects section.</p>
     {:else}
       <select
         id="launcher-project"
-        class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+        class="input-base"
         bind:value={selectedProjectId}
       >
         <option value="">— Select a project —</option>
@@ -109,75 +109,77 @@
   <!-- Config summary card -->
   {#if selectedProject}
     {@const settings = configStore.userSettings}
-    <div class="rounded-lg border border-gray-700 bg-gray-900 p-4 space-y-2">
-      <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Config Summary</h3>
+    <div class="card space-y-2">
+      <h3 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">Config Summary</h3>
       <div class="grid grid-cols-3 gap-3">
-        <div class="rounded bg-gray-800 px-3 py-2 text-center">
-          <p class="text-xs text-gray-500">Language</p>
-          <p class="mt-0.5 text-sm font-medium text-gray-200">
+        <div class="rounded px-3 py-2 text-center" style="background-color: var(--bg-tertiary)">
+          <p class="text-xs" style="color: var(--text-muted)">Language</p>
+          <p class="mt-0.5 text-sm font-medium" style="color: var(--text-primary)">
             {settings.language ?? "default"}
           </p>
         </div>
-        <div class="rounded bg-gray-800 px-3 py-2 text-center">
-          <p class="text-xs text-gray-500">Default Mode</p>
-          <p class="mt-0.5 text-sm font-medium text-gray-200">
+        <div class="rounded px-3 py-2 text-center" style="background-color: var(--bg-tertiary)">
+          <p class="text-xs" style="color: var(--text-muted)">Default Mode</p>
+          <p class="mt-0.5 text-sm font-medium" style="color: var(--text-primary)">
             {settings.permissions?.defaultMode ?? "ask"}
           </p>
         </div>
-        <div class="rounded bg-gray-800 px-3 py-2 text-center">
-          <p class="text-xs text-gray-500">Active Plugins</p>
-          <p class="mt-0.5 text-sm font-medium text-gray-200">{activePluginCount}</p>
+        <div class="rounded px-3 py-2 text-center" style="background-color: var(--bg-tertiary)">
+          <p class="text-xs" style="color: var(--text-muted)">Active Plugins</p>
+          <p class="mt-0.5 text-sm font-medium" style="color: var(--text-primary)">{activePluginCount}</p>
         </div>
       </div>
-      <p class="text-xs text-gray-600">Path: {selectedProject.path}</p>
+      <p class="text-xs" style="color: var(--text-muted)">Path: {selectedProject.path}</p>
     </div>
   {/if}
 
   <!-- Environment variables -->
   <div class="space-y-3">
-    <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-400">
+    <h3 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">
       Environment Variables
     </h3>
 
     <!-- Settings env vars as checkboxes -->
     {#if Object.keys(settingsEnv).length > 0}
-      <div class="rounded-lg border border-gray-700 bg-gray-900 p-3 space-y-2">
-        <p class="text-xs text-gray-500 mb-2">From user settings (check to include):</p>
+      <div class="card space-y-2">
+        <p class="text-xs mb-2" style="color: var(--text-muted)">From user settings (check to include):</p>
         {#each Object.entries(settingsEnv) as [key, value] (key)}
           <label class="flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
-              class="h-3.5 w-3.5 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900"
+              class="h-3.5 w-3.5 rounded"
+              style="accent-color: var(--accent-primary)"
               bind:checked={envChecks[key]}
             />
             <span class="flex-1 min-w-0">
-              <span class="text-sm font-mono text-gray-300">{key}</span>
-              <span class="mx-1 text-gray-600">=</span>
-              <span class="text-sm font-mono text-gray-500 truncate">{value}</span>
+              <span class="text-sm font-mono" style="color: var(--text-secondary)">{key}</span>
+              <span class="mx-1" style="color: var(--text-muted)">=</span>
+              <span class="text-sm font-mono truncate" style="color: var(--text-muted)">{value}</span>
             </span>
           </label>
         {/each}
       </div>
     {:else}
-      <p class="text-xs text-gray-600 italic">No env vars in user settings.</p>
+      <p class="text-xs italic" style="color: var(--text-muted)">No env vars in user settings.</p>
     {/if}
 
     <!-- Custom env vars -->
     {#if customEnv.length > 0}
-      <div class="rounded-lg border border-gray-700 bg-gray-900 p-3 space-y-2">
-        <p class="text-xs text-gray-500 mb-2">Custom variables:</p>
+      <div class="card space-y-2">
+        <p class="text-xs mb-2" style="color: var(--text-muted)">Custom variables:</p>
         {#each customEnv as cv, i (i)}
           <div class="flex items-center gap-2">
             <input
               type="checkbox"
-              class="h-3.5 w-3.5 flex-shrink-0 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500"
+              class="h-3.5 w-3.5 flex-shrink-0 rounded"
+              style="accent-color: var(--accent-primary)"
               bind:checked={cv.enabled}
             />
-            <span class="font-mono text-sm text-gray-300">{cv.key}</span>
-            <span class="text-gray-600">=</span>
-            <span class="flex-1 truncate font-mono text-sm text-gray-500">{cv.value}</span>
+            <span class="font-mono text-sm" style="color: var(--text-secondary)">{cv.key}</span>
+            <span style="color: var(--text-muted)">=</span>
+            <span class="flex-1 truncate font-mono text-sm" style="color: var(--text-muted)">{cv.value}</span>
             <button
-              class="flex-shrink-0 rounded px-2 py-0.5 text-xs text-red-400 hover:bg-red-900/30 hover:text-red-300 transition-colors"
+              class="btn-danger-ghost flex-shrink-0"
               onclick={() => removeCustomVar(i)}
             >
               Remove
@@ -190,29 +192,29 @@
     <!-- Add custom var inputs -->
     <div class="flex items-end gap-2">
       <div class="flex-1 space-y-1">
-        <label for="env-key" class="block text-xs text-gray-500">Key</label>
+        <label for="env-key" class="block text-xs" style="color: var(--text-muted)">Key</label>
         <input
           id="env-key"
           type="text"
           placeholder="MY_VAR"
-          class="w-full rounded border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:border-blue-500 focus:outline-none font-mono"
+          class="input-base font-mono"
           bind:value={newKey}
           onkeydown={(e) => { if (e.key === "Enter") addCustomVar(); }}
         />
       </div>
       <div class="flex-1 space-y-1">
-        <label for="env-value" class="block text-xs text-gray-500">Value</label>
+        <label for="env-value" class="block text-xs" style="color: var(--text-muted)">Value</label>
         <input
           id="env-value"
           type="text"
           placeholder="value"
-          class="w-full rounded border border-gray-700 bg-gray-800 px-2 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:border-blue-500 focus:outline-none font-mono"
+          class="input-base font-mono"
           bind:value={newValue}
           onkeydown={(e) => { if (e.key === "Enter") addCustomVar(); }}
         />
       </div>
       <button
-        class="flex-shrink-0 rounded-lg bg-gray-700 px-3 py-1.5 text-sm text-gray-200 hover:bg-gray-600 transition-colors disabled:opacity-50"
+        class="btn-secondary flex-shrink-0 rounded-lg px-3 py-1.5 text-sm disabled:opacity-50"
         onclick={addCustomVar}
         disabled={!newKey.trim()}
       >
@@ -224,7 +226,7 @@
   <!-- Launch button -->
   <div class="pt-2">
     <button
-      class="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+      class="btn-primary w-full rounded-lg px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
       onclick={launch}
       disabled={!selectedProject || launching}
     >
@@ -238,11 +240,7 @@
 
   <!-- Result message -->
   {#if launchResult}
-    <div
-      class="rounded-lg border px-4 py-3 text-sm {launchIsError
-        ? 'border-red-700 bg-red-900/20 text-red-300'
-        : 'border-green-700 bg-green-900/20 text-green-300'}"
-    >
+    <div class="rounded-lg {launchIsError ? 'alert-error' : 'alert-success'} text-sm">
       {launchResult}
     </div>
   {/if}

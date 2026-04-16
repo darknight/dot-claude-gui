@@ -4,12 +4,12 @@
 
 <div class="p-6 space-y-8">
   <section class="space-y-4">
-    <h2 class="text-lg font-medium text-gray-100">外观</h2>
+    <h2 class="text-lg font-medium" style="color: var(--text-primary)">外观</h2>
 
     <div>
-      <label class="block text-sm text-gray-400 mb-1">主题</label>
+      <label class="block text-sm mb-1" style="color: var(--text-muted)">主题</label>
       <select
-        class="bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200"
+        class="input-base w-auto"
         value={appSettingsStore.preferences.theme}
         onchange={(e) => appSettingsStore.update({ theme: (e.target as HTMLSelectElement).value as "light" | "dark" | "system" })}
       >
@@ -20,7 +20,7 @@
     </div>
 
     <div>
-      <label class="block text-sm text-gray-400 mb-1">字体大小: {appSettingsStore.preferences.fontSize}px</label>
+      <label class="block text-sm mb-1" style="color: var(--text-muted)">字体大小: {appSettingsStore.preferences.fontSize}px</label>
       <input
         type="range"
         min="12"
@@ -32,9 +32,9 @@
     </div>
 
     <div>
-      <label class="block text-sm text-gray-400 mb-1">语言</label>
+      <label class="block text-sm mb-1" style="color: var(--text-muted)">语言</label>
       <select
-        class="bg-gray-800 border border-gray-600 rounded px-3 py-1.5 text-sm text-gray-200"
+        class="input-base w-auto"
         value={appSettingsStore.preferences.language}
         onchange={(e) => appSettingsStore.update({ language: (e.target as HTMLSelectElement).value })}
       >
