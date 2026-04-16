@@ -192,7 +192,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
 
   <!-- ===== Header ===== -->
   <header class="flex items-center justify-between px-4 py-2" style="background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-color)">
-    <span class="text-sm font-semibold text-gray-100">dot-claude</span>
+    <span class="text-sm font-semibold" style="color: var(--text-primary)">dot-claude</span>
 
     <div class="flex items-center gap-2">
       <ScopeSelector />
@@ -229,7 +229,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
 
         <!-- Collapse / expand toggle — alone at bottom -->
         <button
-          class="flex items-center h-8 px-2 mx-2 mb-2 rounded-lg transition-colors hover:bg-gray-800/50"
+          class="flex items-center h-8 px-2 mx-2 mb-2 rounded-lg transition-colors hover:bg-[var(--bg-card-hover)]"
           style="color: var(--text-muted); flex-shrink: 0"
           title={sidebarCollapsed ? "展开侧边栏" : "折叠侧边栏"}
           onclick={toggleSidebar}
@@ -273,15 +273,23 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
           <ul class="flex-1 overflow-y-auto py-2">
             {#each settingsSections as section}
               <li>
-                <button
-                  class="w-full px-4 py-2 text-left text-sm transition-colors
-                    {settingsSection === section.id
-                    ? 'bg-gray-800 text-white'
-                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-                  onclick={() => { settingsSection = section.id; }}
-                >
-                  {section.label}
-                </button>
+                {#if settingsSection === section.id}
+                  <button
+                    class="w-full px-4 py-2 text-left text-sm transition-colors"
+                    style="background-color: var(--accent-bg); color: var(--text-primary)"
+                    onclick={() => { settingsSection = section.id; }}
+                  >
+                    {section.label}
+                  </button>
+                {:else}
+                  <button
+                    class="w-full px-4 py-2 text-left text-sm transition-colors hover:bg-[var(--bg-card-hover)]"
+                    style="color: var(--text-secondary)"
+                    onclick={() => { settingsSection = section.id; }}
+                  >
+                    {section.label}
+                  </button>
+                {/if}
               </li>
             {/each}
           </ul>
@@ -290,15 +298,23 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
           <ul class="flex-1 overflow-y-auto py-2">
             {#each pluginsSections as section}
               <li>
-                <button
-                  class="w-full px-4 py-2 text-left text-sm transition-colors
-                    {pluginsSection === section.id
-                    ? 'bg-gray-800 text-white'
-                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-                  onclick={() => { pluginsSection = section.id; }}
-                >
-                  {section.label}
-                </button>
+                {#if pluginsSection === section.id}
+                  <button
+                    class="w-full px-4 py-2 text-left text-sm transition-colors"
+                    style="background-color: var(--accent-bg); color: var(--text-primary)"
+                    onclick={() => { pluginsSection = section.id; }}
+                  >
+                    {section.label}
+                  </button>
+                {:else}
+                  <button
+                    class="w-full px-4 py-2 text-left text-sm transition-colors hover:bg-[var(--bg-card-hover)]"
+                    style="color: var(--text-secondary)"
+                    onclick={() => { pluginsSection = section.id; }}
+                  >
+                    {section.label}
+                  </button>
+                {/if}
               </li>
             {/each}
           </ul>
@@ -315,52 +331,76 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
           <ul class="flex-1 overflow-y-auto py-2">
             {#each mcpSections as section}
               <li>
-                <button
-                  class="w-full px-4 py-2 text-left text-sm transition-colors
-                    {mcpSection === section.id
-                    ? 'bg-gray-800 text-white'
-                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-                  onclick={() => { mcpSection = section.id; }}
-                >
-                  {section.label}
-                </button>
+                {#if mcpSection === section.id}
+                  <button
+                    class="w-full px-4 py-2 text-left text-sm transition-colors"
+                    style="background-color: var(--accent-bg); color: var(--text-primary)"
+                    onclick={() => { mcpSection = section.id; }}
+                  >
+                    {section.label}
+                  </button>
+                {:else}
+                  <button
+                    class="w-full px-4 py-2 text-left text-sm transition-colors hover:bg-[var(--bg-card-hover)]"
+                    style="color: var(--text-secondary)"
+                    onclick={() => { mcpSection = section.id; }}
+                  >
+                    {section.label}
+                  </button>
+                {/if}
               </li>
             {/each}
           </ul>
         {:else if activeNav === "E"}
           <!-- Effective Config: no sub-navigation needed -->
           <div class="flex-1 overflow-y-auto py-2">
-            <p class="px-4 py-2 text-xs text-gray-600">Merged config for active project</p>
+            <p class="px-4 py-2 text-xs" style="color: var(--text-muted)">Merged config for active project</p>
           </div>
         {:else if activeNav === "L"}
           <!-- Launcher: no sub-navigation needed -->
           <div class="flex-1 overflow-y-auto py-2">
-            <p class="px-4 py-2 text-xs text-gray-600">Select a project and launch</p>
+            <p class="px-4 py-2 text-xs" style="color: var(--text-muted)">Select a project and launch</p>
           </div>
         {:else if activeNav === "A"}
           <!-- App Settings sub-navigation -->
           <ul class="flex-1 overflow-y-auto py-2">
             <li>
-              <button
-                class="w-full px-4 py-2 text-left text-sm transition-colors
-                  {appSettingsSub === 'appearance'
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-                onclick={() => { appSettingsSub = "appearance"; }}
-              >
-                外观
-              </button>
+              {#if appSettingsSub === "appearance"}
+                <button
+                  class="w-full px-4 py-2 text-left text-sm transition-colors"
+                  style="background-color: var(--accent-bg); color: var(--text-primary)"
+                  onclick={() => { appSettingsSub = "appearance"; }}
+                >
+                  外观
+                </button>
+              {:else}
+                <button
+                  class="w-full px-4 py-2 text-left text-sm transition-colors hover:bg-[var(--bg-card-hover)]"
+                  style="color: var(--text-secondary)"
+                  onclick={() => { appSettingsSub = "appearance"; }}
+                >
+                  外观
+                </button>
+              {/if}
             </li>
             <li>
-              <button
-                class="w-full px-4 py-2 text-left text-sm transition-colors
-                  {appSettingsSub === 'connections'
-                  ? 'bg-gray-800 text-white'
-                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'}"
-                onclick={() => { appSettingsSub = "connections"; }}
-              >
-                连接
-              </button>
+              {#if appSettingsSub === "connections"}
+                <button
+                  class="w-full px-4 py-2 text-left text-sm transition-colors"
+                  style="background-color: var(--accent-bg); color: var(--text-primary)"
+                  onclick={() => { appSettingsSub = "connections"; }}
+                >
+                  连接
+                </button>
+              {:else}
+                <button
+                  class="w-full px-4 py-2 text-left text-sm transition-colors hover:bg-[var(--bg-card-hover)]"
+                  style="color: var(--text-secondary)"
+                  onclick={() => { appSettingsSub = "connections"; }}
+                >
+                  连接
+                </button>
+              {/if}
             </li>
           </ul>
         {/if}
@@ -384,7 +424,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
             <!-- Settings module: SettingsEditor orchestrator -->
             {#if configStore.loading}
               <div class="flex-1 overflow-auto p-6">
-                <p class="text-sm text-gray-500">Loading config...</p>
+                <p class="text-sm" style="color: var(--text-muted)">Loading config...</p>
               </div>
             {:else}
               <SettingsEditor activeSection={settingsSection} />
@@ -419,7 +459,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
 
           {:else}
             <div class="flex flex-1 items-center justify-center">
-              <p class="text-sm text-gray-600">Select an item to view details</p>
+              <p class="text-sm" style="color: var(--text-muted)">Select an item to view details</p>
             </div>
           {/if}
         </div>
