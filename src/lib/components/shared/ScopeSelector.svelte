@@ -4,6 +4,7 @@
   import { configStore } from "$lib/stores/config.svelte.js";
   import { claudeMdStore } from "$lib/stores/claudemd.svelte.js";
   import { memoryStore } from "$lib/stores/memory.svelte.js";
+  import { t } from "$lib/i18n";
 
   let open = $state(false);
   let addError = $state("");
@@ -28,7 +29,7 @@
       const selected = await openDialog({
         directory: true,
         multiple: false,
-        title: "选择项目目录",
+        title: t("scope.selectProjectDir"),
       });
       if (selected) {
         await projectsStore.registerProject(selected);
@@ -45,8 +46,8 @@
 
   const displayName = $derived(
     projectsStore.activeProjectId
-      ? projectsStore.activeProject?.path.replace(/^.*\//, "") ?? "Project"
-      : "User Scope"
+      ? projectsStore.activeProject?.path.replace(/^.*\//, "") ?? t("scope.projectFallback")
+      : t("scope.user")
   );
 
   const displayIcon = $derived(projectsStore.activeProjectId ? "📁" : "🏠");
@@ -80,7 +81,7 @@
         onclick={selectUserScope}
       >
         <span>🏠</span>
-        <span>User Scope</span>
+        <span>{t("scope.user")}</span>
       </button>
 
       {#if projectsStore.projects.length > 0}
@@ -110,7 +111,7 @@
         onclick={addProject}
       >
         <span>+</span>
-        <span>添加项目...</span>
+        <span>{t("scope.addProject")}</span>
       </button>
 
       {#if addError}

@@ -36,5 +36,9 @@
   "plugins.manageMarketplaces": "",
   "plugins.perProject": "",
   "mcp.servers": "",
-  "mcp.addServer": ""
+  "mcp.addServer": "",
+  "scope.user": "",
+  "scope.projectFallback": "",
+  "scope.addProject": "",
+  "scope.selectProjectDir": ""
 }

@@ -36,5 +36,9 @@
   "plugins.manageMarketplaces": "マーケットプレイス管理",
   "plugins.perProject": "プロジェクト別",
   "mcp.servers": "サーバー",
-  "mcp.addServer": "サーバーを追加"
+  "mcp.addServer": "サーバーを追加",
+  "scope.user": "ユーザースコープ",
+  "scope.projectFallback": "プロジェクト",
+  "scope.addProject": "プロジェクトを追加...",
+  "scope.selectProjectDir": "プロジェクトディレクトリを選択"
 }

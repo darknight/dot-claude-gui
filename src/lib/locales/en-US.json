@@ -36,5 +36,9 @@
   "plugins.manageMarketplaces": "Manage Marketplaces",
   "plugins.perProject": "Per-Project",
   "mcp.servers": "Servers",
-  "mcp.addServer": "Add Server"
+  "mcp.addServer": "Add Server",
+  "scope.user": "User Scope",
+  "scope.projectFallback": "Project",
+  "scope.addProject": "Add project...",
+  "scope.selectProjectDir": "Select project directory"
 }
