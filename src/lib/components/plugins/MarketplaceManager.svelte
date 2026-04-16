@@ -71,19 +71,19 @@
 
 <div class="flex flex-1 flex-col overflow-hidden p-6">
   <!-- Add marketplace form -->
-  <div class="mb-6 rounded-lg border border-gray-800 bg-gray-900 p-4">
-    <h3 class="mb-3 text-sm font-semibold text-gray-200">Add Marketplace</h3>
+  <div class="card mb-6 p-4">
+    <h3 class="mb-3 text-sm font-semibold" style="color: var(--text-primary)">Add Marketplace</h3>
     <div class="flex gap-2">
       <input
         type="text"
         bind:value={newRepo}
         placeholder="owner/repo"
-        class="flex-1 rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-100 placeholder-gray-600 focus:border-blue-500 focus:outline-none"
+        class="input-base flex-1"
         onkeydown={(e) => { if (e.key === "Enter") handleAdd(); }}
         disabled={adding}
       />
       <button
-        class="rounded bg-blue-700 px-4 py-1.5 text-sm text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+        class="btn-primary px-4 py-1.5 text-sm"
         disabled={adding || !newRepo.trim()}
         onclick={handleAdd}
       >
@@ -93,12 +93,12 @@
 
     <!-- Add progress -->
     {#if adding || addOutput.length > 0}
-      <div class="mt-3 rounded border border-gray-700 bg-gray-950 p-2">
-        <p class="mb-1 text-xs font-medium text-gray-400">
+      <div class="code-block mt-3">
+        <p class="mb-1 text-xs font-medium" style="color: var(--text-muted)">
           {adding ? "Adding marketplace…" : "Done"}
         </p>
         {#if addOutput.length > 0}
-          <div class="max-h-24 overflow-auto font-mono text-xs text-gray-300">
+          <div class="max-h-24 overflow-auto" style="color: var(--text-secondary)">
             {#each addOutput as line (line)}
               <div>{line}</div>
             {/each}
@@ -111,20 +111,20 @@
   <!-- Marketplace list -->
   {#if pluginsStore.marketplaces.length === 0}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm text-gray-600">No marketplaces registered yet.</p>
+      <p class="text-sm" style="color: var(--text-muted)">No marketplaces registered yet.</p>
     </div>
   {:else}
     <div class="flex-1 overflow-auto">
       <div class="space-y-3">
         {#each pluginsStore.marketplaces as mp (mp.id)}
-          <div class="group relative rounded-lg border border-gray-800 bg-gray-900 px-4 py-3 transition-colors hover:border-gray-700">
+          <div class="card group relative">
             <div class="flex items-start justify-between gap-4">
               <!-- Marketplace info -->
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2">
-                  <span class="font-semibold text-gray-100">{mp.id}</span>
+                  <span class="font-semibold" style="color: var(--text-primary)">{mp.id}</span>
                 </div>
-                <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs" style="color: var(--text-muted)">
                   <span>{mp.repo}</span>
                   {#if mp.pluginCount !== undefined}
                     <span>·</span>
@@ -136,17 +136,17 @@
                   {/if}
                 </div>
                 {#if mp.description}
-                  <p class="mt-1 text-xs text-gray-400">{mp.description}</p>
+                  <p class="mt-1 text-xs" style="color: var(--text-secondary)">{mp.description}</p>
                 {/if}
               </div>
 
               <!-- Remove button -->
               <div class="flex-shrink-0">
                 {#if removingId === mp.id}
-                  <span class="text-xs text-gray-500">Removing…</span>
+                  <span class="text-xs" style="color: var(--text-muted)">Removing…</span>
                 {:else}
                   <button
-                    class="hidden rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-red-900/50 hover:text-red-400 group-hover:block disabled:cursor-not-allowed disabled:opacity-50"
+                    class="btn-danger-ghost hidden group-hover:block disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={removingId !== null}
                     onclick={() => handleRemove(mp.id)}
                     title="Remove marketplace"
@@ -159,7 +159,7 @@
 
             <!-- Remove progress -->
             {#if removingId === mp.id && removeOutput.length > 0}
-              <div class="mt-2 rounded border border-gray-700 bg-gray-950 p-2 font-mono text-xs text-gray-300">
+              <div class="code-block mt-2" style="color: var(--text-secondary)">
                 {#each removeOutput as line (line)}
                   <div>{line}</div>
                 {/each}
@@ -172,8 +172,8 @@
   {/if}
 
   {#if pluginsStore.error}
-    <div class="mt-4 rounded border border-red-800 bg-red-950 px-4 py-2">
-      <p class="text-xs text-red-400">{pluginsStore.error}</p>
+    <div class="alert-error mt-4">
+      {pluginsStore.error}
     </div>
   {/if}
 </div>

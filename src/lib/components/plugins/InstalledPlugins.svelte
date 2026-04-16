@@ -56,16 +56,16 @@
 
 <div class="flex-1 overflow-auto p-6">
   {#if pluginsStore.loading}
-    <p class="text-sm text-gray-500">Loading plugins...</p>
+    <p class="text-sm" style="color: var(--text-muted)">Loading plugins...</p>
   {:else if pluginsStore.error}
-    <div class="mb-4 rounded border border-red-800 bg-red-950 px-4 py-2">
-      <p class="text-xs text-red-400">{pluginsStore.error}</p>
+    <div class="alert-error mb-4">
+      {pluginsStore.error}
     </div>
   {/if}
 
   {#if pluginsStore.plugins.length === 0 && !pluginsStore.loading}
     <div class="flex h-full items-center justify-center">
-      <p class="text-sm text-gray-600">No plugins installed</p>
+      <p class="text-sm" style="color: var(--text-muted)">No plugins installed</p>
     </div>
   {:else}
     <div class="space-y-1">
@@ -74,38 +74,39 @@
         <div class={groupIndex === 0 ? "" : "pt-3"}>
           <button
             type="button"
-            class="mb-2 flex w-full items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-300"
+            class="mb-2 flex w-full items-center gap-1.5 text-xs font-semibold uppercase tracking-wider hover:opacity-80"
+            style="color: var(--text-muted)"
             onclick={() => toggleGroup(marketplaceName)}
           >
             <span class="inline-block w-3 text-center">{isCollapsed ? "▸" : "▾"}</span>
             <span class="truncate">{marketplaceName}</span>
-            <span class="text-gray-600">({plugins.length})</span>
+            <span>({plugins.length})</span>
           </button>
           {#if !isCollapsed}
             <div class="space-y-3 pl-5">
               {#each plugins as plugin (plugin.id)}
-                <div class="group relative rounded-lg border border-gray-800 bg-gray-900 px-4 py-3 transition-colors hover:border-gray-700">
+                <div class="card group relative">
                   <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0 flex-1">
                       <div class="flex items-center gap-2">
-                        <span class="font-semibold text-gray-100">{plugin.name}</span>
+                        <span class="font-semibold" style="color: var(--text-primary)">{plugin.name}</span>
                         {#if plugin.blocked}
-                          <span class="rounded bg-red-900 px-1.5 py-0.5 text-xs font-medium text-red-300">
+                          <span class="badge badge-error">
                             Blocked
                           </span>
                         {/if}
                       </div>
-                      <div class="mt-0.5 text-xs text-gray-500">
+                      <div class="mt-0.5 text-xs" style="color: var(--text-muted)">
                         v{plugin.version}
                       </div>
                       {#if plugin.description}
-                        <p class="mt-1 text-xs text-gray-400">{plugin.description}</p>
+                        <p class="mt-1 text-xs" style="color: var(--text-secondary)">{plugin.description}</p>
                       {/if}
                     </div>
 
                     <div class="flex items-center gap-3">
                       <button
-                        class="rounded px-2 py-1 text-xs text-gray-500 opacity-0 transition-opacity hover:bg-red-900/50 hover:text-red-400 group-hover:opacity-100 disabled:opacity-50"
+                        class="btn-danger-ghost opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50"
                         onclick={() => handleUninstall(plugin.id)}
                         disabled={pendingId !== null}
                         title="Uninstall plugin"
@@ -114,17 +115,13 @@
                       </button>
 
                       <button
-                        class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none
-                          {plugin.enabled ? 'bg-green-600' : 'bg-gray-700'}"
+                        class="toggle-track"
                         role="switch"
                         aria-checked={plugin.enabled}
                         aria-label="Toggle {plugin.name}"
                         onclick={() => pluginsStore.togglePlugin(plugin.id, !plugin.enabled)}
                       >
-                        <span
-                          class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
-                            {plugin.enabled ? 'translate-x-4' : 'translate-x-0'}"
-                        ></span>
+                        <span class="toggle-knob"></span>
                       </button>
                     </div>
                   </div>
@@ -138,8 +135,6 @@
   {/if}
 
   {#if pendingId !== null && outputLines.length > 0}
-    <div class="mt-4 rounded border border-gray-800 bg-gray-950 p-3">
-      <pre class="max-h-32 overflow-auto font-mono text-xs text-gray-400 leading-relaxed">{outputLines.join("\n")}</pre>
-    </div>
+    <pre class="code-block mt-4 max-h-32 overflow-auto">{outputLines.join("\n")}</pre>
   {/if}
 </div>

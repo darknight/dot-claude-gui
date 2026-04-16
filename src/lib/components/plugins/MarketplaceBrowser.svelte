@@ -43,16 +43,16 @@
 <div class="flex flex-1 flex-col overflow-hidden p-6">
   <!-- Marketplace selector -->
   <div class="mb-4">
-    <label for="marketplace-select" class="mb-1 block text-xs font-medium text-gray-400">
+    <label for="marketplace-select" class="mb-1 block text-xs font-medium" style="color: var(--text-muted)">
       Marketplace
     </label>
     {#if pluginsStore.marketplaces.length === 0}
-      <p class="text-sm text-gray-600">No marketplaces registered. Add one in the Manage Marketplaces tab.</p>
+      <p class="text-sm" style="color: var(--text-muted)">No marketplaces registered. Add one in the Manage Marketplaces tab.</p>
     {:else}
       <select
         id="marketplace-select"
         bind:value={selectedMarketplace}
-        class="w-full rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-100 focus:border-blue-500 focus:outline-none"
+        class="input-base"
       >
         <option value="">— select a marketplace —</option>
         {#each pluginsStore.marketplaces as mp (mp.id)}
@@ -66,34 +66,34 @@
   {#if selectedMarketplace}
     {#if pluginsStore.availablePlugins.length === 0}
       <div class="flex flex-1 items-center justify-center">
-        <p class="text-sm text-gray-600">No plugins found in this marketplace.</p>
+        <p class="text-sm" style="color: var(--text-muted)">No plugins found in this marketplace.</p>
       </div>
     {:else}
       <div class="flex-1 overflow-auto">
         <div class="space-y-3">
           {#each pluginsStore.availablePlugins as plugin (plugin.name)}
-            <div class="rounded-lg border border-gray-800 bg-gray-900 px-4 py-3 transition-colors hover:border-gray-700">
+            <div class="card">
               <div class="flex items-start justify-between gap-4">
                 <!-- Plugin info -->
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
-                    <span class="font-semibold text-gray-100">{plugin.name}</span>
+                    <span class="font-semibold" style="color: var(--text-primary)">{plugin.name}</span>
                     {#if plugin.version}
-                      <span class="text-xs text-gray-500">v{plugin.version}</span>
+                      <span class="text-xs" style="color: var(--text-muted)">v{plugin.version}</span>
                     {/if}
                     {#if plugin.category}
-                      <span class="rounded bg-blue-900 px-1.5 py-0.5 text-xs font-medium text-blue-300 dark:bg-blue-900 dark:text-blue-300">
+                      <span class="badge badge-info">
                         {plugin.category}
                       </span>
                     {/if}
                     {#if plugin.installed && plugin.installedVersion}
-                      <span class="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                      <span class="badge badge-success">
                         ✓ v{plugin.installedVersion}
                       </span>
                     {/if}
                   </div>
                   {#if plugin.description}
-                    <p class="mt-1 text-xs text-gray-400">{plugin.description}</p>
+                    <p class="mt-1 text-xs" style="color: var(--text-secondary)">{plugin.description}</p>
                   {/if}
                 </div>
 
@@ -102,24 +102,24 @@
                   {#if installing === plugin.name}
                     <button
                       disabled
-                      class="rounded bg-gray-700 px-3 py-1 text-xs text-gray-400 cursor-not-allowed"
+                      class="btn-primary"
                     >
                       Installing…
                     </button>
                   {:else if !plugin.installed}
                     <button
-                      class="rounded bg-blue-600 px-3 py-1 text-xs text-white transition-colors hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+                      class="btn-primary"
                       disabled={installing !== null}
                       onclick={() => handleInstall(plugin.name, plugin.marketplace)}
                     >
                       Install
                     </button>
                   {:else if plugin.version && plugin.installedVersion && plugin.version !== plugin.installedVersion}
-                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                    <span class="text-xs" style="color: var(--text-muted)">
                       {plugin.installedVersion} → {plugin.version}
                     </span>
                     <button
-                      class="rounded bg-emerald-600 px-3 py-1 text-xs text-white transition-colors hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                      class="btn-success"
                       disabled={installing !== null}
                       onclick={() => handleInstall(plugin.name, plugin.marketplace)}
                     >
@@ -127,7 +127,7 @@
                     </button>
                   {:else}
                     <button
-                      class="rounded border border-gray-300 px-3 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      class="btn-secondary"
                       disabled={installing !== null}
                       onclick={() => handleInstall(plugin.name, plugin.marketplace)}
                     >
@@ -145,12 +145,12 @@
 
   <!-- Install progress output -->
   {#if installing !== null || installOutput.length > 0}
-    <div class="mt-4 rounded border border-gray-700 bg-gray-950 p-3">
-      <p class="mb-1 text-xs font-medium text-gray-400">
+    <div class="code-block mt-4">
+      <p class="mb-1 text-xs font-medium">
         {installing ? `Installing ${installing}…` : "Install complete"}
       </p>
       {#if installOutput.length > 0}
-        <div class="max-h-32 overflow-auto font-mono text-xs text-gray-300">
+        <div class="max-h-32 overflow-auto">
           {#each installOutput as line (line)}
             <div>{line}</div>
           {/each}
@@ -160,8 +160,8 @@
   {/if}
 
   {#if pluginsStore.error}
-    <div class="mt-4 rounded border border-red-800 bg-red-950 px-4 py-2">
-      <p class="text-xs text-red-400">{pluginsStore.error}</p>
+    <div class="alert-error mt-4">
+      {pluginsStore.error}
     </div>
   {/if}
 </div>
