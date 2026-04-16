@@ -40,5 +40,10 @@
   "scope.user": "ユーザースコープ",
   "scope.projectFallback": "プロジェクト",
   "scope.addProject": "プロジェクトを追加...",
-  "scope.selectProjectDir": "プロジェクトディレクトリを選択"
+  "scope.selectProjectDir": "プロジェクトディレクトリを選択",
+  "common.loading": "読み込み中...",
+  "skills.title": "スキル",
+  "skills.userGroup": "ユーザースキル",
+  "skills.noSkills": "スキルが見つかりません",
+  "skills.invalid": "無効"
 }

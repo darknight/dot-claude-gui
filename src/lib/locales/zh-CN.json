@@ -40,5 +40,10 @@
   "scope.user": "用户作用域",
   "scope.projectFallback": "项目",
   "scope.addProject": "添加项目...",
-  "scope.selectProjectDir": "选择项目目录"
+  "scope.selectProjectDir": "选择项目目录",
+  "common.loading": "加载中...",
+  "skills.title": "技能",
+  "skills.userGroup": "用户技能",
+  "skills.noSkills": "未找到技能",
+  "skills.invalid": "无效"
 }

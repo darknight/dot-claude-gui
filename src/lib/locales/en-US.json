@@ -40,5 +40,10 @@
   "scope.user": "User Scope",
   "scope.projectFallback": "Project",
   "scope.addProject": "Add project...",
-  "scope.selectProjectDir": "Select project directory"
+  "scope.selectProjectDir": "Select project directory",
+  "common.loading": "Loading...",
+  "skills.title": "Skills",
+  "skills.userGroup": "User Skills",
+  "skills.noSkills": "No skills found",
+  "skills.invalid": "Invalid"
 }

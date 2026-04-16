@@ -1,16 +1,15 @@
 <script lang="ts">
   import { skillsStore } from "$lib/stores/skills.svelte";
   import type { SkillInfo } from "$lib/api/types";
+  import { t } from "$lib/i18n";
 
   type SortMode = "name-asc" | "name-desc";
 
   let sortBy = $state<SortMode>("name-asc");
   let collapsed = $state<Record<string, boolean>>({});
 
-  const USER_GROUP = "用户技能";
-
   function pluginNameOf(skill: SkillInfo): string {
-    if (skill.source === "user") return USER_GROUP;
+    if (skill.source === "user") return t("skills.userGroup");
     const m = skill.source.match(/^plugin:([^@]+)@/);
     return m?.[1] ?? skill.source;
   }
@@ -23,6 +22,7 @@
   );
 
   const groups = $derived.by(() => {
+    const userGroup = t("skills.userGroup");
     const map = new Map<string, SkillInfo[]>();
     for (const s of sortedSkills) {
       const k = pluginNameOf(s);
@@ -30,8 +30,8 @@
       map.get(k)!.push(s);
     }
     return [...map.entries()].sort(([a], [b]) => {
-      if (a === USER_GROUP) return -1;
-      if (b === USER_GROUP) return 1;
+      if (a === userGroup) return -1;
+      if (b === userGroup) return 1;
       return a.localeCompare(b);
     });
   });
@@ -51,7 +51,7 @@
       class="truncate text-xs font-semibold uppercase tracking-wider"
       style="color: var(--text-muted)"
     >
-      技能 <span class="normal-case">({skillsStore.skills.length})</span>
+      {t("skills.title")} <span class="normal-case">({skillsStore.skills.length})</span>
     </h2>
     <select
       bind:value={sortBy}
@@ -66,11 +66,11 @@
   <!-- Body -->
   <ul class="flex-1 overflow-y-auto py-1">
     {#if skillsStore.loading && skillsStore.skills.length === 0}
-      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">Loading...</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("common.loading")}</li>
     {:else if skillsStore.error}
       <li class="px-4 py-2 text-xs" style="color: var(--status-error-text)">{skillsStore.error}</li>
     {:else if skillsStore.skills.length === 0}
-      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">No skills found</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("skills.noSkills")}</li>
     {:else}
       {#each groups as [groupName, skills], groupIndex (groupName)}
         {@const isCollapsed = collapsed[groupName] ?? false}
@@ -102,7 +102,7 @@
                     <span
                       class="flex-shrink-0 cursor-help text-xs"
                       style="color: var(--status-error-text)"
-                      title={skill.validationError ?? "Invalid"}
+                      title={skill.validationError ?? t("skills.invalid")}
                     >✗</span>
                   {/if}
                 </button>
@@ -119,7 +119,7 @@
                     <span
                       class="flex-shrink-0 cursor-help text-xs"
                       style="color: var(--status-error-text)"
-                      title={skill.validationError ?? "Invalid"}
+                      title={skill.validationError ?? t("skills.invalid")}
                     >✗</span>
                   {/if}
                 </button>

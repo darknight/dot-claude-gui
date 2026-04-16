@@ -40,5 +40,10 @@
   "scope.user": "",
   "scope.projectFallback": "",
   "scope.addProject": "",
-  "scope.selectProjectDir": ""
+  "scope.selectProjectDir": "",
+  "common.loading": "",
+  "skills.title": "",
+  "skills.userGroup": "",
+  "skills.noSkills": "",
+  "skills.invalid": ""
 }
