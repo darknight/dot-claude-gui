@@ -1,4 +1,3 @@
-/// <reference types="vite/client" />
 import { appSettingsStore } from "$lib/stores/appsettings.svelte";
 import zhCN from "./locales/zh-CN.json";
 import enUS from "./locales/en-US.json";
@@ -44,7 +43,7 @@ export function t(key: MessageKey, params?: Record<string, string | number>): st
   }
   if (params) {
     for (const [k, v] of Object.entries(params)) {
-      text = text.replace(`{${k}}`, String(v));
+      text = text.replaceAll(`{${k}}`, String(v));
     }
   }
   return text;
@@ -57,15 +56,17 @@ export function detectInitialLocale(): Locale {
   return "en-US";
 }
 
+const DISPLAY_NAMES: Record<Locale, string> = {
+  "zh-CN": "简体中文",
+  "en-US": "English",
+  "ja-JP": "日本語",
+  "es-ES": "Español",
+  "fr-FR": "Français",
+  "ko-KR": "한국어",
+};
+
 export function localeDisplayName(loc: Locale): string {
-  return {
-    "zh-CN": "简体中文",
-    "en-US": "English",
-    "ja-JP": "日本語",
-    "es-ES": "Español",
-    "fr-FR": "Français",
-    "ko-KR": "한국어",
-  }[loc];
+  return DISPLAY_NAMES[loc];
 }
 
 export function isSupportedLocale(s: unknown): s is Locale {
