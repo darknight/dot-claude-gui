@@ -15,14 +15,16 @@
     "CwdChanged", "FileChanged",
   ];
 
-  const settings = $derived(configStore.activeSettings);
-
   let selectedEvent = $state("PreToolUse");
   let hooks = $state<Record<string, HookGroup[]>>({});
 
-  // Sync from store when settings change
+  // Sync from store when settings change.
+  // `$state.snapshot` strips the reactive proxy wrapper so the value can be
+  // safely deep-cloned — `structuredClone` throws DataCloneError on Svelte 5
+  // proxies because they use Symbols/getters it can't serialize.
   $effect(() => {
-    hooks = structuredClone(settings.hooks ?? {});
+    const src = configStore.activeSettings.hooks;
+    hooks = $state.snapshot(src ?? {}) as Record<string, HookGroup[]>;
   });
 
   function getGroups(): HookGroup[] {
@@ -50,13 +52,13 @@
   }
 
   function updateMatcher(index: number, value: string) {
-    const groups = structuredClone(getGroups());
+    const groups = $state.snapshot(getGroups()) as HookGroup[];
     groups[index] = { ...groups[index], matcher: value };
     setGroups(groups);
   }
 
   function updateCondition(index: number, value: string) {
-    const groups = structuredClone(getGroups());
+    const groups = $state.snapshot(getGroups()) as HookGroup[];
     if (value.trim() === "") {
       const { if: _removed, ...rest } = groups[index];
       groups[index] = rest;
@@ -67,7 +69,7 @@
   }
 
   function addHookDefinition(groupIndex: number) {
-    const groups = structuredClone(getGroups());
+    const groups = $state.snapshot(getGroups()) as HookGroup[];
     const hookDef: HookDefinition = { type: "command", command: "" };
     groups[groupIndex] = {
       ...groups[groupIndex],
@@ -77,14 +79,14 @@
   }
 
   function removeHookDefinition(groupIndex: number, hookIndex: number) {
-    const groups = structuredClone(getGroups());
+    const groups = $state.snapshot(getGroups()) as HookGroup[];
     const defs = (groups[groupIndex].hooks ?? []).filter((_, i) => i !== hookIndex);
     groups[groupIndex] = { ...groups[groupIndex], hooks: defs };
     setGroups(groups);
   }
 
   function updateHookType(groupIndex: number, hookIndex: number, type: "command" | "http") {
-    const groups = structuredClone(getGroups());
+    const groups = $state.snapshot(getGroups()) as HookGroup[];
     const defs = [...(groups[groupIndex].hooks ?? [])];
     if (type === "command") {
       defs[hookIndex] = { type: "command", command: "" };
@@ -101,7 +103,7 @@
     field: keyof HookDefinition,
     value: string | number | undefined,
   ) {
-    const groups = structuredClone(getGroups());
+    const groups = $state.snapshot(getGroups()) as HookGroup[];
     const defs = [...(groups[groupIndex].hooks ?? [])];
     defs[hookIndex] = { ...defs[hookIndex], [field]: value };
     groups[groupIndex] = { ...groups[groupIndex], hooks: defs };
@@ -113,7 +115,7 @@
   }
 
   function originalGroup(index: number): HookGroup | undefined {
-    return settings.hooks?.[selectedEvent]?.[index];
+    return configStore.activeSettings.hooks?.[selectedEvent]?.[index];
   }
 
   function isRuleDirty(index: number, group: HookGroup): boolean {
@@ -121,7 +123,7 @@
   }
 
   function isEventDirty(event: string): boolean {
-    return !deepEqual(hooks[event] ?? [], settings.hooks?.[event] ?? []);
+    return !deepEqual(hooks[event] ?? [], configStore.activeSettings.hooks?.[event] ?? []);
   }
 
   function save() {
