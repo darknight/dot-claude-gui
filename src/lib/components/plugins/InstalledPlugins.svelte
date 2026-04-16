@@ -46,9 +46,9 @@
       outputLines = [];
 
       if (p.exitCode === 0) {
-        toastStore.success("Plugin uninstalled");
+        toastStore.success(t("plugins.uninstallSuccess"));
       } else {
-        toastStore.error("Uninstall failed (exit code " + p.exitCode + ")");
+        toastStore.error(t("plugins.uninstallFailed", { exitCode: p.exitCode }));
       }
       await pluginsStore.loadPlugins();
     });
@@ -93,7 +93,7 @@
                         <span class="font-semibold" style="color: var(--text-primary)">{plugin.name}</span>
                         {#if plugin.blocked}
                           <span class="badge badge-error">
-                            Blocked
+                            {t("plugins.blocked")}
                           </span>
                         {/if}
                       </div>
@@ -110,9 +110,9 @@
                         class="btn-danger-ghost opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50"
                         onclick={() => handleUninstall(plugin.id)}
                         disabled={pendingId !== null}
-                        title="Uninstall plugin"
+                        title={t("plugins.uninstall")}
                       >
-                        {pendingId === plugin.id ? "Uninstalling..." : "Uninstall"}
+                        {pendingId === plugin.id ? t("plugins.uninstalling") : t("plugins.uninstall")}
                       </button>
 
                       <button

@@ -43,7 +43,7 @@
   }
 
   async function handleRemove(id: string) {
-    if (!confirm(`Remove marketplace "${id}"?`)) return;
+    if (!confirm(t("plugins.confirmRemoveMarketplace", { id }))) return;
     removingId = id;
     removeOutput = [];
 

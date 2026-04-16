@@ -3,6 +3,7 @@
   import { projectsStore } from "$lib/stores/projects.svelte";
   import { configStore } from "$lib/stores/config.svelte";
   import { pluginsStore } from "$lib/stores/plugins.svelte";
+  import { t } from "$lib/i18n";
 
   let selectedProjectId = $state<string>("");
   let customEnv = $state<{ key: string; value: string; enabled: boolean }[]>([]);
@@ -64,10 +65,10 @@
         projectPath: selectedProject.path,
         env,
       });
-      launchResult = "Claude Code launched successfully!";
+      launchResult = t("launcher.launchSuccess");
       launchIsError = false;
     } catch (e) {
-      launchResult = `Error: ${e instanceof Error ? e.message : "Launch failed"}`;
+      launchResult = t("launcher.launchError", { message: e instanceof Error ? e.message : "Launch failed" });
       launchIsError = true;
     } finally {
       launching = false;
@@ -79,26 +80,26 @@
 
   <!-- Section heading -->
   <div>
-    <h2 class="text-sm font-semibold" style="color: var(--text-primary)">Launch Claude Code</h2>
+    <h2 class="text-sm font-semibold" style="color: var(--text-primary)">{t("launcher.title")}</h2>
     <p class="mt-1 text-xs" style="color: var(--text-muted)">
-      Select a project, configure environment variables, and launch.
+      {t("launcher.description")}
     </p>
   </div>
 
   <!-- Project selector -->
   <div class="space-y-1.5">
     <label for="launcher-project" class="block text-xs font-medium" style="color: var(--text-muted)">
-      Project
+      {t("launcher.projectLabel")}
     </label>
     {#if projectsStore.projects.length === 0}
-      <p class="text-xs" style="color: var(--text-muted)">No projects registered. Add one via the Projects section.</p>
+      <p class="text-xs" style="color: var(--text-muted)">{t("launcher.noProjects")}</p>
     {:else}
       <select
         id="launcher-project"
         class="input-base"
         bind:value={selectedProjectId}
       >
-        <option value="">— Select a project —</option>
+        <option value="">{t("launcher.selectProjectPlaceholder")}</option>
         {#each projectsStore.projects as project (project.id)}
           <option value={project.id}>{project.name}</option>
         {/each}
@@ -110,22 +111,22 @@
   {#if selectedProject}
     {@const settings = configStore.userSettings}
     <div class="card space-y-2">
-      <h3 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">Config Summary</h3>
+      <h3 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">{t("launcher.configSummary")}</h3>
       <div class="grid grid-cols-3 gap-3">
         <div class="rounded px-3 py-2 text-center" style="background-color: var(--bg-tertiary)">
-          <p class="text-xs" style="color: var(--text-muted)">Language</p>
+          <p class="text-xs" style="color: var(--text-muted)">{t("settings.languageLabel")}</p>
           <p class="mt-0.5 text-sm font-medium" style="color: var(--text-primary)">
             {settings.language ?? "default"}
           </p>
         </div>
         <div class="rounded px-3 py-2 text-center" style="background-color: var(--bg-tertiary)">
-          <p class="text-xs" style="color: var(--text-muted)">Default Mode</p>
+          <p class="text-xs" style="color: var(--text-muted)">{t("settings.defaultMode")}</p>
           <p class="mt-0.5 text-sm font-medium" style="color: var(--text-primary)">
             {settings.permissions?.defaultMode ?? "ask"}
           </p>
         </div>
         <div class="rounded px-3 py-2 text-center" style="background-color: var(--bg-tertiary)">
-          <p class="text-xs" style="color: var(--text-muted)">Active Plugins</p>
+          <p class="text-xs" style="color: var(--text-muted)">{t("launcher.activePlugins")}</p>
           <p class="mt-0.5 text-sm font-medium" style="color: var(--text-primary)">{activePluginCount}</p>
         </div>
       </div>
@@ -136,13 +137,13 @@
   <!-- Environment variables -->
   <div class="space-y-3">
     <h3 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">
-      Environment Variables
+      {t("settings.environment")}
     </h3>
 
     <!-- Settings env vars as checkboxes -->
     {#if Object.keys(settingsEnv).length > 0}
       <div class="card space-y-2">
-        <p class="text-xs mb-2" style="color: var(--text-muted)">From user settings (check to include):</p>
+        <p class="text-xs mb-2" style="color: var(--text-muted)">{t("launcher.fromUserSettings")}</p>
         {#each Object.entries(settingsEnv) as [key, value] (key)}
           <label class="flex items-center gap-3 cursor-pointer group">
             <input
@@ -160,13 +161,13 @@
         {/each}
       </div>
     {:else}
-      <p class="text-xs italic" style="color: var(--text-muted)">No env vars in user settings.</p>
+      <p class="text-xs italic" style="color: var(--text-muted)">{t("launcher.noEnvVars")}</p>
     {/if}
 
     <!-- Custom env vars -->
     {#if customEnv.length > 0}
       <div class="card space-y-2">
-        <p class="text-xs mb-2" style="color: var(--text-muted)">Custom variables:</p>
+        <p class="text-xs mb-2" style="color: var(--text-muted)">{t("launcher.customVariables")}</p>
         {#each customEnv as cv, i (i)}
           <div class="flex items-center gap-2">
             <input
@@ -182,7 +183,7 @@
               class="btn-danger-ghost flex-shrink-0"
               onclick={() => removeCustomVar(i)}
             >
-              Remove
+              {t("common.remove")}
             </button>
           </div>
         {/each}
@@ -192,7 +193,7 @@
     <!-- Add custom var inputs -->
     <div class="flex items-end gap-2">
       <div class="flex-1 space-y-1">
-        <label for="env-key" class="block text-xs" style="color: var(--text-muted)">Key</label>
+        <label for="env-key" class="block text-xs" style="color: var(--text-muted)">{t("launcher.keyLabel")}</label>
         <input
           id="env-key"
           type="text"
@@ -203,7 +204,7 @@
         />
       </div>
       <div class="flex-1 space-y-1">
-        <label for="env-value" class="block text-xs" style="color: var(--text-muted)">Value</label>
+        <label for="env-value" class="block text-xs" style="color: var(--text-muted)">{t("launcher.valueLabel")}</label>
         <input
           id="env-value"
           type="text"
@@ -218,7 +219,7 @@
         onclick={addCustomVar}
         disabled={!newKey.trim()}
       >
-        Add
+        {t("common.add")}
       </button>
     </div>
   </div>
@@ -231,9 +232,9 @@
       disabled={!selectedProject || launching}
     >
       {#if launching}
-        Launching...
+        {t("launcher.launching")}
       {:else}
-        Launch Claude Code
+        {t("launcher.launchButton")}
       {/if}
     </button>
   </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { mcpStore } from "$lib/stores/mcp.svelte";
   import type { AddMcpServerRequest } from "$lib/api/types";
+  import { t } from "$lib/i18n";
 
   // Form state
   let name = $state("");
@@ -24,11 +25,11 @@
   function addEnvEntry() {
     const trimmedKey = newEnvKey.trim();
     if (!trimmedKey) {
-      envError = "Key cannot be empty.";
+      envError = t("mcp.errorKeyEmpty");
       return;
     }
     if (envEntries.some((e) => e.key === trimmedKey)) {
-      envError = `Key "${trimmedKey}" already exists.`;
+      envError = t("mcp.errorKeyExists", { key: trimmedKey });
       return;
     }
     envEntries = [...envEntries, { key: trimmedKey, value: newEnvValue }];
@@ -51,17 +52,17 @@
     submitSuccess = false;
 
     if (!name.trim()) {
-      submitError = "Name is required.";
+      submitError = t("mcp.errorNameRequired");
       return;
     }
 
     if (transport === "stdio" && !command.trim()) {
-      submitError = "Command is required for stdio transport.";
+      submitError = t("mcp.errorCommandRequired");
       return;
     }
 
     if ((transport === "sse" || transport === "http") && !url.trim()) {
-      submitError = "URL is required for sse/http transport.";
+      submitError = t("mcp.errorUrlRequired");
       return;
     }
 
@@ -102,7 +103,7 @@
         submitError = mcpStore.error;
       }
     } catch (e) {
-      submitError = e instanceof Error ? e.message : "Failed to add server";
+      submitError = e instanceof Error ? e.message : t("mcp.errorAddFailed");
     } finally {
       submitting = false;
     }
@@ -114,7 +115,7 @@
 
 <div class="flex-1 overflow-auto p-6">
   <form onsubmit={handleSubmit} class="max-w-xl space-y-5">
-    <h2 class="text-sm font-semibold" style="color: var(--text-primary)">Add MCP Server</h2>
+    <h2 class="text-sm font-semibold" style="color: var(--text-primary)">{t("mcp.addMcpServer")}</h2>
 
     {#if submitError}
       <div class="alert-error">
@@ -124,13 +125,13 @@
 
     {#if submitSuccess}
       <div class="alert-success">
-        <p class="text-xs">Server added successfully.</p>
+        <p class="text-xs">{t("mcp.serverAddedSuccess")}</p>
       </div>
     {/if}
 
     <!-- Name -->
     <div>
-      <label for="mcp-name" class={labelClass} style="color: var(--text-muted)">Name</label>
+      <label for="mcp-name" class={labelClass} style="color: var(--text-muted)">{t("mcp.nameLabel")}</label>
       <input
         id="mcp-name"
         type="text"
@@ -143,18 +144,18 @@
 
     <!-- Transport -->
     <div>
-      <span class={labelClass} style="color: var(--text-muted)">Transport</span>
+      <span class={labelClass} style="color: var(--text-muted)">{t("mcp.transportLabel")}</span>
       <div class="flex gap-4">
-        {#each (["stdio", "sse", "http"] as const) as t}
+        {#each (["stdio", "sse", "http"] as const) as t_val}
           <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
               name="transport"
-              value={t}
+              value={t_val}
               bind:group={transport}
               style="accent-color: var(--accent-primary)"
             />
-            <span class="text-sm" style="color: var(--text-secondary)">{t}</span>
+            <span class="text-sm" style="color: var(--text-secondary)">{t_val}</span>
           </label>
         {/each}
       </div>
@@ -163,7 +164,7 @@
     <!-- Stdio: command + args -->
     {#if transport === "stdio"}
       <div>
-        <label for="mcp-command" class={labelClass} style="color: var(--text-muted)">Command</label>
+        <label for="mcp-command" class={labelClass} style="color: var(--text-muted)">{t("mcp.commandLabel")}</label>
         <input
           id="mcp-command"
           type="text"
@@ -173,7 +174,7 @@
         />
       </div>
       <div>
-        <label for="mcp-args" class={labelClass} style="color: var(--text-muted)">Arguments <span style="color: var(--text-muted)">(comma or space separated)</span></label>
+        <label for="mcp-args" class={labelClass} style="color: var(--text-muted)">{t("mcp.argumentsLabel")} <span style="color: var(--text-muted)">{t("mcp.argumentsHint")}</span></label>
         <input
           id="mcp-args"
           type="text"
@@ -185,7 +186,7 @@
     {:else}
       <!-- SSE / HTTP: URL -->
       <div>
-        <label for="mcp-url" class={labelClass} style="color: var(--text-muted)">URL</label>
+        <label for="mcp-url" class={labelClass} style="color: var(--text-muted)">{t("mcp.urlLabel")}</label>
         <input
           id="mcp-url"
           type="url"
@@ -198,7 +199,7 @@
 
     <!-- Scope -->
     <div>
-      <label for="mcp-scope" class={labelClass} style="color: var(--text-muted)">Scope</label>
+      <label for="mcp-scope" class={labelClass} style="color: var(--text-muted)">{t("mcp.scopeLabel")}</label>
       <select
         id="mcp-scope"
         bind:value={scope}
@@ -212,7 +213,7 @@
 
     <!-- Env vars -->
     <div class="space-y-2">
-      <span class={labelClass} style="color: var(--text-muted)">Environment Variables</span>
+      <span class={labelClass} style="color: var(--text-muted)">{t("mcp.envVarsLabel")}</span>
 
       {#if envEntries.length > 0}
         <div class="space-y-1.5">
@@ -228,7 +229,7 @@
                 onclick={() => removeEnvEntry(index)}
                 class="btn-danger-ghost text-xs opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                Remove
+                {t("common.remove")}
               </button>
             </div>
           {/each}
@@ -258,7 +259,7 @@
           onclick={addEnvEntry}
           class="btn-secondary shrink-0 text-xs"
         >
-          Add
+          {t("common.add")}
         </button>
       </div>
       {#if envError}
@@ -273,7 +274,7 @@
         disabled={submitting}
         class="btn-primary disabled:opacity-50"
       >
-        {submitting ? "Adding..." : "Add Server"}
+        {submitting ? t("mcp.adding") : t("mcp.addServer")}
       </button>
     </div>
   </form>
