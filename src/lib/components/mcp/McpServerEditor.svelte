@@ -108,30 +108,29 @@
     }
   }
 
-  const inputClass =
-    "rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full";
-  const labelClass = "block text-xs font-medium text-gray-400 mb-1";
+  const inputClass = "input-base";
+  const labelClass = "block text-xs font-medium mb-1";
 </script>
 
 <div class="flex-1 overflow-auto p-6">
   <form onsubmit={handleSubmit} class="max-w-xl space-y-5">
-    <h2 class="text-sm font-semibold text-gray-200">Add MCP Server</h2>
+    <h2 class="text-sm font-semibold" style="color: var(--text-primary)">Add MCP Server</h2>
 
     {#if submitError}
-      <div class="rounded border border-red-800 bg-red-950 px-4 py-2">
-        <p class="text-xs text-red-400">{submitError}</p>
+      <div class="alert-error">
+        <p class="text-xs">{submitError}</p>
       </div>
     {/if}
 
     {#if submitSuccess}
-      <div class="rounded border border-green-800 bg-green-950 px-4 py-2">
-        <p class="text-xs text-green-400">Server added successfully.</p>
+      <div class="alert-success">
+        <p class="text-xs">Server added successfully.</p>
       </div>
     {/if}
 
     <!-- Name -->
     <div>
-      <label for="mcp-name" class={labelClass}>Name</label>
+      <label for="mcp-name" class={labelClass} style="color: var(--text-muted)">Name</label>
       <input
         id="mcp-name"
         type="text"
@@ -144,7 +143,7 @@
 
     <!-- Transport -->
     <div>
-      <span class={labelClass}>Transport</span>
+      <span class={labelClass} style="color: var(--text-muted)">Transport</span>
       <div class="flex gap-4">
         {#each (["stdio", "sse", "http"] as const) as t}
           <label class="flex items-center gap-2 cursor-pointer">
@@ -153,9 +152,9 @@
               name="transport"
               value={t}
               bind:group={transport}
-              class="accent-blue-500"
+              style="accent-color: var(--accent-primary)"
             />
-            <span class="text-sm text-gray-300">{t}</span>
+            <span class="text-sm" style="color: var(--text-secondary)">{t}</span>
           </label>
         {/each}
       </div>
@@ -164,7 +163,7 @@
     <!-- Stdio: command + args -->
     {#if transport === "stdio"}
       <div>
-        <label for="mcp-command" class={labelClass}>Command</label>
+        <label for="mcp-command" class={labelClass} style="color: var(--text-muted)">Command</label>
         <input
           id="mcp-command"
           type="text"
@@ -174,7 +173,7 @@
         />
       </div>
       <div>
-        <label for="mcp-args" class={labelClass}>Arguments <span class="text-gray-600">(comma or space separated)</span></label>
+        <label for="mcp-args" class={labelClass} style="color: var(--text-muted)">Arguments <span style="color: var(--text-muted)">(comma or space separated)</span></label>
         <input
           id="mcp-args"
           type="text"
@@ -186,7 +185,7 @@
     {:else}
       <!-- SSE / HTTP: URL -->
       <div>
-        <label for="mcp-url" class={labelClass}>URL</label>
+        <label for="mcp-url" class={labelClass} style="color: var(--text-muted)">URL</label>
         <input
           id="mcp-url"
           type="url"
@@ -199,11 +198,11 @@
 
     <!-- Scope -->
     <div>
-      <label for="mcp-scope" class={labelClass}>Scope</label>
+      <label for="mcp-scope" class={labelClass} style="color: var(--text-muted)">Scope</label>
       <select
         id="mcp-scope"
         bind:value={scope}
-        class="rounded border border-gray-700 bg-gray-800 px-3 py-1.5 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="input-base w-auto"
       >
         <option value="user">user</option>
         <option value="project">project</option>
@@ -213,21 +212,21 @@
 
     <!-- Env vars -->
     <div class="space-y-2">
-      <span class={labelClass}>Environment Variables</span>
+      <span class={labelClass} style="color: var(--text-muted)">Environment Variables</span>
 
       {#if envEntries.length > 0}
         <div class="space-y-1.5">
           {#each envEntries as entry, index}
             <div class="group flex items-center gap-2">
-              <code class="shrink-0 rounded bg-gray-800 border border-gray-700 px-2 py-1 text-xs font-mono text-gray-200">
+              <code class="code-block shrink-0 px-2 py-1 text-xs font-mono">
                 {entry.key}
               </code>
-              <span class="text-gray-500 text-sm">=</span>
-              <span class="flex-1 text-xs text-gray-400 truncate">{entry.value || '""'}</span>
+              <span class="text-sm" style="color: var(--text-muted)">=</span>
+              <span class="flex-1 text-xs truncate" style="color: var(--text-muted)">{entry.value || '""'}</span>
               <button
                 type="button"
                 onclick={() => removeEnvEntry(index)}
-                class="text-xs text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-300 transition-opacity"
+                class="btn-danger-ghost text-xs opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 Remove
               </button>
@@ -244,26 +243,26 @@
           onkeydown={handleEnvKeydown}
           oninput={() => { envError = ""; }}
           placeholder="KEY"
-          class="w-32 rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs font-mono text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          class="input-base w-32 font-mono text-xs"
         />
-        <span class="text-gray-500 text-sm">=</span>
+        <span class="text-sm" style="color: var(--text-muted)">=</span>
         <input
           type="text"
           bind:value={newEnvValue}
           onkeydown={handleEnvKeydown}
           placeholder="value"
-          class="flex-1 rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          class="input-base flex-1 text-xs"
         />
         <button
           type="button"
           onclick={addEnvEntry}
-          class="shrink-0 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 hover:bg-gray-600"
+          class="btn-secondary shrink-0 text-xs"
         >
           Add
         </button>
       </div>
       {#if envError}
-        <p class="text-xs text-red-400">{envError}</p>
+        <p class="text-xs" style="color: var(--status-error-text)">{envError}</p>
       {/if}
     </div>
 
@@ -272,7 +271,7 @@
       <button
         type="submit"
         disabled={submitting}
-        class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+        class="btn-primary disabled:opacity-50"
       >
         {submitting ? "Adding..." : "Add Server"}
       </button>

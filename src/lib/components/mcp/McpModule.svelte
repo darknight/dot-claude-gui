@@ -12,7 +12,7 @@
     <McpServerEditor />
   {:else}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm text-gray-600">Unknown section: {activeSection}</p>
+      <p class="text-sm" style="color: var(--text-muted)">Unknown section: {activeSection}</p>
     </div>
   {/if}
 </div>

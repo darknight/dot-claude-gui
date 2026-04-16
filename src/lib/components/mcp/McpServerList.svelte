@@ -25,19 +25,19 @@
   const scopeOrder = ["claude.ai", "plugin", "user", "project", "local", "other"];
 
   function transportBadgeClass(transport: string): string {
-    if (transport === "stdio") return "bg-blue-900 text-blue-300";
-    if (transport === "http") return "bg-green-900 text-green-300";
-    if (transport === "sse") return "bg-yellow-900 text-yellow-300";
-    return "bg-gray-800 text-gray-400";
+    if (transport === "stdio") return "badge badge-info";
+    if (transport === "http") return "badge badge-success";
+    if (transport === "sse") return "badge badge-warning";
+    return "badge badge-neutral";
   }
 
-  function statusIndicatorClass(status?: string): string {
-    if (!status) return "bg-gray-500";
+  function statusIndicatorStyle(status?: string): string {
+    if (!status) return "background-color: var(--text-muted)";
     const s = status.toLowerCase();
-    if (s === "connected") return "bg-green-500";
-    if (s.includes("auth") || s.includes("needs")) return "bg-yellow-500";
-    if (s === "error" || s.includes("fail")) return "bg-red-500";
-    return "bg-gray-500";
+    if (s === "connected") return "background-color: var(--status-success-text)";
+    if (s.includes("auth") || s.includes("needs")) return "background-color: var(--status-warning-text)";
+    if (s === "error" || s.includes("fail")) return "background-color: var(--status-error-text)";
+    return "background-color: var(--text-muted)";
   }
 
   function statusLabel(status?: string): string {
@@ -53,41 +53,41 @@
 
 <div class="flex-1 overflow-auto p-6">
   {#if mcpStore.error}
-    <div class="mb-4 rounded border border-red-800 bg-red-950 px-4 py-2">
-      <p class="text-xs text-red-400">{mcpStore.error}</p>
+    <div class="alert-error mb-4">
+      <p class="text-xs">{mcpStore.error}</p>
     </div>
   {/if}
 
   {#if mcpStore.loading}
-    <div class="flex items-center gap-2 py-4 text-sm text-gray-500">
-      <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-600 border-t-blue-400"></span>
+    <div class="flex items-center gap-2 py-4 text-sm" style="color: var(--text-muted)">
+      <span class="inline-block h-4 w-4 animate-spin rounded-full border-2" style="border-color: var(--border-strong); border-top-color: var(--accent-primary)"></span>
       Loading servers...
     </div>
   {:else if mcpStore.servers.length === 0}
     <div class="flex h-64 items-center justify-center">
-      <p class="text-sm text-gray-600">No MCP servers configured</p>
+      <p class="text-sm" style="color: var(--text-muted)">No MCP servers configured</p>
     </div>
   {:else}
     <div class="space-y-6">
       {#each scopeOrder.filter(s => groupedServers[s]?.length > 0) as scope}
         <div>
-          <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">{scope}</h3>
+          <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">{scope}</h3>
           <div class="space-y-2">
             {#each groupedServers[scope] as server (server.name + server.scope)}
-              <div class="group relative rounded-lg border border-gray-800 bg-gray-900 px-4 py-3 transition-colors hover:border-gray-700">
+              <div class="card group relative px-4 py-3 transition-colors">
                 <div class="flex items-start justify-between gap-4">
                   <!-- Server info -->
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2">
-                      <span class="font-semibold text-gray-100">{server.name}</span>
-                      <span class="rounded px-1.5 py-0.5 text-xs font-medium {transportBadgeClass(server.transport)}">
+                      <span class="font-semibold" style="color: var(--text-primary)">{server.name}</span>
+                      <span class="{transportBadgeClass(server.transport)}">
                         {server.transport}
                       </span>
                     </div>
-                    <p class="mt-0.5 truncate text-xs text-gray-400 font-mono">
+                    <p class="mt-0.5 truncate text-xs font-mono" style="color: var(--text-secondary)">
                       {server.transport === "stdio" ? (server.command ?? "") : (server.url ?? "")}
                       {#if server.transport === "stdio" && server.args?.length}
-                        <span class="text-gray-600"> {server.args.join(" ")}</span>
+                        <span style="color: var(--text-muted)"> {server.args.join(" ")}</span>
                       {/if}
                     </p>
                   </div>
@@ -95,11 +95,11 @@
                   <!-- Status + remove -->
                   <div class="flex items-center gap-3">
                     <div class="flex items-center gap-1.5" title={statusLabel(server.status)}>
-                      <span class="h-2 w-2 rounded-full {statusIndicatorClass(server.status)}"></span>
-                      <span class="text-xs text-gray-500">{statusLabel(server.status)}</span>
+                      <span class="h-2 w-2 rounded-full" style="{statusIndicatorStyle(server.status)}"></span>
+                      <span class="text-xs" style="color: var(--text-muted)">{statusLabel(server.status)}</span>
                     </div>
                     <button
-                      class="hidden rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-red-900/50 hover:text-red-400 group-hover:block"
+                      class="btn-danger-ghost hidden text-xs transition-colors group-hover:block"
                       onclick={() => handleRemove(server.name, server.scope)}
                       title="Remove server"
                     >
