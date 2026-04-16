@@ -45,5 +45,19 @@
   "skills.title": "Skills",
   "skills.userGroup": "User Skills",
   "skills.noSkills": "No skills found",
-  "skills.invalid": "Invalid"
+  "skills.invalid": "Invalid",
+  "common.save": "Save",
+  "common.saving": "Saving...",
+  "common.delete": "Delete",
+  "common.unsaved": "unsaved",
+  "common.unsavedChanges": "unsaved changes",
+  "claudemd.scopeGlobal": "Global",
+  "claudemd.scopeProject": "Project",
+  "claudemd.confirmDelete": "Are you sure you want to delete this CLAUDE.md?",
+  "claudemd.selectFile": "Select a CLAUDE.md file to view and edit",
+  "claudemd.noFilesForScope": "No CLAUDE.md files for this scope",
+  "claudemd.groupProject": "Project",
+  "claudemd.groupGlobal": "Global",
+  "claudemd.createLabel": "CLAUDE.md (create)",
+  "claudemd.clickToCreate": "click to create"
 }

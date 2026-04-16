@@ -45,5 +45,19 @@
   "skills.title": "スキル",
   "skills.userGroup": "ユーザースキル",
   "skills.noSkills": "スキルが見つかりません",
-  "skills.invalid": "無効"
+  "skills.invalid": "無効",
+  "common.save": "保存",
+  "common.saving": "保存中...",
+  "common.delete": "削除",
+  "common.unsaved": "未保存",
+  "common.unsavedChanges": "未保存の変更",
+  "claudemd.scopeGlobal": "グローバル",
+  "claudemd.scopeProject": "プロジェクト",
+  "claudemd.confirmDelete": "この CLAUDE.md を削除してよろしいですか？",
+  "claudemd.selectFile": "CLAUDE.md ファイルを選択して表示・編集",
+  "claudemd.noFilesForScope": "このスコープに CLAUDE.md ファイルはありません",
+  "claudemd.groupProject": "プロジェクト",
+  "claudemd.groupGlobal": "グローバル",
+  "claudemd.createLabel": "CLAUDE.md（作成）",
+  "claudemd.clickToCreate": "クリックして作成"
 }

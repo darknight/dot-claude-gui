@@ -1,5 +1,6 @@
 <script lang="ts">
   import { claudeMdStore } from "$lib/stores/claudemd.svelte";
+  import { t } from "$lib/i18n";
 
   let localContent = $state("");
   let originalContent = $state("");
@@ -31,7 +32,7 @@
   async function handleDelete() {
     const file = claudeMdStore.activeFile;
     if (!file) return;
-    if (!confirm("Are you sure you want to delete this CLAUDE.md?")) return;
+    if (!confirm(t("claudemd.confirmDelete"))) return;
     await claudeMdStore.deleteFile(file.id);
   }
 
@@ -40,14 +41,14 @@
   }
 
   function scopeLabel(scope: string): string {
-    return scope === "global" ? "全局" : "项目";
+    return scope === "global" ? t("claudemd.scopeGlobal") : t("claudemd.scopeProject");
   }
 </script>
 
 <div class="flex flex-1 flex-col overflow-hidden">
   {#if !claudeMdStore.activeFile}
     <div class="flex flex-1 items-center justify-center">
-      <p class="text-sm" style="color: var(--text-muted)">Select a CLAUDE.md file to view and edit</p>
+      <p class="text-sm" style="color: var(--text-muted)">{t("claudemd.selectFile")}</p>
     </div>
   {:else}
     {@const file = claudeMdStore.activeFile}
@@ -63,7 +64,7 @@
             </span>
             {#if isDirty}
               <span class="badge badge-warning flex-shrink-0">
-                unsaved
+                {t("common.unsaved")}
               </span>
             {/if}
           </div>
@@ -76,14 +77,14 @@
             disabled={!isDirty || claudeMdStore.saving}
             onclick={handleSave}
           >
-            {claudeMdStore.saving ? "Saving..." : "Save"}
+            {claudeMdStore.saving ? t("common.saving") : t("common.save")}
           </button>
           {#if file.scope !== "global" || originalContent !== ""}
             <button
               class="btn-danger-ghost rounded px-3 py-1.5 text-xs font-medium"
               onclick={handleDelete}
             >
-              Delete
+              {t("common.delete")}
             </button>
           {/if}
         </div>
@@ -93,7 +94,7 @@
     <div class="flex flex-1 flex-col overflow-hidden p-4">
       {#if claudeMdStore.loading}
         <div class="flex flex-1 items-center justify-center">
-          <p class="text-sm" style="color: var(--text-muted)">Loading...</p>
+          <p class="text-sm" style="color: var(--text-muted)">{t("common.loading")}</p>
         </div>
       {:else}
         <textarea

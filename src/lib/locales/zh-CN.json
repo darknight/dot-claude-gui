@@ -45,5 +45,19 @@
   "skills.title": "技能",
   "skills.userGroup": "用户技能",
   "skills.noSkills": "未找到技能",
-  "skills.invalid": "无效"
+  "skills.invalid": "无效",
+  "common.save": "保存",
+  "common.saving": "保存中...",
+  "common.delete": "删除",
+  "common.unsaved": "未保存",
+  "common.unsavedChanges": "未保存的更改",
+  "claudemd.scopeGlobal": "全局",
+  "claudemd.scopeProject": "项目",
+  "claudemd.confirmDelete": "确认删除此 CLAUDE.md 吗？",
+  "claudemd.selectFile": "选择一个 CLAUDE.md 文件进行查看和编辑",
+  "claudemd.noFilesForScope": "此作用域下没有 CLAUDE.md 文件",
+  "claudemd.groupProject": "项目",
+  "claudemd.groupGlobal": "全局",
+  "claudemd.createLabel": "CLAUDE.md（待创建）",
+  "claudemd.clickToCreate": "点击创建"
 }

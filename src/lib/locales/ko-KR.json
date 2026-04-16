@@ -45,5 +45,19 @@
   "skills.title": "",
   "skills.userGroup": "",
   "skills.noSkills": "",
-  "skills.invalid": ""
+  "skills.invalid": "",
+  "common.save": "",
+  "common.saving": "",
+  "common.delete": "",
+  "common.unsaved": "",
+  "common.unsavedChanges": "",
+  "claudemd.scopeGlobal": "",
+  "claudemd.scopeProject": "",
+  "claudemd.confirmDelete": "",
+  "claudemd.selectFile": "",
+  "claudemd.noFilesForScope": "",
+  "claudemd.groupProject": "",
+  "claudemd.groupGlobal": "",
+  "claudemd.createLabel": "",
+  "claudemd.clickToCreate": ""
 }

@@ -2,6 +2,7 @@
   import { claudeMdStore } from "$lib/stores/claudemd.svelte";
   import { projectsStore } from "$lib/stores/projects.svelte";
   import { configStore } from "$lib/stores/config.svelte";
+  import { t } from "$lib/i18n";
 
   const isProjectScope = $derived(
     configStore.activeScope === "project" && projectsStore.activeProjectId !== null,
@@ -38,13 +39,13 @@
 <div class="flex flex-col overflow-hidden h-full">
   <ul class="flex-1 overflow-y-auto py-2">
     {#if claudeMdStore.loading && claudeMdStore.files.length === 0}
-      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">Loading...</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("common.loading")}</li>
     {:else if visibleFiles.length === 0}
-      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">No CLAUDE.md files for this scope</li>
+      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("claudemd.noFilesForScope")}</li>
     {:else}
       <li class="px-4 pt-2 pb-1">
         <span class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">
-          {isProjectScope ? "Project" : "Global"}
+          {isProjectScope ? t("claudemd.groupProject") : t("claudemd.groupGlobal")}
         </span>
       </li>
       {#each visibleFiles as file (file.id)}
@@ -65,15 +66,15 @@
                 {/if}
                 <span class="truncate">
                   {file.scope === "global"
-                    ? (file.exists ? "CLAUDE.md" : "CLAUDE.md (create)")
+                    ? (file.exists ? "CLAUDE.md" : t("claudemd.createLabel"))
                     : (file.projectName ?? file.projectId)}
                 </span>
               </span>
               {#if !file.exists}
-                <span class="ml-auto flex-shrink-0 text-xs" style="color: var(--text-muted)">click to create</span>
+                <span class="ml-auto flex-shrink-0 text-xs" style="color: var(--text-muted)">{t("claudemd.clickToCreate")}</span>
               {:else}
                 <span class="ml-auto flex-shrink-0 {scopeBadgeClass(file.scope)}">
-                  {file.scope === "global" ? "全局" : "项目"}
+                  {file.scope === "global" ? t("claudemd.scopeGlobal") : t("claudemd.scopeProject")}
                 </span>
               {/if}
             </button>
@@ -86,12 +87,12 @@
               <span class="flex items-center gap-1.5 truncate">
                 <span class="truncate">
                   {file.scope === "global"
-                    ? (file.exists ? "CLAUDE.md" : "CLAUDE.md (create)")
+                    ? (file.exists ? "CLAUDE.md" : t("claudemd.createLabel"))
                     : (file.projectName ?? file.projectId)}
                 </span>
               </span>
               <span class="ml-auto flex-shrink-0 {scopeBadgeClass(file.scope)}">
-                {file.scope === "global" ? "全局" : "项目"}
+                {file.scope === "global" ? t("claudemd.scopeGlobal") : t("claudemd.scopeProject")}
               </span>
             </button>
           {:else}
@@ -102,10 +103,10 @@
             >
               <span class="flex items-center gap-1.5 truncate">
                 <span class="truncate">
-                  {file.scope === "global" ? "CLAUDE.md (create)" : (file.projectName ?? file.projectId)}
+                  {file.scope === "global" ? t("claudemd.createLabel") : (file.projectName ?? file.projectId)}
                 </span>
               </span>
-              <span class="ml-auto flex-shrink-0 text-xs" style="color: var(--text-muted)">click to create</span>
+              <span class="ml-auto flex-shrink-0 text-xs" style="color: var(--text-muted)">{t("claudemd.clickToCreate")}</span>
             </button>
           {/if}
         </li>
