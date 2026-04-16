@@ -1,0 +1,4 @@
+{
+  "memory.noFilesYet": "このプロジェクト {name} にはまだメモリファイルがありません。",
+  "memory.dropdownDisabledInProjectScope": "プロジェクトスコープではメモリは右上のスコープセレクタに従います。手動で選ぶには User Scope に切り替えてください。"
+}

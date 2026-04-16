@@ -1,0 +1,4 @@
+{
+  "memory.noFilesYet": "当前项目 {name} 还没有生成记忆文件。",
+  "memory.dropdownDisabledInProjectScope": "项目 scope 下由顶部 scope 选择器决定，切换到 User Scope 可手动选择。"
+}
