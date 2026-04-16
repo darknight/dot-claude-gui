@@ -71,7 +71,7 @@
       for="language"
       class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
-      Language
+      {t("settings.languageLabel")}
       <DirtyDot dirty={languageDirty} />
     </label>
     <input
@@ -79,7 +79,7 @@
       type="text"
       bind:value={language}
       oninput={() => configStore.markDirty()}
-      placeholder="e.g. Simplified Chinese"
+      placeholder={t("settings.languagePlaceholder")}
       class="input-base"
     />
   </div>
@@ -93,7 +93,7 @@
       class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)"
     />
     <span class="text-sm" style="color: var(--text-secondary)">
-      Always thinking enabled
+      {t("settings.alwaysThinkingEnabled")}
       <DirtyDot dirty={thinkingDirty} />
     </span>
   </label>
@@ -104,7 +104,7 @@
       for="autoUpdatesChannel"
       class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
-      Auto Updates Channel
+      {t("settings.autoUpdatesChannel")}
       <DirtyDot dirty={channelDirty} />
     </label>
     <select
@@ -124,7 +124,7 @@
       for="minimumVersion"
       class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
-      Minimum Version
+      {t("settings.minimumVersion")}
       <DirtyDot dirty={versionDirty} />
     </label>
     <input
@@ -132,7 +132,7 @@
       type="text"
       bind:value={minimumVersion}
       oninput={() => configStore.markDirty()}
-      placeholder="e.g. 2.1.63"
+      placeholder={t("settings.minimumVersionPlaceholder")}
       class="input-base"
     />
   </div>
@@ -146,7 +146,7 @@
       class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)"
     />
     <span class="text-sm" style="color: var(--text-secondary)">
-      Include Co-authored-by in commits
+      {t("settings.includeCoAuthoredBy")}
       <DirtyDot dirty={coauthorDirty} />
     </span>
   </label>
@@ -160,7 +160,7 @@
       class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)"
     />
     <span class="text-sm" style="color: var(--text-secondary)">
-      Skip dangerous mode permission prompt
+      {t("settings.skipDangerousModePrompt")}
       <DirtyDot dirty={skipDangerousDirty} />
     </span>
   </label>
@@ -186,5 +186,5 @@
   </div>
 
   <!-- JSON Preview -->
-  <JsonPreview data={previewData} title="General Settings (JSON)" />
+  <JsonPreview data={previewData} title={t("settings.generalSettingsJson")} />
 </div>

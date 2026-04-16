@@ -145,7 +145,7 @@
       for="eventType"
       class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
-      Event Type
+      {t("settings.eventType")}
       <DirtyDot dirty={isEventDirty(selectedEvent)} />
     </label>
     <select
@@ -170,7 +170,7 @@
         <!-- Header row with delete button -->
         <div class="flex items-center justify-between">
           <span class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-muted)">
-            Rule {groupIndex + 1}
+            {t("settings.hookRule", { n: groupIndex + 1 })}
             <DirtyDot dirty={isRuleDirty(groupIndex, group)} />
           </span>
           <button
@@ -178,7 +178,7 @@
             onclick={() => removeRule(groupIndex)}
             class="btn-danger-ghost text-xs"
           >
-            Delete Rule
+            {t("settings.deleteRule")}
           </button>
         </div>
 
@@ -188,14 +188,14 @@
             for="matcher-{groupIndex}"
             class="block text-xs font-medium" style="color: var(--text-muted)"
           >
-            Matcher
+            {t("settings.matcher")}
           </label>
           <input
             id="matcher-{groupIndex}"
             type="text"
             value={group.matcher ?? ""}
             oninput={(e) => updateMatcher(groupIndex, (e.target as HTMLInputElement).value)}
-            placeholder="e.g. Bash or * to match all"
+            placeholder={t("settings.matcherPlaceholder")}
             class="input-base"
           />
         </div>
@@ -206,14 +206,14 @@
             for="condition-{groupIndex}"
             class="block text-xs font-medium" style="color: var(--text-muted)"
           >
-            Condition (optional)
+            {t("settings.condition")}
           </label>
           <input
             id="condition-{groupIndex}"
             type="text"
             value={group.if ?? ""}
             oninput={(e) => updateCondition(groupIndex, (e.target as HTMLInputElement).value)}
-            placeholder="e.g. tool_name == 'Bash'"
+            placeholder={t("settings.conditionPlaceholder")}
             class="input-base"
           />
         </div>
@@ -221,7 +221,7 @@
         <!-- Hook Definitions -->
         <div class="space-y-2">
           <span class="block text-xs font-medium" style="color: var(--text-muted)">
-            Hooks
+            {t("settings.hooksLabel")}
           </span>
           {#each (group.hooks ?? []) as hookDef, hookIndex}
             <div class="ml-3 pl-3 border-l-2 space-y-2" style="border-color: var(--border-color)">
@@ -236,7 +236,7 @@
                     onchange={() => updateHookType(groupIndex, hookIndex, "command")}
                     style="accent-color: var(--accent-primary)"
                   />
-                  <span style="color: var(--text-secondary)">Command</span>
+                  <span style="color: var(--text-secondary)">{t("settings.hookTypeCommand")}</span>
                 </label>
                 <label class="flex items-center gap-1.5 text-sm cursor-pointer">
                   <input
@@ -247,7 +247,7 @@
                     onchange={() => updateHookType(groupIndex, hookIndex, "http")}
                     style="accent-color: var(--accent-primary)"
                   />
-                  <span style="color: var(--text-secondary)">HTTP</span>
+                  <span style="color: var(--text-secondary)">{t("settings.hookTypeHttp")}</span>
                 </label>
                 {#if (group.hooks ?? []).length > 1}
                   <button
@@ -255,7 +255,7 @@
                     onclick={() => removeHookDefinition(groupIndex, hookIndex)}
                     class="btn-danger-ghost ml-auto text-xs"
                   >
-                    Remove
+                    {t("common.remove")}
                   </button>
                 {/if}
               </div>
@@ -267,7 +267,7 @@
                     for="command-{groupIndex}-{hookIndex}"
                     class="block text-xs" style="color: var(--text-muted)"
                   >
-                    Command
+                    {t("settings.commandLabel")}
                   </label>
                   <input
                     id="command-{groupIndex}-{hookIndex}"
@@ -275,7 +275,7 @@
                     value={hookDef.command ?? ""}
                     oninput={(e) =>
                       updateHookField(groupIndex, hookIndex, "command", (e.target as HTMLInputElement).value)}
-                    placeholder="/path/to/script.sh"
+                    placeholder={t("settings.commandPlaceholder")}
                     class="input-base"
                   />
                 </div>
@@ -289,7 +289,7 @@
                       for="url-{groupIndex}-{hookIndex}"
                       class="block text-xs" style="color: var(--text-muted)"
                     >
-                      URL
+                      {t("settings.urlLabel")}
                     </label>
                     <input
                       id="url-{groupIndex}-{hookIndex}"
@@ -297,7 +297,7 @@
                       value={hookDef.url ?? ""}
                       oninput={(e) =>
                         updateHookField(groupIndex, hookIndex, "url", (e.target as HTMLInputElement).value)}
-                      placeholder="https://example.com/webhook"
+                      placeholder={t("settings.urlPlaceholder")}
                       class="input-base"
                     />
                   </div>
@@ -307,7 +307,7 @@
                         for="method-{groupIndex}-{hookIndex}"
                         class="block text-xs" style="color: var(--text-muted)"
                       >
-                        Method
+                        {t("settings.methodLabel")}
                       </label>
                       <select
                         id="method-{groupIndex}-{hookIndex}"
@@ -326,7 +326,7 @@
                         for="timeout-{groupIndex}-{hookIndex}"
                         class="block text-xs" style="color: var(--text-muted)"
                       >
-                        Timeout (ms)
+                        {t("settings.timeoutLabel")}
                       </label>
                       <input
                         id="timeout-{groupIndex}-{hookIndex}"
@@ -358,7 +358,7 @@
             onclick={() => addHookDefinition(groupIndex)}
             class="ml-3 text-xs" style="color: var(--accent-text)"
           >
-            + Add Hook
+            {t("settings.addHook")}
           </button>
         </div>
       </div>
@@ -371,7 +371,7 @@
     onclick={addRule}
     class="btn-secondary text-sm px-3 py-1.5" style="border-style: dashed"
   >
-    + Add Hook Rule
+    {t("settings.addHookRule")}
   </button>
 
   <!-- Save / Revert -->
@@ -395,5 +395,5 @@
   </div>
 
   <!-- JSON Preview -->
-  <JsonPreview data={previewData} title="Hooks (JSON)" />
+  <JsonPreview data={previewData} title={t("settings.hooksJson")} />
 </div>

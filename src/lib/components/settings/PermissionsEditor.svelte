@@ -52,8 +52,8 @@
   <div class="space-y-1">
     <StringListEditor
       bind:items={allow}
-      label="Allow"
-      placeholder="e.g. Bash(git:*)"
+      label={t("settings.allow")}
+      placeholder={t("settings.allowPlaceholder")}
       dirty={allowDirty}
     />
   </div>
@@ -62,8 +62,8 @@
   <div class="space-y-1">
     <StringListEditor
       bind:items={deny}
-      label="Deny"
-      placeholder="e.g. Bash(rm:*)"
+      label={t("settings.deny")}
+      placeholder={t("settings.denyPlaceholder")}
       dirty={denyDirty}
     />
   </div>
@@ -72,8 +72,8 @@
   <div class="space-y-1">
     <StringListEditor
       bind:items={ask}
-      label="Ask"
-      placeholder="e.g. WebSearch"
+      label={t("settings.ask")}
+      placeholder={t("settings.askPlaceholder")}
       dirty={askDirty}
     />
   </div>
@@ -84,7 +84,7 @@
       for="defaultMode"
       class="block text-sm font-medium" style="color: var(--text-secondary)"
     >
-      Default Mode
+      {t("settings.defaultMode")}
       <DirtyDot dirty={modeDirty} />
     </label>
     <select
@@ -123,5 +123,5 @@
   </div>
 
   <!-- JSON Preview -->
-  <JsonPreview data={previewData} title="Permissions (JSON)" />
+  <JsonPreview data={previewData} title={t("settings.permissionsJson")} />
 </div>
