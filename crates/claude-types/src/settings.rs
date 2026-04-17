@@ -108,6 +108,21 @@ pub struct Settings {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub syntax_highlighting_disabled: Option<bool>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allowed_mcp_servers: Option<Vec<McpServerRef>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled_mcpjson_servers: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disabled_mcpjson_servers: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enable_all_project_mcp_servers: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_managed_mcp_servers_only: Option<bool>,
+
     /// Preserves any fields not explicitly modelled above.
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,
@@ -434,14 +449,17 @@ mod tests {
             "claudeMdExcludes",
             "plansDirectory",
             "syntaxHighlightingDisabled",
+            // M5: MCP tab
+            "allowedMcpServers",
+            "enabledMcpjsonServers",
+            "disabledMcpjsonServers",
+            "enableAllProjectMcpServers",
+            "allowManagedMcpServersOnly",
         ];
 
         // 在后续里程碑中添加字段时，从 `skipped` 列表移除并加到 `modeled`。
         let skipped: &[&str] = &[
             "$schema",
-            // M5: MCP tab
-            "allowedMcpServers", "enabledMcpjsonServers", "disabledMcpjsonServers",
-            "enableAllProjectMcpServers", "allowManagedMcpServersOnly",
             // M6: Plugins & Marketplace
             "strictKnownMarketplaces", "blockedMarketplaces", "skippedMarketplaces",
             "skippedPlugins", "pluginConfigs", "pluginTrustMessage", "skillOverrides",

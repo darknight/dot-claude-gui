@@ -7,6 +7,7 @@
   import EnvVarEditor from "./EnvVarEditor.svelte";
   import StatusLineEditor from "./StatusLineEditor.svelte";
   import RuntimeEditor from "./RuntimeEditor.svelte";
+  import McpPolicyEditor from "./McpPolicyEditor.svelte";
   import { t } from "$lib/i18n";
 
   let { activeSection = "general" }: { activeSection: string } = $props();
@@ -42,6 +43,8 @@
     <StatusLineEditor />
   {:else if activeSection === "runtime"}
     <RuntimeEditor />
+  {:else if activeSection === "mcpPolicy"}
+    <McpPolicyEditor />
   {:else}
     <p class="text-sm" style="color: var(--text-muted)">Unknown section: {activeSection}</p>
   {/if}

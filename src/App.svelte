@@ -100,6 +100,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
     { id: "environment", labelKey: "settings.environment" },
     { id: "statusline", labelKey: "settings.statusLine" },
     { id: "runtime", labelKey: "settings.runtime" },
+    { id: "mcpPolicy", labelKey: "settings.mcpPolicy" },
   ] satisfies { id: string; labelKey: MessageKey }[];
 
   let settingsSection = $state("general");

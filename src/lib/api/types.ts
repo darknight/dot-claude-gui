@@ -40,6 +40,11 @@ export interface Settings {
   claudeMdExcludes?: string[];
   plansDirectory?: string;
   syntaxHighlightingDisabled?: boolean;
+  allowedMcpServers?: McpServerRef[];
+  enabledMcpjsonServers?: string[];
+  disabledMcpjsonServers?: string[];
+  enableAllProjectMcpServers?: boolean;
+  allowManagedMcpServersOnly?: boolean;
   // Catch-all for unknown / future fields preserved by the daemon.
   [key: string]: unknown;
 }

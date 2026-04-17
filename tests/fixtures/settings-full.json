@@ -91,5 +91,12 @@
   "cleanupPeriodDays": 30,
   "claudeMdExcludes": ["vendor/", ".venv/"],
   "plansDirectory": "~/.claude/plans",
-  "syntaxHighlightingDisabled": false
+  "syntaxHighlightingDisabled": false,
+  "allowedMcpServers": [
+    { "serverName": "context7", "serverUrl": "https://mcp.context7.com/mcp" }
+  ],
+  "enabledMcpjsonServers": ["trusted-a"],
+  "disabledMcpjsonServers": ["blocked-a"],
+  "enableAllProjectMcpServers": true,
+  "allowManagedMcpServersOnly": false
 }
