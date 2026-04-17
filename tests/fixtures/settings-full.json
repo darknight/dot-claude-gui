@@ -76,5 +76,13 @@
     "background": "claude-haiku-3"
   },
   "tui": "fullscreen",
-  "effortLevel": "xhigh"
+  "effortLevel": "xhigh",
+  "model": "opus",
+  "outputStyle": "default",
+  "fastMode": true,
+  "fastModePerSessionOptIn": false,
+  "availableModels": ["sonnet", "opus", "haiku"],
+  "autoCompactWindow": 500000,
+  "showClearContextOnPlanAccept": true,
+  "promptSuggestionEnabled": true
 }
