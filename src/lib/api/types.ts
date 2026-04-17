@@ -33,6 +33,13 @@ export interface Settings {
   autoCompactWindow?: number;
   showClearContextOnPlanAccept?: boolean;
   promptSuggestionEnabled?: boolean;
+  autoMemoryEnabled?: boolean;
+  includeGitInstructions?: boolean;
+  respectGitignore?: boolean;
+  cleanupPeriodDays?: number;
+  claudeMdExcludes?: string[];
+  plansDirectory?: string;
+  syntaxHighlightingDisabled?: boolean;
   // Catch-all for unknown / future fields preserved by the daemon.
   [key: string]: unknown;
 }

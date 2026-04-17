@@ -16,6 +16,21 @@
   );
   let tui = $state((settings.tui as string | undefined) ?? "");
   let effortLevel = $state((settings.effortLevel as string | undefined) ?? "");
+  let autoMemoryEnabled = $state((settings.autoMemoryEnabled as boolean) ?? false);
+  let includeGitInstructions = $state(
+    (settings.includeGitInstructions as boolean) ?? false,
+  );
+  let respectGitignore = $state((settings.respectGitignore as boolean) ?? false);
+  let cleanupPeriodDays = $state<number | string>(
+    (settings.cleanupPeriodDays as number | undefined) ?? "",
+  );
+  let claudeMdExcludesText = $state(
+    ((settings.claudeMdExcludes as string[]) ?? []).join("\n"),
+  );
+  let plansDirectory = $state((settings.plansDirectory as string) ?? "");
+  let syntaxHighlightingDisabled = $state(
+    (settings.syntaxHighlightingDisabled as boolean) ?? false,
+  );
 
   $effect(() => {
     language = settings.language ?? "";
@@ -27,6 +42,14 @@
       settings.skipDangerousModePermissionPrompt ?? false;
     tui = (settings.tui as string | undefined) ?? "";
     effortLevel = (settings.effortLevel as string | undefined) ?? "";
+    autoMemoryEnabled = (settings.autoMemoryEnabled as boolean) ?? false;
+    includeGitInstructions = (settings.includeGitInstructions as boolean) ?? false;
+    respectGitignore = (settings.respectGitignore as boolean) ?? false;
+    cleanupPeriodDays = (settings.cleanupPeriodDays as number | undefined) ?? "";
+    claudeMdExcludesText = ((settings.claudeMdExcludes as string[]) ?? []).join("\n");
+    plansDirectory = (settings.plansDirectory as string) ?? "";
+    syntaxHighlightingDisabled =
+      (settings.syntaxHighlightingDisabled as boolean) ?? false;
   });
 
   const languageDirty = $derived(language !== (settings.language ?? ""));
@@ -52,6 +75,43 @@
   const effortLevelDirty = $derived(
     effortLevel !== ((settings.effortLevel as string | undefined) ?? ""),
   );
+  const autoMemoryDirty = $derived(
+    autoMemoryEnabled !== ((settings.autoMemoryEnabled as boolean) ?? false),
+  );
+  const gitInstrDirty = $derived(
+    includeGitInstructions !==
+      ((settings.includeGitInstructions as boolean) ?? false),
+  );
+  const gitignoreDirty = $derived(
+    respectGitignore !== ((settings.respectGitignore as boolean) ?? false),
+  );
+  const cleanupDirty = $derived(
+    String(cleanupPeriodDays) !==
+      String((settings.cleanupPeriodDays as number | undefined) ?? ""),
+  );
+  const excludesDirty = $derived(
+    claudeMdExcludesText !==
+      ((settings.claudeMdExcludes as string[]) ?? []).join("\n"),
+  );
+  const plansDirDirty = $derived(
+    plansDirectory !== ((settings.plansDirectory as string) ?? ""),
+  );
+  const syntaxDisabledDirty = $derived(
+    syntaxHighlightingDisabled !==
+      ((settings.syntaxHighlightingDisabled as boolean) ?? false),
+  );
+
+  function parsedCleanup(): number | undefined {
+    const n = Number(cleanupPeriodDays);
+    return Number.isFinite(n) && n > 0 ? n : undefined;
+  }
+  function parsedExcludes(): string[] | undefined {
+    const lines = claudeMdExcludesText
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return lines.length === 0 ? undefined : lines;
+  }
 
   const previewData = $derived({
     language: language || undefined,
@@ -62,6 +122,13 @@
     skipDangerousModePermissionPrompt,
     tui: tui || undefined,
     effortLevel: effortLevel || undefined,
+    autoMemoryEnabled,
+    includeGitInstructions,
+    respectGitignore,
+    cleanupPeriodDays: parsedCleanup(),
+    claudeMdExcludes: parsedExcludes(),
+    plansDirectory: plansDirectory || undefined,
+    syntaxHighlightingDisabled,
   });
 
   function save() {
@@ -79,6 +146,13 @@
         | "high"
         | "xhigh"
         | undefined,
+      autoMemoryEnabled,
+      includeGitInstructions,
+      respectGitignore,
+      cleanupPeriodDays: parsedCleanup(),
+      claudeMdExcludes: parsedExcludes(),
+      plansDirectory: plansDirectory || undefined,
+      syntaxHighlightingDisabled,
     });
   }
 </script>
@@ -229,6 +303,99 @@
       <option value="xhigh">xhigh (Opus 4.7)</option>
     </select>
   </div>
+
+  <!-- Auto Memory -->
+  <label class="flex items-center gap-3 cursor-pointer">
+    <input type="checkbox" bind:checked={autoMemoryEnabled}
+           onchange={() => configStore.markDirty()}
+           class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+    <span class="text-sm" style="color: var(--text-secondary)"
+          title={t("settings.fields.autoMemoryEnabled.tooltip")}>
+      {t("settings.fields.autoMemoryEnabled.label")}
+      <DirtyDot dirty={autoMemoryDirty} />
+    </span>
+  </label>
+
+  <!-- Include Git Instructions -->
+  <label class="flex items-center gap-3 cursor-pointer">
+    <input type="checkbox" bind:checked={includeGitInstructions}
+           onchange={() => configStore.markDirty()}
+           class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+    <span class="text-sm" style="color: var(--text-secondary)"
+          title={t("settings.fields.includeGitInstructions.tooltip")}>
+      {t("settings.fields.includeGitInstructions.label")}
+      <DirtyDot dirty={gitInstrDirty} />
+    </span>
+  </label>
+
+  <!-- Respect .gitignore -->
+  <label class="flex items-center gap-3 cursor-pointer">
+    <input type="checkbox" bind:checked={respectGitignore}
+           onchange={() => configStore.markDirty()}
+           class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+    <span class="text-sm" style="color: var(--text-secondary)"
+          title={t("settings.fields.respectGitignore.tooltip")}>
+      {t("settings.fields.respectGitignore.label")}
+      <DirtyDot dirty={gitignoreDirty} />
+    </span>
+  </label>
+
+  <!-- Cleanup Period Days -->
+  <div class="space-y-1">
+    <label for="cleanupPeriodDays" class="block text-sm font-medium"
+           style="color: var(--text-secondary)"
+           title={t("settings.fields.cleanupPeriodDays.tooltip")}>
+      {t("settings.fields.cleanupPeriodDays.label")}
+      <DirtyDot dirty={cleanupDirty} />
+    </label>
+    <input id="cleanupPeriodDays" type="number" min="1"
+           bind:value={cleanupPeriodDays}
+           oninput={() => configStore.markDirty()}
+           placeholder="30"
+           class="input-base" />
+  </div>
+
+  <!-- CLAUDE.md Excludes -->
+  <div class="space-y-1">
+    <label for="claudeMdExcludes" class="block text-sm font-medium"
+           style="color: var(--text-secondary)"
+           title={t("settings.fields.claudeMdExcludes.tooltip")}>
+      {t("settings.fields.claudeMdExcludes.label")}
+      <DirtyDot dirty={excludesDirty} />
+    </label>
+    <textarea id="claudeMdExcludes" rows="3"
+              bind:value={claudeMdExcludesText}
+              oninput={() => configStore.markDirty()}
+              placeholder={"vendor/\n.venv/"}
+              class="input-base font-mono text-xs"></textarea>
+  </div>
+
+  <!-- Plans Directory -->
+  <div class="space-y-1">
+    <label for="plansDirectory" class="block text-sm font-medium"
+           style="color: var(--text-secondary)"
+           title={t("settings.fields.plansDirectory.tooltip")}>
+      {t("settings.fields.plansDirectory.label")}
+      <DirtyDot dirty={plansDirDirty} />
+    </label>
+    <input id="plansDirectory" type="text"
+           bind:value={plansDirectory}
+           oninput={() => configStore.markDirty()}
+           placeholder="~/.claude/plans"
+           class="input-base" />
+  </div>
+
+  <!-- Syntax Highlighting Disabled -->
+  <label class="flex items-center gap-3 cursor-pointer">
+    <input type="checkbox" bind:checked={syntaxHighlightingDisabled}
+           onchange={() => configStore.markDirty()}
+           class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+    <span class="text-sm" style="color: var(--text-secondary)"
+          title={t("settings.fields.syntaxHighlightingDisabled.tooltip")}>
+      {t("settings.fields.syntaxHighlightingDisabled.label")}
+      <DirtyDot dirty={syntaxDisabledDirty} />
+    </span>
+  </label>
 
   <!-- Save / Revert -->
   <div class="flex gap-2 pt-4 border-t" style="border-color: var(--border-color)">
