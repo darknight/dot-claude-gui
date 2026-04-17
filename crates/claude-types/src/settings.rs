@@ -63,6 +63,30 @@ pub struct Settings {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub effort_level: Option<String>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output_style: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fast_mode: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fast_mode_per_session_opt_in: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub available_models: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_compact_window: Option<u32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_clear_context_on_plan_accept: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prompt_suggestion_enabled: Option<bool>,
+
     /// Preserves any fields not explicitly modelled above.
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,
@@ -374,15 +398,19 @@ mod tests {
             "modelOverrides",
             "tui",
             "effortLevel",
+            "model",
+            "outputStyle",
+            "fastMode",
+            "fastModePerSessionOptIn",
+            "availableModels",
+            "autoCompactWindow",
+            "showClearContextOnPlanAccept",
+            "promptSuggestionEnabled",
         ];
 
         // 在后续里程碑中添加字段时，从 `skipped` 列表移除并加到 `modeled`。
         let skipped: &[&str] = &[
             "$schema",
-            // M3: Runtime tab
-            "model", "outputStyle", "fastMode", "fastModePerSessionOptIn",
-            "availableModels", "autoCompactWindow", "showClearContextOnPlanAccept",
-            "promptSuggestionEnabled",
             // M4: General extension
             "autoMemoryEnabled", "includeGitInstructions", "respectGitignore",
             "cleanupPeriodDays", "claudeMdExcludes", "plansDirectory",
@@ -444,5 +472,43 @@ mod tests {
             serde_json::from_str(r#"{"effortLevel":"xhigh"}"#).expect("should parse");
         assert_eq!(s.effort_level.as_deref(), Some("xhigh"));
         assert!(!s.extra.contains_key("effortLevel"));
+    }
+
+    #[test]
+    fn parse_runtime_fields_are_typed() {
+        let json = r#"{
+            "model": "opus",
+            "outputStyle": "default",
+            "fastMode": true,
+            "fastModePerSessionOptIn": false,
+            "availableModels": ["sonnet", "opus"],
+            "autoCompactWindow": 200000,
+            "showClearContextOnPlanAccept": true,
+            "promptSuggestionEnabled": false
+        }"#;
+        let s: Settings = serde_json::from_str(json).expect("should parse");
+        assert_eq!(s.model.as_deref(), Some("opus"));
+        assert_eq!(s.output_style.as_deref(), Some("default"));
+        assert_eq!(s.fast_mode, Some(true));
+        assert_eq!(s.fast_mode_per_session_opt_in, Some(false));
+        assert_eq!(
+            s.available_models.as_ref().map(Vec::as_slice),
+            Some(&["sonnet".to_string(), "opus".to_string()][..])
+        );
+        assert_eq!(s.auto_compact_window, Some(200000));
+        assert_eq!(s.show_clear_context_on_plan_accept, Some(true));
+        assert_eq!(s.prompt_suggestion_enabled, Some(false));
+        for k in [
+            "model",
+            "outputStyle",
+            "fastMode",
+            "fastModePerSessionOptIn",
+            "availableModels",
+            "autoCompactWindow",
+            "showClearContextOnPlanAccept",
+            "promptSuggestionEnabled",
+        ] {
+            assert!(!s.extra.contains_key(k), "{} should be typed, not in extra", k);
+        }
     }
 }
