@@ -57,6 +57,12 @@ pub struct Settings {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub model_overrides: Option<ModelOverrides>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tui: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub effort_level: Option<String>,
+
     /// Preserves any fields not explicitly modelled above.
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,
@@ -366,13 +372,13 @@ mod tests {
             "skipDangerousModePermissionPrompt",
             "sandbox",
             "modelOverrides",
+            "tui",
+            "effortLevel",
         ];
 
         // 在后续里程碑中添加字段时，从 `skipped` 列表移除并加到 `modeled`。
         let skipped: &[&str] = &[
             "$schema",
-            // M2: tui, effortLevel
-            "tui", "effortLevel",
             // M3: Runtime tab
             "model", "outputStyle", "fastMode", "fastModePerSessionOptIn",
             "availableModels", "autoCompactWindow", "showClearContextOnPlanAccept",
@@ -422,5 +428,21 @@ mod tests {
             "Settings struct missing fields from snapshot: {:?}",
             missing
         );
+    }
+
+    #[test]
+    fn parse_tui_field_is_typed() {
+        let s: Settings =
+            serde_json::from_str(r#"{"tui":"fullscreen"}"#).expect("should parse");
+        assert_eq!(s.tui.as_deref(), Some("fullscreen"));
+        assert!(!s.extra.contains_key("tui"));
+    }
+
+    #[test]
+    fn parse_effort_level_is_typed() {
+        let s: Settings =
+            serde_json::from_str(r#"{"effortLevel":"xhigh"}"#).expect("should parse");
+        assert_eq!(s.effort_level.as_deref(), Some("xhigh"));
+        assert!(!s.extra.contains_key("effortLevel"));
     }
 }
