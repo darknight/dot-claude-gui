@@ -74,14 +74,160 @@ function readVersion(cliJsPath: string): string {
 }
 
 function extractSettingsFields(source: string, warnings: string[]): SchemaField[] {
+  // Anchor to a known top-level field that lives at depth 1 of the settings schema.
+  // Use a plain-string search for `tui:y.enum` (the settings object may contain nested
+  // y.object({...}) blocks before tui, so a `[^{}]`-bounded regex would miss it).
+  const anchorKey = "tui:y.enum";
+  const anchorIdx = source.indexOf(anchorKey);
+  if (anchorIdx < 0) {
+    warnings.push(
+      "Could not find settings schema anchor (tui enum); falling back to whole-file scan",
+    );
+    return extractSettingsFieldsWholeFile(source);
+  }
+
+  // Walk backwards from the anchor tracking brace depth to locate the enclosing
+  // `y.object({` that opens the settings schema. We cannot just use
+  // `lastIndexOf("y.object({")` because the nearest `y.object({` may belong to a
+  // nested field schema (e.g. remoteSession), not the top-level settings object.
+  let objectStart = -1;
+  {
+    let depth = 0; // counts unmatched `}` seen while walking left
+    let j = anchorIdx - 1;
+    while (j >= 0) {
+      const ch = source[j];
+      if (ch === "}") {
+        depth++;
+      } else if (ch === "{") {
+        if (depth === 0) {
+          // This `{` opens the block that contains the anchor.
+          // Confirm it is preceded by `y.object(`.
+          const prefix = source.slice(Math.max(0, j - 10), j + 1);
+          if (prefix.endsWith("y.object({")) {
+            objectStart = j - "y.object(".length;
+          }
+          break;
+        }
+        depth--;
+      }
+      // NOTE: we do not skip string literals here. Zod schema sources use a
+      // constrained JS subset; quoted `{`/`}` inside .describe() are rare and
+      // the anchor is close enough that string scanning is not needed.
+      j--;
+    }
+  }
+
+  if (objectStart < 0) {
+    warnings.push("Anchor found but could not locate enclosing y.object(");
+    return extractSettingsFieldsWholeFile(source);
+  }
+
+  // Walk from after "y.object({" tracking brace depth.
+  // depth starts at 1 (we just entered the object).
   const fields: SchemaField[] = [];
-  // Matches: foo:y.string().optional().describe("…")
-  //          foo:y.enum(["a","b"]).optional()
-  //          foo:y.boolean().optional().describe("…")
-  //          foo:y.number().int().optional()
-  //          foo:y.array(...)
-  //          foo:y.object({...}).optional()
-  const re = /([a-zA-Z_][a-zA-Z0-9_]{1,40}):y\.(string|boolean|number|enum|array|object|record|union|literal|any)\(/g;
+  const seen = new Set<string>();
+  // Direct zod field: `name:y.<type>(`
+  const topRe =
+    /([a-zA-Z_][a-zA-Z0-9_]{1,40}):y\.(string|boolean|number|enum|array|object|record|union|literal|any)\(/g;
+  // Function-reference field: `name:<Ident>(` (e.g. `hooks:sN()`, `env:Li5()`).
+  // Minified names are typically short identifiers; we require an opening `(` to
+  // distinguish from plain value assignments like `mode:"x"`.
+  const refRe =
+    /([a-zA-Z_][a-zA-Z0-9_]{1,40}):([A-Za-z_$][A-Za-z0-9_$]{0,40})\(/g;
+
+  let depth = 1;
+  let i = objectStart + "y.object({".length;
+
+  while (i < source.length && depth > 0) {
+    const ch = source[i];
+    if (ch === "{") {
+      depth++;
+      i++;
+      continue;
+    }
+    if (ch === "}") {
+      depth--;
+      i++;
+      continue;
+    }
+    // Skip string literals to avoid counting { / } inside them
+    if (ch === '"' || ch === "'" || ch === "`") {
+      const quote = ch;
+      i++;
+      while (i < source.length && source[i] !== quote) {
+        if (source[i] === "\\") i++; // skip escape
+        i++;
+      }
+      i++;
+      continue;
+    }
+    if (depth === 1) {
+      topRe.lastIndex = i;
+      const m = topRe.exec(source);
+      if (m && m.index === i) {
+        const name = m[1];
+        const type = m[2];
+        if (!seen.has(name)) {
+          seen.add(name);
+          const tail = source.slice(
+            m.index + m[0].length,
+            m.index + m[0].length + 400,
+          );
+          const optional = /\)\.optional\(\)/.test(tail);
+          let enumValues: string[] | undefined;
+          if (type === "enum") {
+            const em = source
+              .slice(m.index, m.index + 400)
+              .match(/y\.enum\(\[([^\]]+)\]/);
+            if (em) {
+              enumValues = em[1]
+                .split(",")
+                .map((s) => s.trim().replace(/^"|"$/g, ""));
+            } else {
+              warnings.push(`Could not extract enum values for ${name}`);
+            }
+          }
+          const dm = tail.match(/\.describe\(["'`]([^"'`]+)["'`]\)/);
+          fields.push({ name, type, optional, enumValues, describe: dm?.[1] });
+        }
+        i = m.index + m[0].length;
+        continue;
+      }
+      // Not a direct y.<type> match — try function-reference (e.g. `hooks:sN()`).
+      refRe.lastIndex = i;
+      const rm = refRe.exec(source);
+      if (rm && rm.index === i && rm[2] !== "y") {
+        const name = rm[1];
+        const fnRef = rm[2];
+        if (!seen.has(name)) {
+          seen.add(name);
+          const tail = source.slice(
+            rm.index + rm[0].length,
+            rm.index + rm[0].length + 400,
+          );
+          const optional = /\)\.optional\(\)/.test(tail);
+          const dm = tail.match(/\.describe\(["'`]([^"'`]+)["'`]\)/);
+          // Record the referenced validator name in describe (prefixed) so
+          // downstream readers can see this is a function-reference field
+          // without guessing.
+          const describe = dm?.[1] ?? `(validator: ${fnRef}())`;
+          fields.push({ name, type: "ref", optional, describe });
+        }
+        i = rm.index + rm[0].length;
+        continue;
+      }
+    }
+    i++;
+  }
+
+  return fields;
+}
+
+function extractSettingsFieldsWholeFile(source: string): SchemaField[] {
+  // Fallback: original whole-file scan. Captures sub-object fields too.
+  const fields: SchemaField[] = [];
+  const re =
+    /([a-zA-Z_][a-zA-Z0-9_]{1,40}):y\.(string|boolean|number|enum|array|object|record|union|literal|any)\(/g;
   const seen = new Set<string>();
 
   for (const m of source.matchAll(re)) {
@@ -97,18 +243,12 @@ function extractSettingsFields(source: string, warnings: string[]): SchemaField[
     if (type === "enum") {
       const enumMatch = source.slice(m.index!, m.index! + 400).match(/y\.enum\(\[([^\]]+)\]/);
       if (enumMatch) {
-        enumValues = enumMatch[1]
-          .split(",")
-          .map((s) => s.trim().replace(/^"|"$/g, ""));
-      } else {
-        warnings.push(`Could not extract enum values for ${name}`);
+        enumValues = enumMatch[1].split(",").map((s) => s.trim().replace(/^"|"$/g, ""));
       }
     }
 
     const descMatch = tail.match(/\.describe\(["'`]([^"'`]+)["'`]\)/);
-    const describe = descMatch?.[1];
-
-    fields.push({ name, type, optional, enumValues, describe });
+    fields.push({ name, type, optional, enumValues, describe: descMatch?.[1] });
   }
 
   return fields;
@@ -116,10 +256,11 @@ function extractSettingsFields(source: string, warnings: string[]): SchemaField[
 
 function extractGlobalFields(source: string, warnings: string[]): GlobalField[] {
   const fields: GlobalField[] = [];
-  // Matches: foo:{source:"global",type:"boolean",description:"…"}
-  //          foo:{source:"settings",type:"string",description:"…",options:[…]}
+  // Matches: foo:{source:"global",type:"...",description:"…"}
+  //          foo:{source:"settings",type:"...",description:"…",options:[…]}
+  // We need to match the whole braced object because options can follow description.
   const re =
-    /([a-zA-Z_][a-zA-Z0-9_.]{1,40}):\{source:"(settings|global)",type:"([a-zA-Z_]+)",description:([^}]{0,500})/g;
+    /([a-zA-Z_][a-zA-Z0-9_.]{1,40}):\{source:"(settings|global)",type:"([a-zA-Z_]+)",description:([^{}]{0,800})\}/g;
 
   for (const m of source.matchAll(re)) {
     const name = m[1];
@@ -132,7 +273,17 @@ function extractGlobalFields(source: string, warnings: string[]): GlobalField[] 
     if (descMatch) describe = descMatch[1];
     else warnings.push(`Could not parse description for ${name}`);
 
-    fields.push({ name, source: src, type, describe });
+    let options: string[] | undefined;
+    const optMatch = descPayload.match(/options:\[([^\]]+)\]/);
+    if (optMatch) {
+      options = optMatch[1]
+        .split(",")
+        .map((s) => s.trim().replace(/^"|"$/g, ""))
+        .filter((s) => s.length > 0 && !s.includes(".") && !s.includes("("));
+      if (options.length === 0) options = undefined;
+    }
+
+    fields.push({ name, source: src, type, describe, options });
   }
 
   return fields;
