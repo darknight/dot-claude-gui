@@ -14,6 +14,8 @@
   let skipDangerousModePermissionPrompt = $state(
     settings.skipDangerousModePermissionPrompt ?? false,
   );
+  let tui = $state((settings.tui as string | undefined) ?? "");
+  let effortLevel = $state((settings.effortLevel as string | undefined) ?? "");
 
   $effect(() => {
     language = settings.language ?? "";
@@ -23,6 +25,8 @@
     includeCoAuthoredBy = settings.includeCoAuthoredBy ?? false;
     skipDangerousModePermissionPrompt =
       settings.skipDangerousModePermissionPrompt ?? false;
+    tui = (settings.tui as string | undefined) ?? "";
+    effortLevel = (settings.effortLevel as string | undefined) ?? "";
   });
 
   const languageDirty = $derived(language !== (settings.language ?? ""));
@@ -42,6 +46,12 @@
     skipDangerousModePermissionPrompt !==
       (settings.skipDangerousModePermissionPrompt ?? false),
   );
+  const tuiDirty = $derived(
+    tui !== ((settings.tui as string | undefined) ?? ""),
+  );
+  const effortLevelDirty = $derived(
+    effortLevel !== ((settings.effortLevel as string | undefined) ?? ""),
+  );
 
   const previewData = $derived({
     language: language || undefined,
@@ -50,6 +60,8 @@
     minimumVersion: minimumVersion || undefined,
     includeCoAuthoredBy,
     skipDangerousModePermissionPrompt,
+    tui: tui || undefined,
+    effortLevel: effortLevel || undefined,
   });
 
   function save() {
@@ -60,6 +72,13 @@
       minimumVersion: minimumVersion || undefined,
       includeCoAuthoredBy,
       skipDangerousModePermissionPrompt,
+      tui: (tui || undefined) as "default" | "fullscreen" | undefined,
+      effortLevel: (effortLevel || undefined) as
+        | "low"
+        | "medium"
+        | "high"
+        | "xhigh"
+        | undefined,
     });
   }
 </script>
@@ -164,6 +183,52 @@
       <DirtyDot dirty={skipDangerousDirty} />
     </span>
   </label>
+
+  <!-- TUI Renderer -->
+  <div class="space-y-1">
+    <label
+      for="tui"
+      class="block text-sm font-medium" style="color: var(--text-secondary)"
+      title={t("settings.fields.tui.tooltip")}
+    >
+      {t("settings.fields.tui.label")}
+      <DirtyDot dirty={tuiDirty} />
+    </label>
+    <select
+      id="tui"
+      bind:value={tui}
+      onchange={() => configStore.markDirty()}
+      class="input-base"
+    >
+      <option value="">(unset)</option>
+      <option value="default">default</option>
+      <option value="fullscreen">fullscreen</option>
+    </select>
+  </div>
+
+  <!-- Effort Level -->
+  <div class="space-y-1">
+    <label
+      for="effortLevel"
+      class="block text-sm font-medium" style="color: var(--text-secondary)"
+      title={t("settings.fields.effortLevel.tooltip")}
+    >
+      {t("settings.fields.effortLevel.label")}
+      <DirtyDot dirty={effortLevelDirty} />
+    </label>
+    <select
+      id="effortLevel"
+      bind:value={effortLevel}
+      onchange={() => configStore.markDirty()}
+      class="input-base"
+    >
+      <option value="">(unset)</option>
+      <option value="low">low</option>
+      <option value="medium">medium</option>
+      <option value="high">high</option>
+      <option value="xhigh">xhigh (Opus 4.7)</option>
+    </select>
+  </div>
 
   <!-- Save / Revert -->
   <div class="flex gap-2 pt-4 border-t" style="border-color: var(--border-color)">
