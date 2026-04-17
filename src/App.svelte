@@ -99,6 +99,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
     { id: "sandbox", labelKey: "settings.sandbox" },
     { id: "environment", labelKey: "settings.environment" },
     { id: "statusline", labelKey: "settings.statusLine" },
+    { id: "runtime", labelKey: "settings.runtime" },
   ] satisfies { id: string; labelKey: MessageKey }[];
 
   let settingsSection = $state("general");

@@ -6,6 +6,7 @@
   import SandboxEditor from "./SandboxEditor.svelte";
   import EnvVarEditor from "./EnvVarEditor.svelte";
   import StatusLineEditor from "./StatusLineEditor.svelte";
+  import RuntimeEditor from "./RuntimeEditor.svelte";
   import { t } from "$lib/i18n";
 
   let { activeSection = "general" }: { activeSection: string } = $props();
@@ -39,6 +40,8 @@
     <EnvVarEditor />
   {:else if activeSection === "statusline"}
     <StatusLineEditor />
+  {:else if activeSection === "runtime"}
+    <RuntimeEditor />
   {:else}
     <p class="text-sm" style="color: var(--text-muted)">Unknown section: {activeSection}</p>
   {/if}
