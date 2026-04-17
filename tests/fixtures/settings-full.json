@@ -74,5 +74,7 @@
   "modelOverrides": {
     "default": "claude-opus-4",
     "background": "claude-haiku-3"
-  }
+  },
+  "tui": "fullscreen",
+  "effortLevel": "xhigh"
 }
