@@ -778,6 +778,9 @@ git commit -m "ci: add weekly Claude schema drift workflow"
             "disableBypassPermissionsMode", "disableDeepLinkRegistration",
             "additionalDirectories", "symlinkDirectories", "channelsEnabled",
             "allowedChannelPlugins", "voice",
+            // Extra long-tail picked up by snapshot extraction (M8 will handle):
+            "schema", "defaultShell", "disableAutoMode", "proxyAuthHelper",
+            "spinnerTipsEnabled", "sshConfigs", "viewMode",
         ];
 
         let missing: Vec<&String> = fields
