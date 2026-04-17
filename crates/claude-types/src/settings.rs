@@ -330,4 +330,97 @@ mod tests {
         let settings: Settings = serde_json::from_str("{}").expect("empty object should parse");
         assert_eq!(settings, Settings::default());
     }
+
+    #[test]
+    fn settings_struct_matches_schema_snapshot() {
+        // 读 docs/claude-schema-snapshot.json 的 settingsFields，
+        // 断言每个字段在 Settings 里有同名字段或在跳过列表里。
+        let snapshot_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../docs/claude-schema-snapshot.json");
+        let snapshot_raw = std::fs::read_to_string(&snapshot_path)
+            .expect("schema snapshot should exist — run `pnpm extract:schema`");
+        let snapshot: serde_json::Value =
+            serde_json::from_str(&snapshot_raw).expect("snapshot should be valid JSON");
+
+        let fields = snapshot["settingsFields"]
+            .as_array()
+            .expect("settingsFields should be an array")
+            .iter()
+            .map(|f| f["name"].as_str().unwrap().to_string())
+            .collect::<Vec<_>>();
+
+        // 当前（M1 结束时）已建模的顶层字段：
+        let modeled: &[&str] = &[
+            "env",
+            "includeCoAuthoredBy",
+            "permissions",
+            "hooks",
+            "deniedMcpServers",
+            "statusLine",
+            "enabledPlugins",
+            "extraKnownMarketplaces",
+            "language",
+            "alwaysThinkingEnabled",
+            "autoUpdatesChannel",
+            "minimumVersion",
+            "skipDangerousModePermissionPrompt",
+            "sandbox",
+            "modelOverrides",
+        ];
+
+        // 在后续里程碑中添加字段时，从 `skipped` 列表移除并加到 `modeled`。
+        let skipped: &[&str] = &[
+            "$schema",
+            // M2: tui, effortLevel
+            "tui", "effortLevel",
+            // M3: Runtime tab
+            "model", "outputStyle", "fastMode", "fastModePerSessionOptIn",
+            "availableModels", "autoCompactWindow", "showClearContextOnPlanAccept",
+            "promptSuggestionEnabled",
+            // M4: General extension
+            "autoMemoryEnabled", "includeGitInstructions", "respectGitignore",
+            "cleanupPeriodDays", "claudeMdExcludes", "plansDirectory",
+            "syntaxHighlightingDisabled",
+            // M5: MCP tab
+            "allowedMcpServers", "enabledMcpjsonServers", "disabledMcpjsonServers",
+            "enableAllProjectMcpServers", "allowManagedMcpServersOnly",
+            // M6: Plugins & Marketplace
+            "strictKnownMarketplaces", "blockedMarketplaces", "skippedMarketplaces",
+            "skippedPlugins", "pluginConfigs", "pluginTrustMessage", "skillOverrides",
+            // M7: Hooks Policy
+            "disableAllHooks", "allowedHttpHookUrls", "httpHookAllowedEnvVars",
+            "allowManagedHooksOnly", "allowManagedPermissionRulesOnly",
+            "disableSkillShellExecution",
+            // M8: Advanced (Tier 3 long tail)
+            "apiKeyHelper", "awsCredentialExport", "awsAuthRefresh",
+            "gcpAuthRefresh", "forceLoginMethod", "forceLoginOrgUUID",
+            "otelHeadersHelper", "prefersReducedMotion", "companyAnnouncements",
+            "feedbackSurveyRate", "terminalTitleFromRename", "awaySummaryEnabled",
+            "showThinkingSummaries", "advisorModel", "agent", "autoDreamEnabled",
+            "autoMemoryDirectory", "skillListingBudgetFraction",
+            "skillListingMaxDescChars", "skipWebFetchPreflight",
+            "forceRemoteSettingsRefresh",
+            // M8: sub-objects stored as serde_json::Value
+            "attribution", "autoMode", "fileSuggestion", "worktree",
+            "subagentStatusLine", "spinnerVerbs", "spinnerTipsOverride", "remote",
+            // Defaults / additions that may appear and are not actionable in this plan:
+            "disableBypassPermissionsMode", "disableDeepLinkRegistration",
+            "additionalDirectories", "symlinkDirectories", "channelsEnabled",
+            "allowedChannelPlugins", "voice",
+            // Extra long-tail picked up by snapshot extraction (M8 will handle):
+            "schema", "defaultShell", "disableAutoMode", "proxyAuthHelper",
+            "spinnerTipsEnabled", "sshConfigs", "viewMode",
+        ];
+
+        let missing: Vec<&String> = fields
+            .iter()
+            .filter(|f| !modeled.contains(&f.as_str()) && !skipped.contains(&f.as_str()))
+            .collect();
+
+        assert!(
+            missing.is_empty(),
+            "Settings struct missing fields from snapshot: {:?}",
+            missing
+        );
+    }
 }
