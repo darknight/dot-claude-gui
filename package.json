@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "extract:schema": "tsx scripts/extract-claude-schema.ts --out docs/claude-schema-snapshot.json",
+    "check:schema": "tsx scripts/check-claude-schema.ts"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5",
@@ -17,6 +19,7 @@
     "svelte": "^5",
     "svelte-check": "^4",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5.7",
     "vite": "^6"
   },
