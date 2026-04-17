@@ -144,6 +144,24 @@ pub struct Settings {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub plugin_configs: Option<serde_json::Value>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable_all_hooks: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allowed_http_hook_urls: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub http_hook_allowed_env_vars: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_managed_hooks_only: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_managed_permission_rules_only: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable_skill_shell_execution: Option<bool>,
+
     /// Preserves any fields not explicitly modelled above.
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,
@@ -484,15 +502,18 @@ mod tests {
             "pluginConfigs",
             "pluginTrustMessage",
             "skillOverrides",
+            // M7: Hooks Policy
+            "disableAllHooks",
+            "allowedHttpHookUrls",
+            "httpHookAllowedEnvVars",
+            "allowManagedHooksOnly",
+            "allowManagedPermissionRulesOnly",
+            "disableSkillShellExecution",
         ];
 
         // 在后续里程碑中添加字段时，从 `skipped` 列表移除并加到 `modeled`。
         let skipped: &[&str] = &[
             "$schema",
-            // M7: Hooks Policy
-            "disableAllHooks", "allowedHttpHookUrls", "httpHookAllowedEnvVars",
-            "allowManagedHooksOnly", "allowManagedPermissionRulesOnly",
-            "disableSkillShellExecution",
             // M8: Advanced (Tier 3 long tail)
             "apiKeyHelper", "awsCredentialExport", "awsAuthRefresh",
             "gcpAuthRefresh", "forceLoginMethod", "forceLoginOrgUUID",

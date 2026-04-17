@@ -18,6 +18,49 @@
   let selectedEvent = $state("PreToolUse");
   let hooks = $state<Record<string, HookGroup[]>>({});
 
+  // Policy fields (M7)
+  const activeSettings = $derived(configStore.activeSettings);
+  let disableAllHooks = $state(
+    (activeSettings.disableAllHooks as boolean | undefined) ?? false,
+  );
+  let allowedHttpHookUrlsText = $state(
+    ((activeSettings.allowedHttpHookUrls as string[] | undefined) ?? []).join("\n"),
+  );
+  let httpHookAllowedEnvVarsText = $state(
+    ((activeSettings.httpHookAllowedEnvVars as string[] | undefined) ?? []).join("\n"),
+  );
+  let allowManagedHooksOnly = $state(
+    (activeSettings.allowManagedHooksOnly as boolean | undefined) ?? false,
+  );
+  let allowManagedPermissionRulesOnly = $state(
+    (activeSettings.allowManagedPermissionRulesOnly as boolean | undefined) ?? false,
+  );
+  let disableSkillShellExecution = $state(
+    (activeSettings.disableSkillShellExecution as boolean | undefined) ?? false,
+  );
+
+  $effect(() => {
+    disableAllHooks =
+      (activeSettings.disableAllHooks as boolean | undefined) ?? false;
+    allowedHttpHookUrlsText = (
+      (activeSettings.allowedHttpHookUrls as string[] | undefined) ?? []
+    ).join("\n");
+    httpHookAllowedEnvVarsText = (
+      (activeSettings.httpHookAllowedEnvVars as string[] | undefined) ?? []
+    ).join("\n");
+    allowManagedHooksOnly =
+      (activeSettings.allowManagedHooksOnly as boolean | undefined) ?? false;
+    allowManagedPermissionRulesOnly =
+      (activeSettings.allowManagedPermissionRulesOnly as boolean | undefined) ?? false;
+    disableSkillShellExecution =
+      (activeSettings.disableSkillShellExecution as boolean | undefined) ?? false;
+  });
+
+  function parseLines(text: string): string[] | undefined {
+    const lines = text.split("\n").map((s) => s.trim()).filter(Boolean);
+    return lines.length === 0 ? undefined : lines;
+  }
+
   // Sync from store when settings change.
   // `$state.snapshot` strips the reactive proxy wrapper so the value can be
   // safely deep-cloned — `structuredClone` throws DataCloneError on Svelte 5
@@ -134,7 +177,15 @@
         filtered[event] = groups;
       }
     }
-    configStore.save({ hooks: filtered });
+    configStore.save({
+      hooks: filtered,
+      disableAllHooks,
+      allowedHttpHookUrls: parseLines(allowedHttpHookUrlsText),
+      httpHookAllowedEnvVars: parseLines(httpHookAllowedEnvVarsText),
+      allowManagedHooksOnly,
+      allowManagedPermissionRulesOnly,
+      disableSkillShellExecution,
+    });
   }
 
   const previewData = $derived({ hooks });
@@ -382,6 +433,75 @@
   >
     {t("settings.addHookRule")}
   </button>
+
+  <!-- Policy (M7) -->
+  <section class="border-t pt-4 mt-4" style="border-color: var(--border-color)">
+    <h3 class="text-sm font-semibold mb-3" style="color: var(--text-primary)">
+      {t("settings.hooks.policy")}
+    </h3>
+
+    <label class="flex items-center gap-3 cursor-pointer mb-2">
+      <input type="checkbox" bind:checked={disableAllHooks}
+             onchange={() => configStore.markDirty()}
+             class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+      <span class="text-sm" title={t("settings.fields.disableAllHooks.tooltip")}
+            style="color: var(--text-secondary)">
+        {t("settings.fields.disableAllHooks.label")}
+      </span>
+    </label>
+
+    <label class="flex items-center gap-3 cursor-pointer mb-2">
+      <input type="checkbox" bind:checked={allowManagedHooksOnly}
+             onchange={() => configStore.markDirty()}
+             class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+      <span class="text-sm" title={t("settings.fields.allowManagedHooksOnly.tooltip")}
+            style="color: var(--text-secondary)">
+        {t("settings.fields.allowManagedHooksOnly.label")}
+      </span>
+    </label>
+
+    <label class="flex items-center gap-3 cursor-pointer mb-2">
+      <input type="checkbox" bind:checked={allowManagedPermissionRulesOnly}
+             onchange={() => configStore.markDirty()}
+             class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+      <span class="text-sm" title={t("settings.fields.allowManagedPermissionRulesOnly.tooltip")}
+            style="color: var(--text-secondary)">
+        {t("settings.fields.allowManagedPermissionRulesOnly.label")}
+      </span>
+    </label>
+
+    <label class="flex items-center gap-3 cursor-pointer mb-3">
+      <input type="checkbox" bind:checked={disableSkillShellExecution}
+             onchange={() => configStore.markDirty()}
+             class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+      <span class="text-sm" title={t("settings.fields.disableSkillShellExecution.tooltip")}
+            style="color: var(--text-secondary)">
+        {t("settings.fields.disableSkillShellExecution.label")}
+      </span>
+    </label>
+
+    <div class="space-y-1 mb-3">
+      <label class="block text-sm font-medium" style="color: var(--text-secondary)"
+             title={t("settings.fields.allowedHttpHookUrls.tooltip")}>
+        {t("settings.fields.allowedHttpHookUrls.label")}
+      </label>
+      <textarea bind:value={allowedHttpHookUrlsText} rows="3"
+                oninput={() => configStore.markDirty()}
+                placeholder="https://hooks.internal.corp"
+                class="input-base font-mono text-xs"></textarea>
+    </div>
+
+    <div class="space-y-1">
+      <label class="block text-sm font-medium" style="color: var(--text-secondary)"
+             title={t("settings.fields.httpHookAllowedEnvVars.tooltip")}>
+        {t("settings.fields.httpHookAllowedEnvVars.label")}
+      </label>
+      <textarea bind:value={httpHookAllowedEnvVarsText} rows="3"
+                oninput={() => configStore.markDirty()}
+                placeholder="GITHUB_TOKEN"
+                class="input-base font-mono text-xs"></textarea>
+    </div>
+  </section>
 
   <!-- Save / Revert -->
   <div class="flex gap-2 pt-4 border-t" style="border-color: var(--border-color)">

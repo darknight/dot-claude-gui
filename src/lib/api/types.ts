@@ -52,6 +52,12 @@ export interface Settings {
   pluginTrustMessage?: string;
   skillOverrides?: Record<string, unknown>;
   pluginConfigs?: Record<string, unknown>;
+  disableAllHooks?: boolean;
+  allowedHttpHookUrls?: string[];
+  httpHookAllowedEnvVars?: string[];
+  allowManagedHooksOnly?: boolean;
+  allowManagedPermissionRulesOnly?: boolean;
+  disableSkillShellExecution?: boolean;
   // Catch-all for unknown / future fields preserved by the daemon.
   [key: string]: unknown;
 }

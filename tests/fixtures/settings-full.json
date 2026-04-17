@@ -111,5 +111,11 @@
   },
   "skillOverrides": {
     "my-skill": { "disabled": true }
-  }
+  },
+  "disableAllHooks": false,
+  "allowedHttpHookUrls": ["https://hooks.internal"],
+  "httpHookAllowedEnvVars": ["GITHUB_TOKEN"],
+  "allowManagedHooksOnly": false,
+  "allowManagedPermissionRulesOnly": false,
+  "disableSkillShellExecution": false
 }
