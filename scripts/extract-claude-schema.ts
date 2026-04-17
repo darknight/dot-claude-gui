@@ -73,6 +73,135 @@ function readVersion(cliJsPath: string): string {
   return pkg.version ?? "unknown";
 }
 
+/**
+ * Slice the value expression of a single zod field. Starts at `matchEnd` (right
+ * after `name:y.type(`). Tracks paren, brace, bracket, and quote depth so that
+ * braces inside strings or nested calls don't confuse boundary detection.
+ *
+ * Terminates at the first top-level `,` or `}` — that's where the next field
+ * starts (or the enclosing object ends). Returns the substring between
+ * matchEnd and that terminator. Capped at 2000 chars as a safety net.
+ */
+function sliceFieldTail(source: string, matchEnd: number): string {
+  const maxLen = 2000;
+  let paren = 1; // we're inside the opening `(` from name:y.type(
+  let brace = 0;
+  let bracket = 0;
+  let i = matchEnd;
+  const end = Math.min(source.length, matchEnd + maxLen);
+
+  while (i < end) {
+    const ch = source[i];
+
+    // Skip string/template literals
+    if (ch === '"' || ch === "'" || ch === "`") {
+      const quote = ch;
+      i++;
+      while (i < end && source[i] !== quote) {
+        if (source[i] === "\\") i++;
+        i++;
+      }
+      i++;
+      continue;
+    }
+
+    if (ch === "(") paren++;
+    else if (ch === ")") paren--;
+    else if (ch === "{") brace++;
+    else if (ch === "}") {
+      if (paren === 0 && brace === 0 && bracket === 0) break;
+      brace--;
+    } else if (ch === "[") bracket++;
+    else if (ch === "]") bracket--;
+    else if (ch === "," && paren === 0 && brace === 0 && bracket === 0) {
+      break;
+    }
+
+    i++;
+  }
+
+  return source.slice(matchEnd, i);
+}
+
+/**
+ * Extract the outermost `.describe("...")` text from a field tail.
+ *
+ * The tail begins inside the opening `(` of `y.<type>(`. Nested schemas (e.g.
+ * `y.array(y.object({ id:y.string().describe("…") }))`) contain their own
+ * `.describe()` calls at deeper paren/brace depths; we want the one attached to
+ * the field's own value expression, which appears at paren=0 / brace=0 /
+ * bracket=0 after the outer `y.<type>(...)` closes.
+ *
+ * Returns the string literal body, or undefined if no top-level describe exists.
+ */
+function findOwnDescribe(tail: string): string | undefined {
+  let paren = 1; // tail starts inside `y.<type>(`
+  let brace = 0;
+  let bracket = 0;
+  let i = 0;
+  while (i < tail.length) {
+    const ch = tail[i];
+
+    // Skip strings
+    if (ch === '"' || ch === "'" || ch === "`") {
+      const quote = ch;
+      i++;
+      while (i < tail.length && tail[i] !== quote) {
+        if (tail[i] === "\\") i++;
+        i++;
+      }
+      i++;
+      continue;
+    }
+
+    if (ch === "(") {
+      // Only consider `.describe(` when we're at the top level (paren=0) of
+      // the field's chained calls. The outer `y.<type>(` starts at paren=1, so
+      // we look for `.describe(` matched when paren transitions 0 -> 1.
+      if (
+        paren === 0 &&
+        brace === 0 &&
+        bracket === 0 &&
+        tail.slice(Math.max(0, i - 9), i) === ".describe"
+      ) {
+        // Parse the string literal argument
+        let j = i + 1;
+        // skip whitespace
+        while (j < tail.length && /\s/.test(tail[j])) j++;
+        const q = tail[j];
+        if (q === '"' || q === "'" || q === "`") {
+          j++;
+          let buf = "";
+          while (j < tail.length && tail[j] !== q) {
+            if (tail[j] === "\\" && j + 1 < tail.length) {
+              // unescape simple cases
+              const next = tail[j + 1];
+              if (next === "n") buf += "\n";
+              else if (next === "t") buf += "\t";
+              else if (next === "r") buf += "\r";
+              else buf += next;
+              j += 2;
+              continue;
+            }
+            buf += tail[j];
+            j++;
+          }
+          return buf;
+        }
+        // Not a string literal argument — skip
+      }
+      paren++;
+    } else if (ch === ")") paren--;
+    else if (ch === "{") brace++;
+    else if (ch === "}") brace--;
+    else if (ch === "[") bracket++;
+    else if (ch === "]") bracket--;
+
+    i++;
+  }
+  return undefined;
+}
+
 function extractSettingsFields(source: string, warnings: string[]): SchemaField[] {
   // Anchor to a known top-level field that lives at depth 1 of the settings schema.
   // Use a plain-string search for `tui:y.enum` (the settings object may contain nested
@@ -169,15 +298,15 @@ function extractSettingsFields(source: string, warnings: string[]): SchemaField[
         const type = m[2];
         if (!seen.has(name)) {
           seen.add(name);
-          const tail = source.slice(
-            m.index + m[0].length,
-            m.index + m[0].length + 400,
-          );
+          const matchEnd = m.index + m[0].length;
+          const tail = sliceFieldTail(source, matchEnd);
           const optional = /\)\.optional\(\)/.test(tail);
           let enumValues: string[] | undefined;
           if (type === "enum") {
+            // enum values live at the very start of the value expression:
+            // `y.enum([...])`; search within the (bounded) tail prefix.
             const em = source
-              .slice(m.index, m.index + 400)
+              .slice(m.index, matchEnd + tail.length)
               .match(/y\.enum\(\[([^\]]+)\]/);
             if (em) {
               enumValues = em[1]
@@ -187,8 +316,8 @@ function extractSettingsFields(source: string, warnings: string[]): SchemaField[
               warnings.push(`Could not extract enum values for ${name}`);
             }
           }
-          const dm = tail.match(/\.describe\(["'`]([^"'`]+)["'`]\)/);
-          fields.push({ name, type, optional, enumValues, describe: dm?.[1] });
+          const describe = findOwnDescribe(tail);
+          fields.push({ name, type, optional, enumValues, describe });
         }
         i = m.index + m[0].length;
         continue;
@@ -201,16 +330,14 @@ function extractSettingsFields(source: string, warnings: string[]): SchemaField[
         const fnRef = rm[2];
         if (!seen.has(name)) {
           seen.add(name);
-          const tail = source.slice(
-            rm.index + rm[0].length,
-            rm.index + rm[0].length + 400,
-          );
+          const matchEnd = rm.index + rm[0].length;
+          const tail = sliceFieldTail(source, matchEnd);
           const optional = /\)\.optional\(\)/.test(tail);
-          const dm = tail.match(/\.describe\(["'`]([^"'`]+)["'`]\)/);
+          const ownDesc = findOwnDescribe(tail);
           // Record the referenced validator name in describe (prefixed) so
           // downstream readers can see this is a function-reference field
           // without guessing.
-          const describe = dm?.[1] ?? `(validator: ${fnRef}())`;
+          const describe = ownDesc ?? `(validator: ${fnRef}())`;
           fields.push({ name, type: "ref", optional, describe });
         }
         i = rm.index + rm[0].length;
@@ -236,19 +363,22 @@ function extractSettingsFieldsWholeFile(source: string): SchemaField[] {
     if (seen.has(name)) continue;
     seen.add(name);
 
-    const tail = source.slice(m.index! + m[0].length, m.index! + m[0].length + 400);
+    const matchEnd = m.index! + m[0].length;
+    const tail = sliceFieldTail(source, matchEnd);
     const optional = /\)\.optional\(\)/.test(tail);
 
     let enumValues: string[] | undefined;
     if (type === "enum") {
-      const enumMatch = source.slice(m.index!, m.index! + 400).match(/y\.enum\(\[([^\]]+)\]/);
+      const enumMatch = source
+        .slice(m.index!, matchEnd + tail.length)
+        .match(/y\.enum\(\[([^\]]+)\]/);
       if (enumMatch) {
         enumValues = enumMatch[1].split(",").map((s) => s.trim().replace(/^"|"$/g, ""));
       }
     }
 
-    const descMatch = tail.match(/\.describe\(["'`]([^"'`]+)["'`]\)/);
-    fields.push({ name, type, optional, enumValues, describe: descMatch?.[1] });
+    const describe = findOwnDescribe(tail);
+    fields.push({ name, type, optional, enumValues, describe });
   }
 
   return fields;

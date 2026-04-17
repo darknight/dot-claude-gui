@@ -1,6 +1,6 @@
 {
   "claudeCodeVersion": "2.1.112",
-  "extractedAt": "2026-04-17T12:25:07.686Z",
+  "extractedAt": "2026-04-17T12:35:11.979Z",
   "settingsFields": [
     {
       "name": "advisorModel",
@@ -12,17 +12,19 @@
       "name": "agent",
       "type": "string",
       "optional": true,
-      "describe": "Company announcements to display at startup (one will be randomly selected if multiple are provided)"
+      "describe": "Name of an agent (built-in or custom) to use for the main thread. Applies the agent's system prompt, tool restrictions, and model."
     },
     {
       "name": "allowedChannelPlugins",
       "type": "array",
-      "optional": true
+      "optional": true,
+      "describe": "Teams/Enterprise allowlist of channel plugins. When set, "
     },
     {
       "name": "allowedHttpHookUrls",
       "type": "array",
-      "optional": true
+      "optional": true,
+      "describe": "Allowlist of URL patterns that HTTP hooks may target. Supports * as a wildcard (e.g. \"https://hooks.example.com/*\"). When set, HTTP hooks with non-matching URLs are blocked. If undefined, all URLs are allowed. If empty array, no HTTP hooks are allowed. Arrays merge across settings sources (same semantics as allowedMcpServers)."
     },
     {
       "name": "allowedMcpServers",
@@ -64,7 +66,7 @@
       "name": "attribution",
       "type": "object",
       "optional": true,
-      "describe": "Attribution text for git commits, including any trailers. Empty string hides attribution."
+      "describe": "Customize attribution text for commits and PRs. Each field defaults to the standard Claude Code attribution if not set."
     },
     {
       "name": "autoCompactWindow",
@@ -103,7 +105,8 @@
     {
       "name": "availableModels",
       "type": "array",
-      "optional": true
+      "optional": true,
+      "describe": "Allowlist of models that users can select. Accepts family aliases (\"opus\" allows any opus version), version prefixes (\"opus-4-5\" allows only that version), and full model IDs. If undefined, all models are available. If empty array, only the default model is available. Typically set in managed settings by enterprise administrators."
     },
     {
       "name": "awaySummaryEnabled",
@@ -138,7 +141,8 @@
     {
       "name": "claudeMdExcludes",
       "type": "array",
-      "optional": true
+      "optional": true,
+      "describe": "Glob patterns or absolute paths of CLAUDE.md files to exclude from loading. Patterns are matched against absolute file paths using picomatch. Only applies to User, Project, and Local memory types (Managed/policy files cannot be excluded). Examples: \"/home/user/monorepo/CLAUDE.md\", \"**/code/CLAUDE.md\", \"**/some-dir/.claude/rules/**\""
     },
     {
       "name": "cleanupPeriodDays",
@@ -160,7 +164,7 @@
         "bash",
         "powershell"
       ],
-      "describe": "When true (and set in managed settings), only hooks from managed settings run. User, project, and local hooks are ignored."
+      "describe": "Default shell for input-box ! commands. Defaults to 'bash' on all platforms (no Windows auto-flip)."
     },
     {
       "name": "deniedMcpServers",
@@ -222,7 +226,8 @@
     {
       "name": "enabledPlugins",
       "type": "record",
-      "optional": true
+      "optional": true,
+      "describe": "Enabled plugins using plugin-id@marketplace-id format. Example: { \"formatter@anthropic-tools\": true }. Also supports extended format with version constraints."
     },
     {
       "name": "env",
@@ -233,7 +238,8 @@
     {
       "name": "extraKnownMarketplaces",
       "type": "record",
-      "optional": true
+      "optional": true,
+      "describe": "Additional marketplaces to make available for this repository. Typically used in repository .claude/settings.json to ensure team members have required plugin sources."
     },
     {
       "name": "fastMode",
@@ -266,7 +272,8 @@
       "enumValues": [
         "claudeai",
         "console"
-      ]
+      ],
+      "describe": "Force a specific login method: \"claudeai\" for Claude Pro/Max, \"console\" for Console billing"
     },
     {
       "name": "forceLoginOrgUUID",
@@ -295,25 +302,26 @@
     {
       "name": "httpHookAllowedEnvVars",
       "type": "array",
-      "optional": true
+      "optional": true,
+      "describe": "Allowlist of environment variable names HTTP hooks may interpolate into headers. When set, each hook's effective allowedEnvVars is the intersection with this list. If undefined, no restriction is applied. Arrays merge across settings sources (same semantics as allowedMcpServers)."
     },
     {
       "name": "includeCoAuthoredBy",
       "type": "boolean",
       "optional": true,
-      "describe": "Tool usage permissions configuration"
+      "describe": "Deprecated: Use attribution instead. Whether to include Claude's co-authored by attribution in commits and PRs (defaults to true)"
     },
     {
       "name": "includeGitInstructions",
       "type": "boolean",
       "optional": true,
-      "describe": "Tool usage permissions configuration"
+      "describe": "Include built-in commit and PR workflow instructions in Claude's system prompt (default: true)"
     },
     {
       "name": "language",
       "type": "string",
       "optional": true,
-      "describe": "Skip the WebFetch blocklist check for enterprise environments with restrictive security policies"
+      "describe": "Preferred language for Claude responses and voice dictation (e.g., \"japanese\", \"spanish\")"
     },
     {
       "name": "minimumVersion",
@@ -331,7 +339,7 @@
       "name": "modelOverrides",
       "type": "record",
       "optional": true,
-      "describe": "Whether to automatically approve all MCP servers in the project"
+      "describe": "Override mapping from Anthropic model ID (e.g. \"claude-opus-4-6\") to provider-specific model ID (e.g. a Bedrock inference profile ARN). Typically set in managed settings by enterprise administrators."
     },
     {
       "name": "otelHeadersHelper",
@@ -361,12 +369,13 @@
       "name": "pluginConfigs",
       "type": "record",
       "optional": true,
-      "describe": "User configuration values for MCP servers keyed by server name"
+      "describe": "Per-plugin configuration including MCP server user configs, keyed by plugin ID (plugin@marketplace format)"
     },
     {
       "name": "pluginTrustMessage",
       "type": "string",
-      "optional": true
+      "optional": true,
+      "describe": "Custom message to append to the plugin trust warning shown before installation. Only read from policy settings (managed-settings.json / MDM). Useful for enterprise administrators to add organization-specific context (e.g., \"All plugins from our internal marketplace are vetted and approved.\")."
     },
     {
       "name": "prefersReducedMotion",
@@ -390,7 +399,7 @@
       "name": "remote",
       "type": "object",
       "optional": true,
-      "describe": "Default environment ID to use for remote sessions"
+      "describe": "Remote session configuration"
     },
     {
       "name": "respectGitignore",
@@ -402,7 +411,7 @@
       "name": "sandbox",
       "type": "ref",
       "optional": true,
-      "describe": "Probability (0–1) that the session quality survey appears when eligible. 0.05 is a reasonable starting point."
+      "describe": "(validator: dF7())"
     },
     {
       "name": "schema",
@@ -413,7 +422,8 @@
     {
       "name": "showClearContextOnPlanAccept",
       "type": "boolean",
-      "optional": true
+      "optional": true,
+      "describe": "When true, the plan-approval dialog offers a \"clear context\" option. Defaults to false."
     },
     {
       "name": "showThinkingSummaries",
@@ -436,7 +446,8 @@
     {
       "name": "skillOverrides",
       "type": "record",
-      "optional": true
+      "optional": true,
+      "describe": "Per-skill listing overrides keyed by skill name. \"name-only\" lists the skill without its description; \"user-invocable-only\" hides it from the model but keeps /name; \"off\" hides it from both. Absent = on."
     },
     {
       "name": "skipDangerousModePermissionPrompt",
@@ -465,24 +476,26 @@
     {
       "name": "spinnerVerbs",
       "type": "object",
-      "optional": true
+      "optional": true,
+      "describe": "Customize spinner verbs. mode: \"append\" adds verbs to defaults, \"replace\" uses only your verbs."
     },
     {
       "name": "sshConfigs",
       "type": "array",
       "optional": true,
-      "describe": "Unique identifier for this SSH config. Used to match configs across settings sources."
+      "describe": "SSH connection configurations for remote environments. Typically set in managed settings by enterprise administrators to pre-configure SSH connections for team members."
     },
     {
       "name": "statusLine",
       "type": "object",
       "optional": true,
-      "describe": "Re-run the status line command every N seconds in addition to event-driven updates"
+      "describe": "Custom status line display configuration"
     },
     {
       "name": "strictKnownMarketplaces",
       "type": "array",
-      "optional": true
+      "optional": true,
+      "describe": "Enterprise strict list of allowed marketplace sources. When set in managed settings, ONLY these exact sources can be added as marketplaces. The check happens BEFORE downloading, so blocked sources never touch the filesystem. "
     },
     {
       "name": "subagentStatusLine",
@@ -509,7 +522,8 @@
       "enumValues": [
         "default",
         "fullscreen"
-      ]
+      ],
+      "describe": "Terminal UI renderer. \"fullscreen\" uses the flicker-free alt-screen renderer with virtualized scrollback (equivalent to CLAUDE_CODE_NO_FLICKER=1). \"default\" uses the classic main-screen renderer."
     },
     {
       "name": "viewMode",
@@ -526,12 +540,13 @@
       "name": "voice",
       "type": "object",
       "optional": true,
-      "describe": "Submit the prompt when hold-to-talk is released (hold mode only)"
+      "describe": "@internal Voice handsfree settings; behavior gated at read sites by feature(VOICE_HANDSFREE). Hidden from public SDK types until external launch; see TODO on voiceEnabled in entitlements.ts."
     },
     {
       "name": "worktree",
       "type": "object",
-      "optional": true
+      "optional": true,
+      "describe": "Git worktree configuration for --worktree flag."
     }
   ],
   "globalFields": [
