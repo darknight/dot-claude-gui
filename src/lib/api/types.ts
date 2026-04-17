@@ -25,6 +25,14 @@ export interface Settings {
   modelOverrides?: Record<string, unknown>;
   tui?: "default" | "fullscreen";
   effortLevel?: "low" | "medium" | "high" | "xhigh";
+  model?: string;
+  outputStyle?: string;
+  fastMode?: boolean;
+  fastModePerSessionOptIn?: boolean;
+  availableModels?: string[];
+  autoCompactWindow?: number;
+  showClearContextOnPlanAccept?: boolean;
+  promptSuggestionEnabled?: boolean;
   // Catch-all for unknown / future fields preserved by the daemon.
   [key: string]: unknown;
 }
