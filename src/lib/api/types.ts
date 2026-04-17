@@ -23,6 +23,8 @@ export interface Settings {
   skipDangerousModePermissionPrompt?: boolean;
   sandbox?: SandboxConfig;
   modelOverrides?: Record<string, unknown>;
+  tui?: "default" | "fullscreen";
+  effortLevel?: "low" | "medium" | "high" | "xhigh";
   // Catch-all for unknown / future fields preserved by the daemon.
   [key: string]: unknown;
 }
