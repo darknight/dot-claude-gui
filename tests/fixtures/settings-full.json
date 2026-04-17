@@ -98,5 +98,18 @@
   "enabledMcpjsonServers": ["trusted-a"],
   "disabledMcpjsonServers": ["blocked-a"],
   "enableAllProjectMcpServers": true,
-  "allowManagedMcpServersOnly": false
+  "allowManagedMcpServersOnly": false,
+  "strictKnownMarketplaces": [
+    { "source": { "source": "github" }, "repo": "anthropics/claude-plugins" }
+  ],
+  "blockedMarketplaces": [],
+  "skippedMarketplaces": ["some-old-market"],
+  "skippedPlugins": ["deprecated-plugin"],
+  "pluginTrustMessage": "Only install plugins from vetted marketplaces.",
+  "pluginConfigs": {
+    "context7@official": { "options": { "apiKey": "xxx" } }
+  },
+  "skillOverrides": {
+    "my-skill": { "disabled": true }
+  }
 }

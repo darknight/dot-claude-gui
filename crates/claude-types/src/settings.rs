@@ -123,6 +123,27 @@ pub struct Settings {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_managed_mcp_servers_only: Option<bool>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub strict_known_marketplaces: Option<Vec<MarketplaceSource>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blocked_marketplaces: Option<Vec<MarketplaceSource>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skipped_marketplaces: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skipped_plugins: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub plugin_trust_message: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skill_overrides: Option<serde_json::Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub plugin_configs: Option<serde_json::Value>,
+
     /// Preserves any fields not explicitly modelled above.
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,
@@ -455,14 +476,19 @@ mod tests {
             "disabledMcpjsonServers",
             "enableAllProjectMcpServers",
             "allowManagedMcpServersOnly",
+            // M6: Plugins & Marketplace
+            "strictKnownMarketplaces",
+            "blockedMarketplaces",
+            "skippedMarketplaces",
+            "skippedPlugins",
+            "pluginConfigs",
+            "pluginTrustMessage",
+            "skillOverrides",
         ];
 
         // 在后续里程碑中添加字段时，从 `skipped` 列表移除并加到 `modeled`。
         let skipped: &[&str] = &[
             "$schema",
-            // M6: Plugins & Marketplace
-            "strictKnownMarketplaces", "blockedMarketplaces", "skippedMarketplaces",
-            "skippedPlugins", "pluginConfigs", "pluginTrustMessage", "skillOverrides",
             // M7: Hooks Policy
             "disableAllHooks", "allowedHttpHookUrls", "httpHookAllowedEnvVars",
             "allowManagedHooksOnly", "allowManagedPermissionRulesOnly",

@@ -45,6 +45,13 @@ export interface Settings {
   disabledMcpjsonServers?: string[];
   enableAllProjectMcpServers?: boolean;
   allowManagedMcpServersOnly?: boolean;
+  strictKnownMarketplaces?: MarketplaceSource[];
+  blockedMarketplaces?: MarketplaceSource[];
+  skippedMarketplaces?: string[];
+  skippedPlugins?: string[];
+  pluginTrustMessage?: string;
+  skillOverrides?: Record<string, unknown>;
+  pluginConfigs?: Record<string, unknown>;
   // Catch-all for unknown / future fields preserved by the daemon.
   [key: string]: unknown;
 }
