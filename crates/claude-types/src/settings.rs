@@ -162,6 +162,95 @@ pub struct Settings {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disable_skill_shell_execution: Option<bool>,
 
+    // ---- M8 Advanced (Tier 3 scalar long tail) ----
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub api_key_helper: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aws_credential_export: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aws_auth_refresh: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gcp_auth_refresh: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub force_login_method: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub force_login_org_uuid: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub otel_headers_helper: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prefers_reduced_motion: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub company_announcements: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub feedback_survey_rate: Option<f64>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub terminal_title_from_rename: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub away_summary_enabled: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_thinking_summaries: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub advisor_model: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub agent: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_dream_enabled: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_memory_directory: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skill_listing_budget_fraction: Option<f64>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skill_listing_max_desc_chars: Option<u32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skip_web_fetch_preflight: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub force_remote_settings_refresh: Option<bool>,
+
+    // ---- M8 Sub-objects stored as raw JSON Value ----
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attribution: Option<serde_json::Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_mode: Option<serde_json::Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_suggestion: Option<serde_json::Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub worktree: Option<serde_json::Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subagent_status_line: Option<serde_json::Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spinner_verbs: Option<serde_json::Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spinner_tips_override: Option<serde_json::Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remote: Option<serde_json::Value>,
+
     /// Preserves any fields not explicitly modelled above.
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,
@@ -509,23 +598,42 @@ mod tests {
             "allowManagedHooksOnly",
             "allowManagedPermissionRulesOnly",
             "disableSkillShellExecution",
+            // M8: Advanced (Tier 3 long tail)
+            "apiKeyHelper",
+            "awsCredentialExport",
+            "awsAuthRefresh",
+            "gcpAuthRefresh",
+            "forceLoginMethod",
+            "forceLoginOrgUUID",
+            "otelHeadersHelper",
+            "prefersReducedMotion",
+            "companyAnnouncements",
+            "feedbackSurveyRate",
+            "terminalTitleFromRename",
+            "awaySummaryEnabled",
+            "showThinkingSummaries",
+            "advisorModel",
+            "agent",
+            "autoDreamEnabled",
+            "autoMemoryDirectory",
+            "skillListingBudgetFraction",
+            "skillListingMaxDescChars",
+            "skipWebFetchPreflight",
+            "forceRemoteSettingsRefresh",
+            // M8: sub-objects stored as serde_json::Value
+            "attribution",
+            "autoMode",
+            "fileSuggestion",
+            "worktree",
+            "subagentStatusLine",
+            "spinnerVerbs",
+            "spinnerTipsOverride",
+            "remote",
         ];
 
         // 在后续里程碑中添加字段时，从 `skipped` 列表移除并加到 `modeled`。
         let skipped: &[&str] = &[
             "$schema",
-            // M8: Advanced (Tier 3 long tail)
-            "apiKeyHelper", "awsCredentialExport", "awsAuthRefresh",
-            "gcpAuthRefresh", "forceLoginMethod", "forceLoginOrgUUID",
-            "otelHeadersHelper", "prefersReducedMotion", "companyAnnouncements",
-            "feedbackSurveyRate", "terminalTitleFromRename", "awaySummaryEnabled",
-            "showThinkingSummaries", "advisorModel", "agent", "autoDreamEnabled",
-            "autoMemoryDirectory", "skillListingBudgetFraction",
-            "skillListingMaxDescChars", "skipWebFetchPreflight",
-            "forceRemoteSettingsRefresh",
-            // M8: sub-objects stored as serde_json::Value
-            "attribution", "autoMode", "fileSuggestion", "worktree",
-            "subagentStatusLine", "spinnerVerbs", "spinnerTipsOverride", "remote",
             // Defaults / additions that may appear and are not actionable in this plan:
             "disableBypassPermissionsMode", "disableDeepLinkRegistration",
             "additionalDirectories", "symlinkDirectories", "channelsEnabled",

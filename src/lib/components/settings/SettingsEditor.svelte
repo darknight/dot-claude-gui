@@ -9,6 +9,7 @@
   import RuntimeEditor from "./RuntimeEditor.svelte";
   import McpPolicyEditor from "./McpPolicyEditor.svelte";
   import PluginsMarketplaceEditor from "./PluginsMarketplaceEditor.svelte";
+  import AdvancedJsonEditor from "./AdvancedJsonEditor.svelte";
   import { t } from "$lib/i18n";
 
   let { activeSection = "general" }: { activeSection: string } = $props();
@@ -48,6 +49,8 @@
     <McpPolicyEditor />
   {:else if activeSection === "pluginsMarketplace"}
     <PluginsMarketplaceEditor />
+  {:else if activeSection === "advanced"}
+    <AdvancedJsonEditor />
   {:else}
     <p class="text-sm" style="color: var(--text-muted)">Unknown section: {activeSection}</p>
   {/if}

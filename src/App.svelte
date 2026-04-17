@@ -102,6 +102,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
     { id: "runtime", labelKey: "settings.runtime" },
     { id: "mcpPolicy", labelKey: "settings.mcpPolicy" },
     { id: "pluginsMarketplace", labelKey: "settings.pluginsMarketplace" },
+    { id: "advanced", labelKey: "settings.advanced" },
   ] satisfies { id: string; labelKey: MessageKey }[];
 
   let settingsSection = $state("general");

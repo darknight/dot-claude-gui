@@ -58,6 +58,35 @@ export interface Settings {
   allowManagedHooksOnly?: boolean;
   allowManagedPermissionRulesOnly?: boolean;
   disableSkillShellExecution?: boolean;
+  apiKeyHelper?: string;
+  awsCredentialExport?: string;
+  awsAuthRefresh?: string;
+  gcpAuthRefresh?: string;
+  forceLoginMethod?: string;
+  forceLoginOrgUUID?: string;
+  otelHeadersHelper?: string;
+  prefersReducedMotion?: boolean;
+  companyAnnouncements?: string[];
+  feedbackSurveyRate?: number;
+  terminalTitleFromRename?: boolean;
+  awaySummaryEnabled?: boolean;
+  showThinkingSummaries?: boolean;
+  advisorModel?: string;
+  agent?: string;
+  autoDreamEnabled?: boolean;
+  autoMemoryDirectory?: string;
+  skillListingBudgetFraction?: number;
+  skillListingMaxDescChars?: number;
+  skipWebFetchPreflight?: boolean;
+  forceRemoteSettingsRefresh?: boolean;
+  attribution?: Record<string, unknown>;
+  autoMode?: Record<string, unknown>;
+  fileSuggestion?: Record<string, unknown>;
+  worktree?: Record<string, unknown>;
+  subagentStatusLine?: Record<string, unknown>;
+  spinnerVerbs?: Record<string, unknown>;
+  spinnerTipsOverride?: Record<string, unknown>;
+  remote?: Record<string, unknown>;
   // Catch-all for unknown / future fields preserved by the daemon.
   [key: string]: unknown;
 }
