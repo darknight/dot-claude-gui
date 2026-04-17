@@ -87,6 +87,27 @@ pub struct Settings {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prompt_suggestion_enabled: Option<bool>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_memory_enabled: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_git_instructions: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub respect_gitignore: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cleanup_period_days: Option<u32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub claude_md_excludes: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub plans_directory: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub syntax_highlighting_disabled: Option<bool>,
+
     /// Preserves any fields not explicitly modelled above.
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,
@@ -406,15 +427,18 @@ mod tests {
             "autoCompactWindow",
             "showClearContextOnPlanAccept",
             "promptSuggestionEnabled",
+            "autoMemoryEnabled",
+            "includeGitInstructions",
+            "respectGitignore",
+            "cleanupPeriodDays",
+            "claudeMdExcludes",
+            "plansDirectory",
+            "syntaxHighlightingDisabled",
         ];
 
         // 在后续里程碑中添加字段时，从 `skipped` 列表移除并加到 `modeled`。
         let skipped: &[&str] = &[
             "$schema",
-            // M4: General extension
-            "autoMemoryEnabled", "includeGitInstructions", "respectGitignore",
-            "cleanupPeriodDays", "claudeMdExcludes", "plansDirectory",
-            "syntaxHighlightingDisabled",
             // M5: MCP tab
             "allowedMcpServers", "enabledMcpjsonServers", "disabledMcpjsonServers",
             "enableAllProjectMcpServers", "allowManagedMcpServersOnly",
@@ -509,6 +533,37 @@ mod tests {
             "promptSuggestionEnabled",
         ] {
             assert!(!s.extra.contains_key(k), "{} should be typed, not in extra", k);
+        }
+    }
+
+    #[test]
+    fn parse_general_extension_fields_are_typed() {
+        let json = r#"{
+            "autoMemoryEnabled": true,
+            "includeGitInstructions": false,
+            "respectGitignore": true,
+            "cleanupPeriodDays": 60,
+            "claudeMdExcludes": ["vendor/", ".venv/"],
+            "plansDirectory": "~/.claude/plans",
+            "syntaxHighlightingDisabled": false
+        }"#;
+        let s: Settings = serde_json::from_str(json).expect("should parse");
+        assert_eq!(s.auto_memory_enabled, Some(true));
+        assert_eq!(s.include_git_instructions, Some(false));
+        assert_eq!(s.respect_gitignore, Some(true));
+        assert_eq!(s.cleanup_period_days, Some(60));
+        assert_eq!(
+            s.claude_md_excludes.as_ref().map(Vec::as_slice),
+            Some(&["vendor/".to_string(), ".venv/".to_string()][..])
+        );
+        assert_eq!(s.plans_directory.as_deref(), Some("~/.claude/plans"));
+        assert_eq!(s.syntax_highlighting_disabled, Some(false));
+        for k in [
+            "autoMemoryEnabled", "includeGitInstructions", "respectGitignore",
+            "cleanupPeriodDays", "claudeMdExcludes", "plansDirectory",
+            "syntaxHighlightingDisabled",
+        ] {
+            assert!(!s.extra.contains_key(k));
         }
     }
 }
