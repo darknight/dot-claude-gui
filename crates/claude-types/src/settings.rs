@@ -641,6 +641,9 @@ mod tests {
             // Extra long-tail picked up by snapshot extraction (M8 will handle):
             "schema", "defaultShell", "disableAutoMode", "proxyAuthHelper",
             "spinnerTipsEnabled", "sshConfigs", "viewMode",
+            // Added when snapshot source switched to schemastore (2026-04-27);
+            // schemastore had these ahead of our cli.js extraction baseline.
+            "showTurnDuration", "teammateMode", "terminalProgressBarEnabled",
         ];
 
         let missing: Vec<&String> = fields

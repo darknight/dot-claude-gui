@@ -24,23 +24,5 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Install latest Claude Code
-        run: |
-          npm i -g @anthropic-ai/claude-code@latest
-          echo "--- npm config ---"
-          echo "prefix: $(npm prefix -g)"
-          echo "root: $(npm root -g)"
-          echo "--- locate package ---"
-          PKG_DIR="$(npm ls -g @anthropic-ai/claude-code --parseable --depth=0 2>/dev/null | tail -n 1)"
-          echo "npm ls parseable: $PKG_DIR"
-          if [ -z "$PKG_DIR" ] || [ ! -d "$PKG_DIR" ]; then
-            PKG_DIR="$(find / -maxdepth 8 -path '*/node_modules/@anthropic-ai/claude-code' -type d 2>/dev/null | head -n 1)"
-            echo "find fallback: $PKG_DIR"
-          fi
-          CLI_PATH="$PKG_DIR/cli.js"
-          test -f "$CLI_PATH" || { echo "cli.js not found"; exit 1; }
-          echo "Resolved cli.js: $CLI_PATH"
-          echo "CLAUDE_CODE_CLI_JS=$CLI_PATH" >> "$GITHUB_ENV"
-
       - name: Check schema drift
         run: pnpm check:schema

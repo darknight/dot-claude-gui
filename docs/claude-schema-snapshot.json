@@ -1,6 +1,6 @@
 {
-  "claudeCodeVersion": "2.1.112",
-  "extractedAt": "2026-04-17T12:43:19.036Z",
+  "claudeCodeVersion": "schemastore@W/\"69ee7dd3-10078\"+extras@2.1.112",
+  "extractedAt": "2026-04-27T04:16:45.236Z",
   "settingsFields": [
     {
       "name": "advisorModel",
@@ -24,37 +24,37 @@
       "name": "allowedHttpHookUrls",
       "type": "array",
       "optional": true,
-      "describe": "Allowlist of URL patterns that HTTP hooks may target. Supports * as a wildcard (e.g. \"https://hooks.example.com/*\"). When set, HTTP hooks with non-matching URLs are blocked. If undefined, all URLs are allowed. If empty array, no HTTP hooks are allowed. Arrays merge across settings sources (same semantics as allowedMcpServers)."
+      "describe": "Allowlist of URL patterns that HTTP hooks may target. Supports * as a wildcard. When set, hooks with non-matching URLs are blocked. Undefined = no restriction, empty array = block all HTTP hooks. Arrays merge across settings sources. See https://code.claude.com/docs/en/settings#hook-configuration"
     },
     {
       "name": "allowedMcpServers",
       "type": "array",
       "optional": true,
-      "describe": "Enterprise allowlist of MCP servers that can be used. Applies to all scopes including enterprise servers from managed-mcp.json. If undefined, all servers are allowed. If empty array, no servers are allowed. Denylist takes precedence - if a server is on both lists, it is denied."
+      "describe": "Enterprise allowlist of MCP servers that can be used. Applies to all scopes including enterprise servers from managed-mcp.json. If undefined, all servers are allowed. If empty array, no servers are allowed. Denylist takes precedence - if a server is on both lists, it is denied. See https://code.claude.com/docs/en/mcp#restriction-options"
     },
     {
       "name": "allowManagedHooksOnly",
       "type": "boolean",
       "optional": true,
-      "describe": "When true (and set in managed settings), only hooks from managed settings run. User, project, and local hooks are ignored."
+      "describe": "(Managed settings only) Prevent loading of user, project, and plugin hooks. Only allows managed hooks and SDK hooks. See https://code.claude.com/docs/en/settings#hook-configuration"
     },
     {
       "name": "allowManagedMcpServersOnly",
       "type": "boolean",
       "optional": true,
-      "describe": "When true (and set in managed settings), allowedMcpServers is only read from managed settings. deniedMcpServers still merges from all sources, so users can deny servers for themselves. Users can still add their own MCP servers, but only the admin-defined allowlist applies."
+      "describe": "(Managed settings only) Only allowedMcpServers from managed settings are respected. deniedMcpServers still merges from all sources. Users can still add their own MCP servers, but only the admin-defined allowlist applies."
     },
     {
       "name": "allowManagedPermissionRulesOnly",
       "type": "boolean",
       "optional": true,
-      "describe": "When true (and set in managed settings), only permission rules (allow/deny/ask) from managed settings are respected. User, project, local, and CLI argument permission rules are ignored."
+      "describe": "(Managed settings only) Prevent user and project settings from defining allow, ask, or deny permission rules. Only rules in managed settings apply. See https://code.claude.com/docs/en/settings#permission-settings"
     },
     {
       "name": "alwaysThinkingEnabled",
       "type": "boolean",
       "optional": true,
-      "describe": "When false, thinking is disabled. When absent or true, thinking is enabled automatically for supported models."
+      "describe": "Enable extended thinking by default for all sessions. Typically configured via the /config command rather than editing directly. See https://code.claude.com/docs/en/common-workflows#use-extended-thinking-thinking-mode"
     },
     {
       "name": "apiKeyHelper",
@@ -66,7 +66,7 @@
       "name": "attribution",
       "type": "object",
       "optional": true,
-      "describe": "Customize attribution text for commits and PRs. Each field defaults to the standard Claude Code attribution if not set."
+      "describe": "Customize attribution for git commits and pull requests. See https://code.claude.com/docs/en/settings#attribution-settings"
     },
     {
       "name": "autoCompactWindow",
@@ -90,23 +90,23 @@
       "name": "autoMemoryEnabled",
       "type": "boolean",
       "optional": true,
-      "describe": "Enable auto-memory for this project. When false, Claude will not read from or write to the auto-memory directory."
+      "describe": "Enable automatic memory saves that capture useful context to .claude/memory/. Also configurable via CLAUDE_CODE_DISABLE_AUTO_MEMORY environment variable (set to 1 to disable, 0 to enable). See https://code.claude.com/docs/en/memory#auto-memory"
     },
     {
       "name": "autoUpdatesChannel",
       "type": "enum",
       "optional": true,
       "enumValues": [
-        "latest",
-        "stable"
+        "stable",
+        "latest"
       ],
-      "describe": "Release channel for auto-updates (latest or stable)"
+      "describe": "Release channel to follow for updates. Use \"stable\" for a version that is typically about one week old and skips versions with major regressions, or \"latest\" (default) for the most recent release. Set DISABLE_AUTOUPDATER=1 to disable updates entirely."
     },
     {
       "name": "availableModels",
       "type": "array",
       "optional": true,
-      "describe": "Allowlist of models that users can select. Accepts family aliases (\"opus\" allows any opus version), version prefixes (\"opus-4-5\" allows only that version), and full model IDs. If undefined, all models are available. If empty array, only the default model is available. Typically set in managed settings by enterprise administrators."
+      "describe": "Restrict which models users can select. When defined at multiple settings levels (user, project, etc.), arrays are merged and deduplicated. See https://code.claude.com/docs/en/model-config#restrict-model-selection"
     },
     {
       "name": "awaySummaryEnabled",
@@ -130,7 +130,7 @@
       "name": "blockedMarketplaces",
       "type": "array",
       "optional": true,
-      "describe": "Enterprise blocklist of marketplace sources. When set in managed settings, these exact sources are blocked from being added as marketplaces. The check happens BEFORE downloading, so blocked sources never touch the filesystem."
+      "describe": "(Managed settings only) Blocklist of marketplace sources. These exact sources are blocked from being added as marketplaces. The check happens before downloading, so blocked sources never touch the filesystem."
     },
     {
       "name": "channelsEnabled",
@@ -142,13 +142,13 @@
       "name": "claudeMdExcludes",
       "type": "array",
       "optional": true,
-      "describe": "Glob patterns or absolute paths of CLAUDE.md files to exclude from loading. Patterns are matched against absolute file paths using picomatch. Only applies to User, Project, and Local memory types (Managed/policy files cannot be excluded). Examples: \"/home/user/monorepo/CLAUDE.md\", \"**/code/CLAUDE.md\", \"**/some-dir/.claude/rules/**\""
+      "describe": "Glob patterns for CLAUDE.md files to exclude from loading. Useful in monorepos to skip irrelevant instructions from other teams. Patterns match against absolute file paths. Arrays merge across settings layers. Managed policy CLAUDE.md files cannot be excluded. See https://code.claude.com/docs/en/memory#exclude-specific-claudemd-files"
     },
     {
       "name": "cleanupPeriodDays",
-      "type": "number",
+      "type": "integer",
       "optional": true,
-      "describe": "Number of days to retain chat transcripts before automatic cleanup (default: 30). Minimum 1. Use a large value for long retention; use --no-session-persistence to disable transcript writes entirely."
+      "describe": "Number of days to retain chat transcripts (0 to disable cleanup)"
     },
     {
       "name": "companyAnnouncements",
@@ -170,13 +170,13 @@
       "name": "deniedMcpServers",
       "type": "array",
       "optional": true,
-      "describe": "Enterprise denylist of MCP servers that are explicitly blocked. If a server is on the denylist, it will be blocked across all scopes including enterprise. Denylist takes precedence over allowlist - if a server is on both lists, it is denied."
+      "describe": "Enterprise denylist of MCP servers that are explicitly blocked. If a server is on the denylist, it will be blocked across all scopes including enterprise. Denylist takes precedence over allowlist - if a server is on both lists, it is denied. See https://code.claude.com/docs/en/mcp#restriction-options"
     },
     {
       "name": "disableAllHooks",
       "type": "boolean",
       "optional": true,
-      "describe": "Disable all hooks and statusLine execution"
+      "describe": "Disable all hooks and statusLine execution. When true in managed settings, user and project-level disableAllHooks cannot override it. See https://code.claude.com/docs/en/hooks#disable-or-remove-hooks"
     },
     {
       "name": "disableAutoMode",
@@ -191,7 +191,7 @@
       "name": "disabledMcpjsonServers",
       "type": "array",
       "optional": true,
-      "describe": "List of rejected MCP servers from .mcp.json"
+      "describe": "List of rejected MCP servers from .mcp.json. See https://code.claude.com/docs/en/mcp"
     },
     {
       "name": "disableSkillShellExecution",
@@ -209,61 +209,61 @@
         "high",
         "xhigh"
       ],
-      "describe": "Persisted effort level for supported models."
+      "describe": "Control Opus 4.6 adaptive reasoning effort. Lower effort is faster and cheaper for straightforward tasks, higher effort provides deeper reasoning. Defaults vary by model and plan (Opus 4.6 defaults to medium for Max and Team subscribers). Use /effort auto to reset to model default. Also configurable via CLAUDE_CODE_EFFORT_LEVEL environment variable. See https://code.claude.com/docs/en/model-config#adjust-effort-level"
     },
     {
       "name": "enableAllProjectMcpServers",
       "type": "boolean",
       "optional": true,
-      "describe": "Whether to automatically approve all MCP servers in the project"
+      "describe": "Whether to automatically approve all MCP servers in the project. See https://code.claude.com/docs/en/mcp"
     },
     {
       "name": "enabledMcpjsonServers",
       "type": "array",
       "optional": true,
-      "describe": "List of approved MCP servers from .mcp.json"
+      "describe": "List of approved MCP servers from .mcp.json. See https://code.claude.com/docs/en/mcp"
     },
     {
       "name": "enabledPlugins",
-      "type": "record",
+      "type": "object",
       "optional": true,
-      "describe": "Enabled plugins using plugin-id@marketplace-id format. Example: { \"formatter@anthropic-tools\": true }. Also supports extended format with version constraints."
+      "describe": "Enabled plugins using plugin-id@marketplace-id format. Example: { \"formatter@anthropic-tools\": true }. See https://code.claude.com/docs/en/plugins"
     },
     {
       "name": "env",
-      "type": "ref",
+      "type": "object",
       "optional": true,
-      "describe": "Environment variables to set for Claude Code sessions"
+      "describe": "Environment variables to set for Claude Code sessions. Many environment variables provide settings dimensions not available as dedicated settings.json properties (e.g., thinking tokens, prompt caching, bash timeouts, shell configuration). See https://code.claude.com/docs/en/settings#environment-variables for the full list.\nUNDOCUMENTED: CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS (plugin marketplace git timeout in ms, default 120000, see https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#2151).\nUNDOCUMENTED: ENABLE_CLAUDEAI_MCP_SERVERS (set to false to opt out of claude.ai MCP servers, see https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#2163)."
     },
     {
       "name": "extraKnownMarketplaces",
-      "type": "record",
+      "type": "object",
       "optional": true,
-      "describe": "Additional marketplaces to make available for this repository. Typically used in repository .claude/settings.json to ensure team members have required plugin sources."
+      "describe": "Additional marketplaces to make available for this repository. Typically used in repository .claude/settings.json to ensure team members have required plugin sources. See https://code.claude.com/docs/en/plugin-marketplaces"
     },
     {
       "name": "fastMode",
       "type": "boolean",
       "optional": true,
-      "describe": "When true, fast mode is enabled. When absent or false, fast mode is off."
+      "describe": "Enable fast mode for Opus 4.6 (research preview). Fast mode uses the same model with 2.5x faster output at higher per-token cost. Requires extra usage enabled. Alternatively, toggle with /fast command. See https://code.claude.com/docs/en/fast-mode"
     },
     {
       "name": "fastModePerSessionOptIn",
       "type": "boolean",
       "optional": true,
-      "describe": "When true, fast mode does not persist across sessions. Each session starts with fast mode off."
+      "describe": "Require per-session opt-in for fast mode. When true, fast mode does not persist across sessions and users must enable it with /fast each session. Useful for controlling costs. See https://code.claude.com/docs/en/fast-mode"
     },
     {
       "name": "feedbackSurveyRate",
       "type": "number",
       "optional": true,
-      "describe": "Probability (0–1) that the session quality survey appears when eligible. 0.05 is a reasonable starting point."
+      "describe": "Probability (0–1) that the session quality survey appears when eligible. A value of 0.05 means 5% of eligible sessions. See https://code.claude.com/docs/en/settings"
     },
     {
       "name": "fileSuggestion",
       "type": "object",
       "optional": true,
-      "describe": "Custom file suggestion configuration for @ mentions"
+      "describe": "Configure a custom script for @ file autocomplete. See https://code.claude.com/docs/en/settings#file-suggestion-settings"
     },
     {
       "name": "forceLoginMethod",
@@ -277,9 +277,9 @@
     },
     {
       "name": "forceLoginOrgUUID",
-      "type": "union",
+      "type": "string",
       "optional": true,
-      "describe": "Organization UUID to require for OAuth login. Accepts a single UUID string or an array of UUIDs (any one is permitted). When set in managed settings, login fails if the authenticated account does not belong to a listed organization."
+      "describe": "Organization UUID to use for OAuth login"
     },
     {
       "name": "forceRemoteSettingsRefresh",
@@ -295,33 +295,33 @@
     },
     {
       "name": "hooks",
-      "type": "ref",
+      "type": "object",
       "optional": true,
-      "describe": "Custom commands to run before/after tool executions"
+      "describe": "Custom commands to run before/after tool executions. See https://code.claude.com/docs/en/hooks"
     },
     {
       "name": "httpHookAllowedEnvVars",
       "type": "array",
       "optional": true,
-      "describe": "Allowlist of environment variable names HTTP hooks may interpolate into headers. When set, each hook's effective allowedEnvVars is the intersection with this list. If undefined, no restriction is applied. Arrays merge across settings sources (same semantics as allowedMcpServers)."
+      "describe": "Allowlist of environment variable names HTTP hooks may interpolate into headers. When set, each hook's effective allowedEnvVars is the intersection with this list. Undefined = no restriction. Arrays merge across settings sources. See https://code.claude.com/docs/en/settings#hook-configuration"
     },
     {
       "name": "includeCoAuthoredBy",
       "type": "boolean",
       "optional": true,
-      "describe": "Deprecated: Use attribution instead. Whether to include Claude's co-authored by attribution in commits and PRs (defaults to true)"
+      "describe": "DEPRECATED. Use 'attribution' instead. Whether to include the co-authored-by Claude byline in git commits and pull requests (default: true)"
     },
     {
       "name": "includeGitInstructions",
       "type": "boolean",
       "optional": true,
-      "describe": "Include built-in commit and PR workflow instructions in Claude's system prompt (default: true)"
+      "describe": "Include built-in git commit and PR workflow instructions in Claude's system prompt. Also configurable via CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS environment variable (set to 1 to disable). See https://code.claude.com/docs/en/settings#available-settings"
     },
     {
       "name": "language",
       "type": "string",
       "optional": true,
-      "describe": "Preferred language for Claude responses and voice dictation (e.g., \"japanese\", \"spanish\")"
+      "describe": "Preferred language for Claude's responses"
     },
     {
       "name": "minimumVersion",
@@ -333,13 +333,13 @@
       "name": "model",
       "type": "string",
       "optional": true,
-      "describe": "Override the default model used by Claude Code"
+      "describe": "Override the default model used by Claude Code. For finer control, use environment variables: ANTHROPIC_MODEL (runtime override), ANTHROPIC_DEFAULT_OPUS_MODEL, ANTHROPIC_DEFAULT_SONNET_MODEL, ANTHROPIC_DEFAULT_HAIKU_MODEL (per-class pinning), CLAUDE_CODE_SUBAGENT_MODEL (subagent model). See https://code.claude.com/docs/en/model-config"
     },
     {
       "name": "modelOverrides",
-      "type": "record",
+      "type": "object",
       "optional": true,
-      "describe": "Override mapping from Anthropic model ID (e.g. \"claude-opus-4-6\") to provider-specific model ID (e.g. a Bedrock inference profile ARN). Typically set in managed settings by enterprise administrators."
+      "describe": "Map Anthropic model IDs to provider-specific model IDs such as Bedrock inference profile ARNs, Vertex AI version names, or Foundry deployment names. Each model picker entry uses its mapped value when calling the provider API. Unknown keys are ignored. See https://code.claude.com/docs/en/model-config#override-model-ids-per-version"
     },
     {
       "name": "otelHeadersHelper",
@@ -351,37 +351,37 @@
       "name": "outputStyle",
       "type": "string",
       "optional": true,
-      "describe": "Controls the output style for assistant responses"
+      "describe": "Controls the output style for assistant responses. Built-in styles: default, Explanatory, Learning. Custom styles can be added in ~/.claude/output-styles/ or .claude/output-styles/. See https://code.claude.com/docs/en/output-styles"
     },
     {
       "name": "permissions",
-      "type": "ref",
+      "type": "object",
       "optional": true,
-      "describe": "Tool usage permissions configuration"
+      "describe": "Tool usage permissions configuration.\nSee https://code.claude.com/docs/en/permissions and https://code.claude.com/docs/en/settings#permission-settings\nSee https://code.claude.com/docs/en/settings#tools-available-to-claude for full list of tools available to Claude."
     },
     {
       "name": "plansDirectory",
       "type": "string",
       "optional": true,
-      "describe": "Custom directory for plan files, relative to project root. If not set, defaults to ~/.claude/plans/"
+      "describe": "Customize where plan files are stored. Path is relative to project root (default: ~/.claude/plans)"
     },
     {
       "name": "pluginConfigs",
-      "type": "record",
+      "type": "object",
       "optional": true,
-      "describe": "Per-plugin configuration including MCP server user configs, keyed by plugin ID (plugin@marketplace format)"
+      "describe": "Per-plugin configuration including MCP server user configs, keyed by plugin ID (plugin@marketplace format). See https://code.claude.com/docs/en/plugins"
     },
     {
       "name": "pluginTrustMessage",
       "type": "string",
       "optional": true,
-      "describe": "Custom message to append to the plugin trust warning shown before installation. Only read from policy settings (managed-settings.json / MDM). Useful for enterprise administrators to add organization-specific context (e.g., \"All plugins from our internal marketplace are vetted and approved.\")."
+      "describe": "(Managed settings only) Custom message appended to the plugin trust warning shown before installation. Use to provide organization-specific context about approved plugins. See https://code.claude.com/docs/en/settings#plugin-settings"
     },
     {
       "name": "prefersReducedMotion",
       "type": "boolean",
       "optional": true,
-      "describe": "Reduce or disable animations for accessibility (spinner shimmer, flash effects, etc.)"
+      "describe": "Reduce or disable UI animations (spinners, shimmer, flash effects) for accessibility"
     },
     {
       "name": "promptSuggestionEnabled",
@@ -405,19 +405,13 @@
       "name": "respectGitignore",
       "type": "boolean",
       "optional": true,
-      "describe": "Whether file picker should respect .gitignore files (default: true). Note: .ignore files are always respected."
+      "describe": "Control whether the @ file picker respects .gitignore patterns. When true (default), files matching .gitignore patterns are excluded from suggestions"
     },
     {
       "name": "sandbox",
-      "type": "ref",
+      "type": "object",
       "optional": true,
-      "describe": "(validator: dF7())"
-    },
-    {
-      "name": "schema",
-      "type": "literal",
-      "optional": true,
-      "describe": "JSON Schema reference for Claude Code settings"
+      "describe": "Sandbox execution configuration. See https://code.claude.com/docs/en/sandboxing"
     },
     {
       "name": "showClearContextOnPlanAccept",
@@ -430,6 +424,12 @@
       "type": "boolean",
       "optional": true,
       "describe": "Show thinking summaries in the transcript view (ctrl+o). Default: false."
+    },
+    {
+      "name": "showTurnDuration",
+      "type": "boolean",
+      "optional": true,
+      "describe": "Show turn duration messages after responses (e.g., \"Cooked for 1m 6s\"). Set to false to hide these messages (default: true)"
     },
     {
       "name": "skillListingBudgetFraction",
@@ -456,6 +456,18 @@
       "describe": "Whether the user has accepted the bypass permissions mode dialog"
     },
     {
+      "name": "skippedMarketplaces",
+      "type": "array",
+      "optional": true,
+      "describe": "List of marketplace names the user has chosen not to install when prompted"
+    },
+    {
+      "name": "skippedPlugins",
+      "type": "array",
+      "optional": true,
+      "describe": "List of plugin IDs (plugin@marketplace format) the user has chosen not to install when prompted"
+    },
+    {
       "name": "skipWebFetchPreflight",
       "type": "boolean",
       "optional": true,
@@ -465,19 +477,19 @@
       "name": "spinnerTipsEnabled",
       "type": "boolean",
       "optional": true,
-      "describe": "Whether to show tips in the spinner"
+      "describe": "Show tips in the spinner while Claude is working. Set to false to disable tips (default: true)"
     },
     {
       "name": "spinnerTipsOverride",
       "type": "object",
       "optional": true,
-      "describe": "Override spinner tips. tips: array of tip strings. excludeDefault: if true, only show custom tips (default: false)."
+      "describe": "Customize the tips displayed in the spinner while Claude is working. See https://code.claude.com/docs/en/settings#available-settings"
     },
     {
       "name": "spinnerVerbs",
       "type": "object",
       "optional": true,
-      "describe": "Customize spinner verbs. mode: \"append\" adds verbs to defaults, \"replace\" uses only your verbs."
+      "describe": "Customize the verbs shown in spinner progress messages"
     },
     {
       "name": "sshConfigs",
@@ -489,13 +501,13 @@
       "name": "statusLine",
       "type": "object",
       "optional": true,
-      "describe": "Custom status line display configuration"
+      "describe": "Custom status line display configuration. See https://code.claude.com/docs/en/statusline"
     },
     {
       "name": "strictKnownMarketplaces",
       "type": "array",
       "optional": true,
-      "describe": "Enterprise strict list of allowed marketplace sources. When set in managed settings, ONLY these exact sources can be added as marketplaces. The check happens BEFORE downloading, so blocked sources never touch the filesystem. "
+      "describe": "(Managed settings only) Allowlist of plugin marketplaces users can add. Undefined = no restrictions, empty array = lockdown. Uses exact matching for source specifications. See https://code.claude.com/docs/en/settings#strictknownmarketplaces"
     },
     {
       "name": "subagentStatusLine",
@@ -508,6 +520,23 @@
       "type": "boolean",
       "optional": true,
       "describe": "Whether to disable syntax highlighting in diffs"
+    },
+    {
+      "name": "teammateMode",
+      "type": "enum",
+      "optional": true,
+      "enumValues": [
+        "auto",
+        "in-process",
+        "tmux"
+      ],
+      "describe": "How agent team teammates display: \"auto\" picks split panes in tmux or iTerm2, in-process otherwise. Agent teams are experimental and disabled by default. Enable them by adding CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS to your settings.json or environment. See https://code.claude.com/docs/en/agent-teams"
+    },
+    {
+      "name": "terminalProgressBarEnabled",
+      "type": "boolean",
+      "optional": true,
+      "describe": "Enable the terminal progress bar that shows progress in supported terminals like Windows Terminal and iTerm2 (default: true)"
     },
     {
       "name": "terminalTitleFromRename",
@@ -546,7 +575,7 @@
       "name": "worktree",
       "type": "object",
       "optional": true,
-      "describe": "Git worktree configuration for --worktree flag."
+      "describe": "Configuration for --worktree sessions. See https://code.claude.com/docs/en/settings"
     }
   ],
   "globalFields": [
