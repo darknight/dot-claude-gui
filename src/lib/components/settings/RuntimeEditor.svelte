@@ -24,6 +24,13 @@
   let promptSuggestionEnabled = $state(
     (settings.promptSuggestionEnabled as boolean) ?? false,
   );
+  let showTurnDuration = $state(
+    (settings.showTurnDuration as boolean | undefined) ?? true,
+  );
+  let terminalProgressBarEnabled = $state(
+    (settings.terminalProgressBarEnabled as boolean | undefined) ?? true,
+  );
+  let teammateMode = $state((settings.teammateMode as string) ?? "");
 
   $effect(() => {
     model = (settings.model as string) ?? "";
@@ -36,6 +43,10 @@
       (settings.showClearContextOnPlanAccept as boolean) ?? false;
     promptSuggestionEnabled =
       (settings.promptSuggestionEnabled as boolean) ?? false;
+    showTurnDuration = (settings.showTurnDuration as boolean | undefined) ?? true;
+    terminalProgressBarEnabled =
+      (settings.terminalProgressBarEnabled as boolean | undefined) ?? true;
+    teammateMode = (settings.teammateMode as string) ?? "";
   });
 
   const modelDirty = $derived(model !== ((settings.model as string) ?? ""));
@@ -65,6 +76,17 @@
     promptSuggestionEnabled !==
       ((settings.promptSuggestionEnabled as boolean) ?? false),
   );
+  const showTurnDurationDirty = $derived(
+    showTurnDuration !==
+      ((settings.showTurnDuration as boolean | undefined) ?? true),
+  );
+  const terminalProgressBarDirty = $derived(
+    terminalProgressBarEnabled !==
+      ((settings.terminalProgressBarEnabled as boolean | undefined) ?? true),
+  );
+  const teammateModeDirty = $derived(
+    teammateMode !== ((settings.teammateMode as string) ?? ""),
+  );
 
   function parseAvailableModels(): string[] | undefined {
     const lines = availableModelsText
@@ -84,6 +106,9 @@
     outputStyle: outputStyle || undefined,
     fastMode,
     fastModePerSessionOptIn,
+    showTurnDuration,
+    terminalProgressBarEnabled,
+    teammateMode: teammateMode || undefined,
     availableModels: parseAvailableModels(),
     autoCompactWindow: parsedWindow(),
     showClearContextOnPlanAccept,
@@ -96,6 +121,9 @@
       outputStyle: outputStyle || undefined,
       fastMode,
       fastModePerSessionOptIn,
+      showTurnDuration,
+      terminalProgressBarEnabled,
+      teammateMode: teammateMode || undefined,
       availableModels: parseAvailableModels(),
       autoCompactWindow: parsedWindow(),
       showClearContextOnPlanAccept,
@@ -203,6 +231,45 @@
       <DirtyDot dirty={promptSuggestionDirty} />
     </span>
   </label>
+
+  <label class="flex items-center gap-3 cursor-pointer">
+    <input type="checkbox" bind:checked={showTurnDuration}
+           onchange={() => configStore.markDirty()}
+           class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+    <span class="text-sm" style="color: var(--text-secondary)"
+          title={t("settings.fields.showTurnDuration.tooltip")}>
+      {t("settings.fields.showTurnDuration.label")}
+      <DirtyDot dirty={showTurnDurationDirty} />
+    </span>
+  </label>
+
+  <label class="flex items-center gap-3 cursor-pointer">
+    <input type="checkbox" bind:checked={terminalProgressBarEnabled}
+           onchange={() => configStore.markDirty()}
+           class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+    <span class="text-sm" style="color: var(--text-secondary)"
+          title={t("settings.fields.terminalProgressBarEnabled.tooltip")}>
+      {t("settings.fields.terminalProgressBarEnabled.label")}
+      <DirtyDot dirty={terminalProgressBarDirty} />
+    </span>
+  </label>
+
+  <div class="space-y-1">
+    <label for="teammateMode" class="block text-sm font-medium"
+           style="color: var(--text-secondary)"
+           title={t("settings.fields.teammateMode.tooltip")}>
+      {t("settings.fields.teammateMode.label")}
+      <DirtyDot dirty={teammateModeDirty} />
+    </label>
+    <select id="teammateMode" bind:value={teammateMode}
+            onchange={() => configStore.markDirty()}
+            class="input-base">
+      <option value="">{t("settings.fields.teammateMode.unset")}</option>
+      <option value="auto">auto</option>
+      <option value="in-process">in-process</option>
+      <option value="tmux">tmux</option>
+    </select>
+  </div>
 
   <div class="flex gap-2 pt-4 border-t" style="border-color: var(--border-color)">
     <button type="button" onclick={save}

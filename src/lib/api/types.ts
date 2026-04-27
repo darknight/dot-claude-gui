@@ -29,6 +29,9 @@ export interface Settings {
   outputStyle?: string;
   fastMode?: boolean;
   fastModePerSessionOptIn?: boolean;
+  showTurnDuration?: boolean;
+  terminalProgressBarEnabled?: boolean;
+  teammateMode?: "auto" | "in-process" | "tmux";
   availableModels?: string[];
   autoCompactWindow?: number;
   showClearContextOnPlanAccept?: boolean;

@@ -76,6 +76,15 @@ pub struct Settings {
     pub fast_mode_per_session_opt_in: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_turn_duration: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub terminal_progress_bar_enabled: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub teammate_mode: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub available_models: Option<Vec<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -566,6 +575,9 @@ mod tests {
             "outputStyle",
             "fastMode",
             "fastModePerSessionOptIn",
+            "showTurnDuration",
+            "terminalProgressBarEnabled",
+            "teammateMode",
             "availableModels",
             "autoCompactWindow",
             "showClearContextOnPlanAccept",
@@ -641,9 +653,6 @@ mod tests {
             // Extra long-tail picked up by snapshot extraction (M8 will handle):
             "schema", "defaultShell", "disableAutoMode", "proxyAuthHelper",
             "spinnerTipsEnabled", "sshConfigs", "viewMode",
-            // Added when snapshot source switched to schemastore (2026-04-27);
-            // schemastore had these ahead of our cli.js extraction baseline.
-            "showTurnDuration", "teammateMode", "terminalProgressBarEnabled",
         ];
 
         let missing: Vec<&String> = fields
@@ -681,6 +690,9 @@ mod tests {
             "outputStyle": "default",
             "fastMode": true,
             "fastModePerSessionOptIn": false,
+            "showTurnDuration": false,
+            "terminalProgressBarEnabled": false,
+            "teammateMode": "tmux",
             "availableModels": ["sonnet", "opus"],
             "autoCompactWindow": 200000,
             "showClearContextOnPlanAccept": true,
@@ -691,6 +703,9 @@ mod tests {
         assert_eq!(s.output_style.as_deref(), Some("default"));
         assert_eq!(s.fast_mode, Some(true));
         assert_eq!(s.fast_mode_per_session_opt_in, Some(false));
+        assert_eq!(s.show_turn_duration, Some(false));
+        assert_eq!(s.terminal_progress_bar_enabled, Some(false));
+        assert_eq!(s.teammate_mode.as_deref(), Some("tmux"));
         assert_eq!(
             s.available_models.as_ref().map(Vec::as_slice),
             Some(&["sonnet".to_string(), "opus".to_string()][..])
@@ -703,6 +718,9 @@ mod tests {
             "outputStyle",
             "fastMode",
             "fastModePerSessionOptIn",
+            "showTurnDuration",
+            "terminalProgressBarEnabled",
+            "teammateMode",
             "availableModels",
             "autoCompactWindow",
             "showClearContextOnPlanAccept",
