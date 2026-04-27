@@ -25,7 +25,14 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install latest Claude Code
-        run: npm i -g @anthropic-ai/claude-code@latest
+        run: |
+          npm i -g @anthropic-ai/claude-code@latest
+          CLI_PATH="$(npm root -g)/@anthropic-ai/claude-code/cli.js"
+          if [ ! -f "$CLI_PATH" ]; then
+            CLI_PATH="$(pnpm root -g)/@anthropic-ai/claude-code/cli.js"
+          fi
+          test -f "$CLI_PATH" || { echo "cli.js not found in npm/pnpm global"; exit 1; }
+          echo "CLAUDE_CODE_CLI_JS=$CLI_PATH" >> "$GITHUB_ENV"
 
       - name: Check schema drift
         run: pnpm check:schema
