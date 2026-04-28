@@ -334,14 +334,14 @@ pub async fn add_marketplace(
     _state: State<'_, AppState>,
     repo: String,
 ) -> Result<CommandRequest, String> {
-    // Mirror daemon: claude plugin marketplace add --source github --repo <repo>
+    // claude plugin marketplace add <source>
+    // <source> accepts a URL, local path, or "owner/repo" GitHub shorthand.
+    // Older Claude CLI took --source <type> --repo <repo>; that syntax was
+    // removed (now positional only).
     let args = vec![
         "plugin".to_string(),
         "marketplace".to_string(),
         "add".to_string(),
-        "--source".to_string(),
-        "github".to_string(),
-        "--repo".to_string(),
         repo,
     ];
     let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
