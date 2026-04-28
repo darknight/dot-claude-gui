@@ -653,6 +653,9 @@ mod tests {
             // Extra long-tail picked up by snapshot extraction (M8 will handle):
             "schema", "defaultShell", "disableAutoMode", "proxyAuthHelper",
             "spinnerTipsEnabled", "sshConfigs", "viewMode",
+            // Schemastore catch-up 2026-04-28; deferred for future modeling.
+            "prUrlTemplate", "strictPluginOnlyCustomization",
+            "useAutoModeDuringPlan", "voiceEnabled", "wslInheritsWindowsSettings",
         ];
 
         let missing: Vec<&String> = fields

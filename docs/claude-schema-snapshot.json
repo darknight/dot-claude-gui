@@ -1,6 +1,6 @@
 {
-  "claudeCodeVersion": "schemastore@W/\"69ee7dd3-10078\"+extras@2.1.112",
-  "extractedAt": "2026-04-27T04:16:45.236Z",
+  "claudeCodeVersion": "schemastore@W/\"69efeb79-1415c\"+extras@2.1.112",
+  "extractedAt": "2026-04-28T03:25:48.676Z",
   "settingsFields": [
     {
       "name": "advisorModel",
@@ -12,13 +12,13 @@
       "name": "agent",
       "type": "string",
       "optional": true,
-      "describe": "Name of an agent (built-in or custom) to use for the main thread. Applies the agent's system prompt, tool restrictions, and model."
+      "describe": "Name of an agent (built-in or custom) to use for the main thread. Applies the agent's system prompt, tool restrictions, and model. See https://code.claude.com/docs/en/sub-agents"
     },
     {
       "name": "allowedChannelPlugins",
       "type": "array",
       "optional": true,
-      "describe": "Teams/Enterprise allowlist of channel plugins. When set, "
+      "describe": "(Managed settings only) Allowlist of plugin IDs whose MCP servers may advertise channel notifications when channelsEnabled is true. When set, only the listed plugins can push inbound messages. See https://code.claude.com/docs/en/mcp"
     },
     {
       "name": "allowedHttpHookUrls",
@@ -84,13 +84,19 @@
       "name": "autoMemoryDirectory",
       "type": "string",
       "optional": true,
-      "describe": "Custom directory path for auto-memory storage. Supports ~/ prefix for home directory expansion. Ignored if set in projectSettings (checked-in .claude/settings.json) for security. When unset, defaults to ~/.claude/projects/<sanitized-cwd>/memory/."
+      "describe": "Custom directory path for auto-memory storage. Supports ~/ prefix for home-directory expansion. Ignored if set in checked-in project settings (.claude/settings.json) for security. Defaults to ~/.claude/projects/<sanitized-cwd>/memory/ when unset. See https://code.claude.com/docs/en/memory"
     },
     {
       "name": "autoMemoryEnabled",
       "type": "boolean",
       "optional": true,
       "describe": "Enable automatic memory saves that capture useful context to .claude/memory/. Also configurable via CLAUDE_CODE_DISABLE_AUTO_MEMORY environment variable (set to 1 to disable, 0 to enable). See https://code.claude.com/docs/en/memory#auto-memory"
+    },
+    {
+      "name": "autoMode",
+      "type": "object",
+      "optional": true,
+      "describe": "Customization for the auto mode classifier prompt. Typically configured in managed settings to tune the allow/deny rules used when permissions.defaultMode is \"auto\". By default, allow, soft_deny, and environment REPLACE the corresponding built-in classifier section entirely. Include the literal string \"$defaults\" as an array entry (added in v2.1.118) to splice the built-in defaults in at that position alongside your custom rules. See https://code.claude.com/docs/en/permissions"
     },
     {
       "name": "autoUpdatesChannel",
@@ -100,7 +106,7 @@
         "stable",
         "latest"
       ],
-      "describe": "Release channel to follow for updates. Use \"stable\" for a version that is typically about one week old and skips versions with major regressions, or \"latest\" (default) for the most recent release. Set DISABLE_AUTOUPDATER=1 to disable updates entirely."
+      "describe": "Release channel to follow for updates. Use \"stable\" for a version that is typically about one week old and skips versions with major regressions, or \"latest\" (default) for the most recent release. Set DISABLE_AUTOUPDATER=1 to disable background auto-updates, or DISABLE_UPDATES=1 (added in v2.1.118) to block all update paths including manual `claude update`."
     },
     {
       "name": "availableModels",
@@ -136,19 +142,19 @@
       "name": "channelsEnabled",
       "type": "boolean",
       "optional": true,
-      "describe": "Teams/Enterprise opt-in for channel notifications (MCP servers with the claude/channel capability pushing inbound messages). Default off. Set true to allow; users then select servers via --channels."
+      "describe": "(Teams/Enterprise) Opt-in for channel notifications — MCP servers with the claude/channel capability pushing inbound messages. Default off. When true, users can select servers via --channels. See https://code.claude.com/docs/en/mcp"
     },
     {
       "name": "claudeMdExcludes",
       "type": "array",
       "optional": true,
-      "describe": "Glob patterns for CLAUDE.md files to exclude from loading. Useful in monorepos to skip irrelevant instructions from other teams. Patterns match against absolute file paths. Arrays merge across settings layers. Managed policy CLAUDE.md files cannot be excluded. See https://code.claude.com/docs/en/memory#exclude-specific-claudemd-files"
+      "describe": "Glob patterns for CLAUDE.md files to exclude from loading. Useful in monorepos to skip irrelevant instructions from other teams. Patterns match against absolute file paths. Arrays merge across settings layers. Managed policy CLAUDE.md files cannot be excluded. See https://code.claude.com/docs/en/memory#exclude-specific-claude-md-files"
     },
     {
       "name": "cleanupPeriodDays",
       "type": "integer",
       "optional": true,
-      "describe": "Number of days to retain chat transcripts (0 to disable cleanup)"
+      "describe": "Number of days to retain sessions, orphaned subagent worktrees, tasks, shell snapshots, and backups. Minimum is 1; setting 0 is rejected with a validation error. See https://code.claude.com/docs/en/settings"
     },
     {
       "name": "companyAnnouncements",
@@ -164,7 +170,7 @@
         "bash",
         "powershell"
       ],
-      "describe": "Default shell for input-box ! commands. Defaults to 'bash' on all platforms (no Windows auto-flip)."
+      "describe": "Default shell for input-box ! commands. Default: bash. Using \"powershell\" routes ! commands through PowerShell on Windows and requires CLAUDE_CODE_USE_POWERSHELL_TOOL=1 with pwsh on PATH. See https://code.claude.com/docs/en/settings"
     },
     {
       "name": "deniedMcpServers",
@@ -188,6 +194,15 @@
       "describe": "Disable auto mode"
     },
     {
+      "name": "disableDeepLinkRegistration",
+      "type": "enum",
+      "optional": true,
+      "enumValues": [
+        "disable"
+      ],
+      "describe": "Set to \"disable\" to prevent Claude Code from registering the `claude://` deep-link protocol handler on startup. Most useful in managed settings where users cannot override it. See https://code.claude.com/docs/en/settings"
+    },
+    {
       "name": "disabledMcpjsonServers",
       "type": "array",
       "optional": true,
@@ -197,7 +212,7 @@
       "name": "disableSkillShellExecution",
       "type": "boolean",
       "optional": true,
-      "describe": "Disable inline shell execution in skills and custom slash commands from user, project, or plugin sources. Commands are replaced with a placeholder instead of being run."
+      "describe": "Disable inline shell execution for `` !`...` `` and ` ```! ` blocks in skills and custom slash commands from user, project, plugin, or additional-directory sources. Commands are replaced with [shell command execution disabled by policy] instead of being run. Bundled and managed skills are not affected. Most useful in managed settings where users cannot override it. See https://code.claude.com/docs/en/settings"
     },
     {
       "name": "effortLevel",
@@ -207,9 +222,10 @@
         "low",
         "medium",
         "high",
-        "xhigh"
+        "xhigh",
+        "max"
       ],
-      "describe": "Control Opus 4.6 adaptive reasoning effort. Lower effort is faster and cheaper for straightforward tasks, higher effort provides deeper reasoning. Defaults vary by model and plan (Opus 4.6 defaults to medium for Max and Team subscribers). Use /effort auto to reset to model default. Also configurable via CLAUDE_CODE_EFFORT_LEVEL environment variable. See https://code.claude.com/docs/en/model-config#adjust-effort-level"
+      "describe": "Persist adaptive reasoning effort across sessions. Effort is supported on Opus 4.7, Opus 4.6, and Sonnet 4.6. Opus 4.7 supports low/medium/high/xhigh/max (xhigh sits between high and max, added in v2.1.111); Opus 4.6 and Sonnet 4.6 support low/medium/high/max (xhigh falls back to high). Defaults: Opus 4.6 and Sonnet 4.6 default to high on all plans (Pro/Max raised from medium to high in v2.1.117); Opus 4.7 defaults to xhigh on Max plan. The max value is session-only unless set via CLAUDE_CODE_EFFORT_LEVEL. Use /effort auto to reset to model default. Also configurable via CLAUDE_CODE_EFFORT_LEVEL environment variable. See https://code.claude.com/docs/en/model-config#adjust-effort-level"
     },
     {
       "name": "enableAllProjectMcpServers",
@@ -285,7 +301,7 @@
       "name": "forceRemoteSettingsRefresh",
       "type": "boolean",
       "optional": true,
-      "describe": "When set in managed settings, the CLI blocks startup until remote managed settings are freshly fetched, and exits if the fetch fails"
+      "describe": "(Managed settings only) Block CLI startup until remote managed settings are freshly fetched from the server. If the fetch fails, the CLI exits (fail-closed) rather than continuing with cached settings. When not set, startup continues without waiting for remote settings. See https://code.claude.com/docs/en/server-managed-settings"
     },
     {
       "name": "gcpAuthRefresh",
@@ -327,7 +343,7 @@
       "name": "minimumVersion",
       "type": "string",
       "optional": true,
-      "describe": "Minimum version to stay on - prevents downgrades when switching to stable channel"
+      "describe": "Minimum Claude Code version to stay on. Prevents downgrades when switching release channels. See https://code.claude.com/docs/en/settings"
     },
     {
       "name": "model",
@@ -357,7 +373,7 @@
       "name": "permissions",
       "type": "object",
       "optional": true,
-      "describe": "Tool usage permissions configuration.\nSee https://code.claude.com/docs/en/permissions and https://code.claude.com/docs/en/settings#permission-settings\nSee https://code.claude.com/docs/en/settings#tools-available-to-claude for full list of tools available to Claude."
+      "describe": "Tool usage permissions configuration.\nSee https://code.claude.com/docs/en/permissions and https://code.claude.com/docs/en/settings#permission-settings\nSee https://code.claude.com/docs/en/tools-reference for full list of tools available to Claude."
     },
     {
       "name": "plansDirectory",
@@ -369,7 +385,7 @@
       "name": "pluginConfigs",
       "type": "object",
       "optional": true,
-      "describe": "Per-plugin configuration including MCP server user configs, keyed by plugin ID (plugin@marketplace format). See https://code.claude.com/docs/en/plugins"
+      "describe": "Per-plugin configuration including MCP server user configs and plugin options, keyed by plugin ID (plugin@marketplace format). See https://code.claude.com/docs/en/plugins"
     },
     {
       "name": "pluginTrustMessage",
@@ -394,6 +410,12 @@
       "type": "string",
       "optional": true,
       "describe": "Shell command that outputs a Proxy-Authorization header value (EAP)"
+    },
+    {
+      "name": "prUrlTemplate",
+      "type": "string",
+      "optional": true,
+      "describe": "URL template for the PR badge shown in the footer and in tool-result summaries. Substitutes placeholders {host}, {owner}, {repo}, {number}, {url} from the gh-reported PR URL. Use this to point PR links at an internal code-review tool instead of github.com. Does not affect #123 autolinks in Claude's prose. See https://code.claude.com/docs/en/settings"
     },
     {
       "name": "remote",
@@ -423,7 +445,7 @@
       "name": "showThinkingSummaries",
       "type": "boolean",
       "optional": true,
-      "describe": "Show thinking summaries in the transcript view (ctrl+o). Default: false."
+      "describe": "Show thinking summaries in the transcript view (Ctrl+O). Thinking summaries are not generated by default in interactive sessions; set to true to restore. See https://code.claude.com/docs/en/settings"
     },
     {
       "name": "showTurnDuration",
@@ -453,7 +475,7 @@
       "name": "skipDangerousModePermissionPrompt",
       "type": "boolean",
       "optional": true,
-      "describe": "Whether the user has accepted the bypass permissions mode dialog"
+      "describe": "Whether the user has accepted the bypass permissions mode dialog. Typically managed by the CLI rather than set by hand."
     },
     {
       "name": "skippedMarketplaces",
@@ -510,6 +532,12 @@
       "describe": "(Managed settings only) Allowlist of plugin marketplaces users can add. Undefined = no restrictions, empty array = lockdown. Uses exact matching for source specifications. See https://code.claude.com/docs/en/settings#strictknownmarketplaces"
     },
     {
+      "name": "strictPluginOnlyCustomization",
+      "type": "ref",
+      "optional": true,
+      "describe": "(Managed settings) Block non-plugin customization sources for the listed surfaces. Array form locks specific surfaces (e.g., [\"skills\", \"hooks\"]); true locks all four; false is an explicit no-op. See https://code.claude.com/docs/en/plugins-reference"
+    },
+    {
       "name": "subagentStatusLine",
       "type": "object",
       "optional": true,
@@ -549,10 +577,16 @@
       "type": "enum",
       "optional": true,
       "enumValues": [
-        "default",
-        "fullscreen"
+        "fullscreen",
+        "default"
       ],
-      "describe": "Terminal UI renderer. \"fullscreen\" uses the flicker-free alt-screen renderer with virtualized scrollback (equivalent to CLAUDE_CODE_NO_FLICKER=1). \"default\" uses the classic main-screen renderer."
+      "describe": "TUI rendering mode. Use \"fullscreen\" for the flicker-free alt-screen renderer with virtualized scrollback; \"default\" for the classic main-screen renderer. Corresponds to the /tui command. See https://code.claude.com/docs/en/settings"
+    },
+    {
+      "name": "useAutoModeDuringPlan",
+      "type": "boolean",
+      "optional": true,
+      "describe": "When true, apply the auto mode classifier during plan mode to auto-approve safe read-only tool calls while planning. Has no effect unless permissions.defaultMode allows auto. See https://code.claude.com/docs/en/permissions"
     },
     {
       "name": "viewMode",
@@ -563,7 +597,7 @@
         "verbose",
         "focus"
       ],
-      "describe": "Default transcript view mode on startup"
+      "describe": "Transcript view mode. \"default\" shows standard interactive view; \"verbose\" shows expanded tool details; \"focus\" shows prompt, one-line tool summaries, and final response only (Ctrl+O toggle). See https://code.claude.com/docs/en/settings"
     },
     {
       "name": "voice",
@@ -572,10 +606,22 @@
       "describe": "@internal Voice handsfree settings; behavior gated at read sites by feature(VOICE_HANDSFREE). Hidden from public SDK types until external launch; see TODO on voiceEnabled in entitlements.ts."
     },
     {
+      "name": "voiceEnabled",
+      "type": "boolean",
+      "optional": true,
+      "describe": "Enable push-to-talk voice dictation. Typically written automatically when /voice is used. Requires a Claude.ai account. See https://code.claude.com/docs/en/settings"
+    },
+    {
       "name": "worktree",
       "type": "object",
       "optional": true,
       "describe": "Configuration for --worktree sessions. See https://code.claude.com/docs/en/settings"
+    },
+    {
+      "name": "wslInheritsWindowsSettings",
+      "type": "boolean",
+      "optional": true,
+      "describe": "(Windows managed settings only) When true, Claude Code on WSL reads managed settings from the Windows policy chain in addition to /etc/claude-code, with Windows sources taking priority. Only honored when set in the HKLM registry key or C:\\Program Files\\ClaudeCode\\managed-settings.json, both of which require Windows admin to write. For HKCU policy to also apply on WSL, the flag must additionally be set in HKCU itself. Has no effect on native Windows. See https://code.claude.com/docs/en/settings"
     }
   ],
   "globalFields": [

@@ -1,6 +1,6 @@
 {
   "_comment": "Settings fields that are real (Category A) or internal (Category B) per docs/schema-triage-2026-04-27.md but not yet in https://json.schemastore.org/claude-code-settings.json. When schemastore catches up, remove the field from this list. Refresh process: re-extract from cli.js when an old @anthropic-ai/claude-code version is available, or update entries by hand when the schema field is observed in the wild.",
-  "lastReviewed": "2026-04-27",
+  "lastReviewed": "2026-04-28",
   "sourceVersion": "2.1.112",
   "settingsFields": [
     {
@@ -8,18 +8,6 @@
       "type": "string",
       "optional": true,
       "describe": "Advisor model for the server-side advisor tool."
-    },
-    {
-      "name": "agent",
-      "type": "string",
-      "optional": true,
-      "describe": "Name of an agent (built-in or custom) to use for the main thread. Applies the agent's system prompt, tool restrictions, and model."
-    },
-    {
-      "name": "allowedChannelPlugins",
-      "type": "array",
-      "optional": true,
-      "describe": "Teams/Enterprise allowlist of channel plugins. When set, "
     },
     {
       "name": "autoCompactWindow",
@@ -34,32 +22,10 @@
       "describe": "Enable background memory consolidation (auto-dream). When set, overrides the server-side default."
     },
     {
-      "name": "autoMemoryDirectory",
-      "type": "string",
-      "optional": true,
-      "describe": "Custom directory path for auto-memory storage. Supports ~/ prefix for home directory expansion. Ignored if set in projectSettings (checked-in .claude/settings.json) for security. When unset, defaults to ~/.claude/projects/<sanitized-cwd>/memory/."
-    },
-    {
       "name": "awaySummaryEnabled",
       "type": "boolean",
       "optional": true,
       "describe": "@internal When false, the session recap (shown when you return after being away for 5+ minutes) is disabled. When absent or true, recap is enabled. Hidden from public SDK types until external launch; mirrors voiceHandsfree pattern above."
-    },
-    {
-      "name": "channelsEnabled",
-      "type": "boolean",
-      "optional": true,
-      "describe": "Teams/Enterprise opt-in for channel notifications (MCP servers with the claude/channel capability pushing inbound messages). Default off. Set true to allow; users then select servers via --channels."
-    },
-    {
-      "name": "defaultShell",
-      "type": "enum",
-      "optional": true,
-      "enumValues": [
-        "bash",
-        "powershell"
-      ],
-      "describe": "Default shell for input-box ! commands. Defaults to 'bash' on all platforms (no Windows auto-flip)."
     },
     {
       "name": "disableAutoMode",
@@ -71,28 +37,10 @@
       "describe": "Disable auto mode"
     },
     {
-      "name": "disableSkillShellExecution",
-      "type": "boolean",
-      "optional": true,
-      "describe": "Disable inline shell execution in skills and custom slash commands from user, project, or plugin sources. Commands are replaced with a placeholder instead of being run."
-    },
-    {
-      "name": "forceRemoteSettingsRefresh",
-      "type": "boolean",
-      "optional": true,
-      "describe": "When set in managed settings, the CLI blocks startup until remote managed settings are freshly fetched, and exits if the fetch fails"
-    },
-    {
       "name": "gcpAuthRefresh",
       "type": "string",
       "optional": true,
       "describe": "Command to refresh GCP authentication (e.g., gcloud auth application-default login)"
-    },
-    {
-      "name": "minimumVersion",
-      "type": "string",
-      "optional": true,
-      "describe": "Minimum version to stay on - prevents downgrades when switching to stable channel"
     },
     {
       "name": "promptSuggestionEnabled",
@@ -113,18 +61,6 @@
       "describe": "Remote session configuration"
     },
     {
-      "name": "showClearContextOnPlanAccept",
-      "type": "boolean",
-      "optional": true,
-      "describe": "When true, the plan-approval dialog offers a \"clear context\" option. Defaults to false."
-    },
-    {
-      "name": "showThinkingSummaries",
-      "type": "boolean",
-      "optional": true,
-      "describe": "Show thinking summaries in the transcript view (ctrl+o). Default: false."
-    },
-    {
       "name": "skillListingBudgetFraction",
       "type": "number",
       "optional": true,
@@ -141,12 +77,6 @@
       "type": "record",
       "optional": true,
       "describe": "Per-skill listing overrides keyed by skill name. \"name-only\" lists the skill without its description; \"user-invocable-only\" hides it from the model but keeps /name; \"off\" hides it from both. Absent = on."
-    },
-    {
-      "name": "skipDangerousModePermissionPrompt",
-      "type": "boolean",
-      "optional": true,
-      "describe": "Whether the user has accepted the bypass permissions mode dialog"
     },
     {
       "name": "sshConfigs",
@@ -171,27 +101,6 @@
       "type": "boolean",
       "optional": true,
       "describe": "Whether /rename updates the terminal tab title (defaults to true). Set to false to keep auto-generated topic titles."
-    },
-    {
-      "name": "tui",
-      "type": "enum",
-      "optional": true,
-      "enumValues": [
-        "default",
-        "fullscreen"
-      ],
-      "describe": "Terminal UI renderer. \"fullscreen\" uses the flicker-free alt-screen renderer with virtualized scrollback (equivalent to CLAUDE_CODE_NO_FLICKER=1). \"default\" uses the classic main-screen renderer."
-    },
-    {
-      "name": "viewMode",
-      "type": "enum",
-      "optional": true,
-      "enumValues": [
-        "default",
-        "verbose",
-        "focus"
-      ],
-      "describe": "Default transcript view mode on startup"
     },
     {
       "name": "voice",

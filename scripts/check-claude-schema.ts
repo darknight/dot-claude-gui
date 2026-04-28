@@ -59,8 +59,8 @@ function diffFields(prev: Field[], next: Field[], label: string): string[] {
       if (before.type !== f.type) {
         lines.push(`~ [${label}] ${name} type: ${before.type} → ${f.type}`);
       }
-      const beforeEnum = JSON.stringify(before.enumValues ?? []);
-      const afterEnum = JSON.stringify(f.enumValues ?? []);
+      const beforeEnum = JSON.stringify([...(before.enumValues ?? [])].sort());
+      const afterEnum = JSON.stringify([...(f.enumValues ?? [])].sort());
       if (beforeEnum !== afterEnum) {
         lines.push(`~ [${label}] ${name} enum: ${beforeEnum} → ${afterEnum}`);
       }
