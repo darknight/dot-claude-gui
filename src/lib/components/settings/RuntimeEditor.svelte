@@ -31,6 +31,14 @@
     (settings.terminalProgressBarEnabled as boolean | undefined) ?? true,
   );
   let teammateMode = $state((settings.teammateMode as string) ?? "");
+  let useAutoModeDuringPlan = $state(
+    (settings.useAutoModeDuringPlan as boolean) ?? false,
+  );
+  let voiceEnabled = $state((settings.voiceEnabled as boolean) ?? false);
+  let wslInheritsWindowsSettings = $state(
+    (settings.wslInheritsWindowsSettings as boolean) ?? false,
+  );
+  let prUrlTemplate = $state((settings.prUrlTemplate as string) ?? "");
 
   $effect(() => {
     model = (settings.model as string) ?? "";
@@ -47,6 +55,11 @@
     terminalProgressBarEnabled =
       (settings.terminalProgressBarEnabled as boolean | undefined) ?? true;
     teammateMode = (settings.teammateMode as string) ?? "";
+    useAutoModeDuringPlan = (settings.useAutoModeDuringPlan as boolean) ?? false;
+    voiceEnabled = (settings.voiceEnabled as boolean) ?? false;
+    wslInheritsWindowsSettings =
+      (settings.wslInheritsWindowsSettings as boolean) ?? false;
+    prUrlTemplate = (settings.prUrlTemplate as string) ?? "";
   });
 
   const modelDirty = $derived(model !== ((settings.model as string) ?? ""));
@@ -87,6 +100,20 @@
   const teammateModeDirty = $derived(
     teammateMode !== ((settings.teammateMode as string) ?? ""),
   );
+  const useAutoModeDuringPlanDirty = $derived(
+    useAutoModeDuringPlan !==
+      ((settings.useAutoModeDuringPlan as boolean) ?? false),
+  );
+  const voiceEnabledDirty = $derived(
+    voiceEnabled !== ((settings.voiceEnabled as boolean) ?? false),
+  );
+  const wslInheritsDirty = $derived(
+    wslInheritsWindowsSettings !==
+      ((settings.wslInheritsWindowsSettings as boolean) ?? false),
+  );
+  const prUrlTemplateDirty = $derived(
+    prUrlTemplate !== ((settings.prUrlTemplate as string) ?? ""),
+  );
 
   function parseAvailableModels(): string[] | undefined {
     const lines = availableModelsText
@@ -109,6 +136,10 @@
     showTurnDuration,
     terminalProgressBarEnabled,
     teammateMode: teammateMode || undefined,
+    useAutoModeDuringPlan,
+    voiceEnabled,
+    wslInheritsWindowsSettings,
+    prUrlTemplate: prUrlTemplate || undefined,
     availableModels: parseAvailableModels(),
     autoCompactWindow: parsedWindow(),
     showClearContextOnPlanAccept,
@@ -124,6 +155,10 @@
       showTurnDuration,
       terminalProgressBarEnabled,
       teammateMode: teammateMode || undefined,
+      useAutoModeDuringPlan,
+      voiceEnabled,
+      wslInheritsWindowsSettings,
+      prUrlTemplate: prUrlTemplate || undefined,
       availableModels: parseAvailableModels(),
       autoCompactWindow: parsedWindow(),
       showClearContextOnPlanAccept,
@@ -269,6 +304,53 @@
       <option value="in-process">in-process</option>
       <option value="tmux">tmux</option>
     </select>
+  </div>
+
+  <label class="flex items-center gap-3 cursor-pointer">
+    <input type="checkbox" bind:checked={useAutoModeDuringPlan}
+           onchange={() => configStore.markDirty()}
+           class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+    <span class="text-sm" style="color: var(--text-secondary)"
+          title={t("settings.fields.useAutoModeDuringPlan.tooltip")}>
+      {t("settings.fields.useAutoModeDuringPlan.label")}
+      <DirtyDot dirty={useAutoModeDuringPlanDirty} />
+    </span>
+  </label>
+
+  <label class="flex items-center gap-3 cursor-pointer">
+    <input type="checkbox" bind:checked={voiceEnabled}
+           onchange={() => configStore.markDirty()}
+           class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+    <span class="text-sm" style="color: var(--text-secondary)"
+          title={t("settings.fields.voiceEnabled.tooltip")}>
+      {t("settings.fields.voiceEnabled.label")}
+      <DirtyDot dirty={voiceEnabledDirty} />
+    </span>
+  </label>
+
+  <label class="flex items-center gap-3 cursor-pointer">
+    <input type="checkbox" bind:checked={wslInheritsWindowsSettings}
+           onchange={() => configStore.markDirty()}
+           class="h-4 w-4 rounded" style="accent-color: var(--accent-primary)" />
+    <span class="text-sm" style="color: var(--text-secondary)"
+          title={t("settings.fields.wslInheritsWindowsSettings.tooltip")}>
+      {t("settings.fields.wslInheritsWindowsSettings.label")}
+      <DirtyDot dirty={wslInheritsDirty} />
+    </span>
+  </label>
+
+  <div class="space-y-1">
+    <label for="prUrlTemplate" class="block text-sm font-medium"
+           style="color: var(--text-secondary)"
+           title={t("settings.fields.prUrlTemplate.tooltip")}>
+      {t("settings.fields.prUrlTemplate.label")}
+      <DirtyDot dirty={prUrlTemplateDirty} />
+    </label>
+    <input id="prUrlTemplate" type="text"
+           bind:value={prUrlTemplate}
+           oninput={() => configStore.markDirty()}
+           placeholder="https://reviews.example.com/{owner}/{repo}/pull/{number}"
+           class="input-base font-mono text-xs" />
   </div>
 
   <div class="flex gap-2 pt-4 border-t" style="border-color: var(--border-color)">

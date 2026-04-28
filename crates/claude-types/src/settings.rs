@@ -85,6 +85,21 @@ pub struct Settings {
     pub teammate_mode: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub use_auto_mode_during_plan: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub voice_enabled: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub wsl_inherits_windows_settings: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pr_url_template: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub strict_plugin_only_customization: Option<serde_json::Value>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub available_models: Option<Vec<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -578,6 +593,10 @@ mod tests {
             "showTurnDuration",
             "terminalProgressBarEnabled",
             "teammateMode",
+            "useAutoModeDuringPlan",
+            "voiceEnabled",
+            "wslInheritsWindowsSettings",
+            "prUrlTemplate",
             "availableModels",
             "autoCompactWindow",
             "showClearContextOnPlanAccept",
@@ -641,6 +660,7 @@ mod tests {
             "spinnerVerbs",
             "spinnerTipsOverride",
             "remote",
+            "strictPluginOnlyCustomization",
         ];
 
         // 在后续里程碑中添加字段时，从 `skipped` 列表移除并加到 `modeled`。
@@ -653,9 +673,6 @@ mod tests {
             // Extra long-tail picked up by snapshot extraction (M8 will handle):
             "schema", "defaultShell", "disableAutoMode", "proxyAuthHelper",
             "spinnerTipsEnabled", "sshConfigs", "viewMode",
-            // Schemastore catch-up 2026-04-28; deferred for future modeling.
-            "prUrlTemplate", "strictPluginOnlyCustomization",
-            "useAutoModeDuringPlan", "voiceEnabled", "wslInheritsWindowsSettings",
         ];
 
         let missing: Vec<&String> = fields
@@ -696,6 +713,10 @@ mod tests {
             "showTurnDuration": false,
             "terminalProgressBarEnabled": false,
             "teammateMode": "tmux",
+            "useAutoModeDuringPlan": true,
+            "voiceEnabled": false,
+            "wslInheritsWindowsSettings": false,
+            "prUrlTemplate": "https://r.example.com/{owner}/{repo}/pull/{number}",
             "availableModels": ["sonnet", "opus"],
             "autoCompactWindow": 200000,
             "showClearContextOnPlanAccept": true,
@@ -709,6 +730,13 @@ mod tests {
         assert_eq!(s.show_turn_duration, Some(false));
         assert_eq!(s.terminal_progress_bar_enabled, Some(false));
         assert_eq!(s.teammate_mode.as_deref(), Some("tmux"));
+        assert_eq!(s.use_auto_mode_during_plan, Some(true));
+        assert_eq!(s.voice_enabled, Some(false));
+        assert_eq!(s.wsl_inherits_windows_settings, Some(false));
+        assert_eq!(
+            s.pr_url_template.as_deref(),
+            Some("https://r.example.com/{owner}/{repo}/pull/{number}")
+        );
         assert_eq!(
             s.available_models.as_ref().map(Vec::as_slice),
             Some(&["sonnet".to_string(), "opus".to_string()][..])
@@ -724,6 +752,10 @@ mod tests {
             "showTurnDuration",
             "terminalProgressBarEnabled",
             "teammateMode",
+            "useAutoModeDuringPlan",
+            "voiceEnabled",
+            "wslInheritsWindowsSettings",
+            "prUrlTemplate",
             "availableModels",
             "autoCompactWindow",
             "showClearContextOnPlanAccept",

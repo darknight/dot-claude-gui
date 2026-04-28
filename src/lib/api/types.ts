@@ -32,6 +32,13 @@ export interface Settings {
   showTurnDuration?: boolean;
   terminalProgressBarEnabled?: boolean;
   teammateMode?: "auto" | "in-process" | "tmux";
+  useAutoModeDuringPlan?: boolean;
+  voiceEnabled?: boolean;
+  wslInheritsWindowsSettings?: boolean;
+  prUrlTemplate?: string;
+  strictPluginOnlyCustomization?:
+    | boolean
+    | Array<"skills" | "agents" | "hooks" | "mcp">;
   availableModels?: string[];
   autoCompactWindow?: number;
   showClearContextOnPlanAccept?: boolean;
