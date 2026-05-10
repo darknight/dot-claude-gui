@@ -9,6 +9,9 @@ class AppSettingsStore {
     fontSize: 14,
     sidebarWidth: 140,
     subpanelWidth: 240,
+    preferredTerminal: "terminal",
+    launcherProjectEnv: {},
+    accounts: [],
   });
 
   loaded = $state(false);

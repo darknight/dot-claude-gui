@@ -5,6 +5,8 @@
   import { pluginsStore } from "$lib/stores/plugins.svelte";
   import { skillsStore } from "$lib/stores/skills.svelte";
   import { memoryStore } from "$lib/stores/memory.svelte";
+  import { launcherStore } from "$lib/stores/launcher.svelte";
+  import { accountsStore } from "$lib/stores/accounts.svelte";
   import { mcpStore } from "$lib/stores/mcp.svelte";
   import { appSettingsStore } from "$lib/stores/appsettings.svelte";
   import { onConfigChanged } from "$lib/ipc/events.js";
@@ -19,6 +21,8 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   import McpModule from "$lib/components/mcp/McpModule.svelte";
   import EffectiveConfigView from "$lib/components/effective/EffectiveConfigView.svelte";
   import LauncherView from "$lib/components/launcher/LauncherView.svelte";
+  import LauncherList from "$lib/components/launcher/LauncherList.svelte";
+  import AccountsView from "$lib/components/accounts/AccountsView.svelte";
   import AppSettingsView from "$lib/components/appsettings/AppSettingsView.svelte";
   import ClaudeMdList from "$lib/components/claudemd/ClaudeMdList.svelte";
   import ClaudeMdModule from "$lib/components/claudemd/ClaudeMdModule.svelte";
@@ -80,6 +84,7 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
     { id: "C", labelKey: "nav.mcp", icon: "M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 0 6h13.5a3 3 0 1 0 0-6m-16.5-3a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3m-19.5 0a4.5 4.5 0 0 1 .9-2.7L5.737 5.1a3.375 3.375 0 0 1 2.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 0 1 .9 2.7m0 0h.375a2.625 2.625 0 0 1 0 5.25H17.25m-13.5-5.25H3.375a2.625 2.625 0 0 0 0 5.25H6.75m0-5.25v5.25m11.25-5.25v5.25" },
     { id: "E", labelKey: "nav.effective", icon: "M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" },
     { id: "L", labelKey: "nav.launcher", icon: "M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" },
+    { id: "U", labelKey: "nav.accounts", icon: "M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" },
   ] satisfies { id: string; labelKey: MessageKey; icon: string }[];
 
   // App Settings is kept separate (bottom of sidebar)
@@ -152,6 +157,8 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
         memoryStore.loadProjects(),
         mcpStore.loadServers(),
         claudeMdStore.loadFiles(),
+        launcherStore.loadClaudeArgs(),
+        accountsStore.loadAccounts(),
       ]);
 
       // Subscribe to config-changed events pushed from backend file watcher
@@ -371,9 +378,12 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
             <p class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("nav.mergedConfigHint")}</p>
           </div>
         {:else if activeNav === "L"}
-          <!-- Launcher: no sub-navigation needed -->
+          <!-- Launcher sub-panel: project list -->
+          <LauncherList />
+        {:else if activeNav === "U"}
+          <!-- Accounts: no sub-navigation needed -->
           <div class="flex-1 overflow-y-auto py-2">
-            <p class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("nav.launcherHint")}</p>
+            <p class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("nav.accountsHint")}</p>
           </div>
         {:else if activeNav === "A"}
           <!-- App Settings sub-navigation -->
@@ -470,6 +480,10 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
           {:else if activeNav === "L"}
             <!-- Launcher module -->
             <LauncherView />
+
+          {:else if activeNav === "U"}
+            <!-- Accounts module -->
+            <AccountsView />
 
           {:else}
             <div class="flex flex-1 items-center justify-center">

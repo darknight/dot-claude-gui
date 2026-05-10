@@ -44,7 +44,15 @@ pub struct AddMcpServerRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LaunchRequest {
-    pub project_path: String,
+    /// Working directory to `cd` into before running `claude`. None means run in
+    /// the terminal's default cwd (~), used for non-project flows like OAuth login.
+    #[serde(default)]
+    pub project_path: Option<String>,
     #[serde(default)]
     pub env: HashMap<String, String>,
+    #[serde(default)]
+    pub args: Vec<String>,
+    /// Preferred terminal app: "terminal" (default), "iterm2", or None for default.
+    #[serde(default)]
+    pub preferred_terminal: Option<String>,
 }

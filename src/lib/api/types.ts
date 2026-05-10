@@ -409,8 +409,50 @@ export interface AddMcpServerRequest {
 // ---------------------------------------------------------------------------
 
 export interface LaunchRequest {
-  projectPath: string;
+  /** Working directory to cd into. Omit to run in the terminal's default cwd (e.g. ~) — used for non-project flows like OAuth. */
+  projectPath?: string;
   env?: Record<string, string>;
+  args?: string[];
+  preferredTerminal?: PreferredTerminal;
+}
+
+export type PreferredTerminal = "terminal" | "iterm2";
+
+export interface LauncherEnvEntry {
+  key: string;
+  value: string;
+  enabled: boolean;
+}
+
+export interface LauncherArgEntry {
+  flag: string;
+  value?: string;
+  enabled: boolean;
+}
+
+export interface LauncherProjectEnv {
+  customEnv: LauncherEnvEntry[];
+  customArgs: LauncherArgEntry[];
+  /** Name of the account whose home dir to inject as CLAUDE_CONFIG_DIR. undefined = native ~/.claude/. */
+  accountName?: string;
+}
+
+export interface Account {
+  name: string;
+  /** ISO 8601 timestamp. */
+  createdAt: string;
+}
+
+export interface DiskAccount {
+  name: string;
+  /** Unix seconds (UTC). */
+  createdAtUnix: number;
+}
+
+export interface AccountStatus {
+  loggedIn: boolean;
+  /** OAuth account email, present iff loggedIn. */
+  email?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -437,4 +479,9 @@ export interface AppConfig {
   fontSize: number;
   sidebarWidth: number;
   subpanelWidth: number;
+  preferredTerminal?: PreferredTerminal;
+  /** Per-project launcher state, keyed by absolute project path. */
+  launcherProjectEnv?: Record<string, LauncherProjectEnv>;
+  /** GUI-managed Claude accounts. Each maps to ~/.dot-claude-gui/accounts/<name>/. */
+  accounts?: Account[];
 }

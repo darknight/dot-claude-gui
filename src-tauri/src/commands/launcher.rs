@@ -12,50 +12,92 @@ use crate::state::AppState;
 // ---------------------------------------------------------------------------
 
 pub(crate) fn launch_claude_logic(req: LaunchRequest) -> Result<serde_json::Value, String> {
-    let project_path = std::path::PathBuf::from(&req.project_path);
-    if !project_path.exists() {
-        return Err(format!("invalid_path: {}", req.project_path));
+    if let Some(p) = &req.project_path {
+        if !std::path::PathBuf::from(p).exists() {
+            return Err(format!("invalid_path: {}", p));
+        }
     }
 
     #[cfg(target_os = "macos")]
     {
-        // Build `KEY='VAL' KEY2='VAL2' ...` env prefix, escaping single quotes.
-        let env_prefix = req
-            .env
-            .iter()
-            .map(|(k, v)| format!("{}='{}'", k, v.replace('\'', "'\\''")))
-            .collect::<Vec<_>>()
-            .join(" ");
+        let terminal = req.preferred_terminal.as_deref().unwrap_or("terminal");
+        let osa_script = build_osa_script(terminal, req.project_path.as_deref(), &req.env, &req.args);
 
-        let path_escaped = req.project_path.replace('\'', "'\\''");
-        let shell_cmd = if env_prefix.is_empty() {
-            format!("cd '{}' && claude", path_escaped)
-        } else {
-            format!("cd '{}' && {} claude", path_escaped, env_prefix)
-        };
-
-        // AppleScript needs `\` and `"` inside the do script string escaped.
-        let script_arg = shell_cmd.replace('\\', "\\\\").replace('"', "\\\"");
-        let osa_script = format!(
-            "tell application \"Terminal\"\n  activate\n  do script \"{}\"\nend tell",
-            script_arg
-        );
-
-        Command::new("osascript")
+        let output = Command::new("osascript")
             .args(["-e", &osa_script])
-            .spawn()
+            .output()
             .map_err(|e| format!("spawn osascript: {e}"))?;
 
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("launch_failed: {}", stderr.trim()));
+        }
+
+        let terminal_name = match terminal {
+            "iterm2" => "iTerm",
+            _ => "Terminal.app",
+        };
         return Ok(json!({
             "status": "launched",
             "projectPath": req.project_path,
-            "terminal": "Terminal.app",
+            "terminal": terminal_name,
         }));
     }
 
     #[cfg(not(target_os = "macos"))]
     {
+        let _ = req;
         Err("launch_unsupported: only macOS is supported for now".to_string())
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn build_osa_script(
+    terminal: &str,
+    project_path: Option<&str>,
+    env: &std::collections::HashMap<String, String>,
+    args: &[String],
+) -> String {
+    // Build `KEY='VAL' KEY2='VAL2' ...` env prefix, escaping single quotes.
+    let env_prefix = env
+        .iter()
+        .map(|(k, v)| format!("{}='{}'", k, v.replace('\'', "'\\''")))
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    // Append CLI args, each single-quote-escaped.
+    let args_suffix = if args.is_empty() {
+        String::new()
+    } else {
+        let escaped: Vec<String> = args
+            .iter()
+            .map(|a| format!("'{}'", a.replace('\'', "'\\''")))
+            .collect();
+        format!(" {}", escaped.join(" "))
+    };
+
+    let cd_prefix = match project_path {
+        Some(p) => format!("cd '{}' && ", p.replace('\'', "'\\''")),
+        None => String::new(),
+    };
+    let shell_cmd = if env_prefix.is_empty() {
+        format!("{}claude{}", cd_prefix, args_suffix)
+    } else {
+        format!("{}{} claude{}", cd_prefix, env_prefix, args_suffix)
+    };
+
+    // AppleScript needs `\` and `"` inside string literals escaped.
+    let script_arg = shell_cmd.replace('\\', "\\\\").replace('"', "\\\"");
+
+    match terminal {
+        "iterm2" => format!(
+            "tell application \"iTerm\"\n  activate\n  create window with default profile\n  tell current session of current window to write text \"{}\"\nend tell",
+            script_arg
+        ),
+        _ => format!(
+            "tell application \"Terminal\"\n  activate\n  do script \"{}\"\nend tell",
+            script_arg
+        ),
     }
 }
 
@@ -65,6 +107,18 @@ pub fn launch_claude(
     req: LaunchRequest,
 ) -> Result<serde_json::Value, String> {
     launch_claude_logic(req)
+}
+
+#[tauri::command]
+pub fn get_claude_args() -> Result<String, String> {
+    let output = Command::new("claude")
+        .arg("--help")
+        .output()
+        .map_err(|e| format!("spawn_claude: {e}"))?;
+    if !output.status.success() {
+        return Err(format!("claude_help_failed: exit {}", output.status));
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
 }
 
 // ---------------------------------------------------------------------------
@@ -79,10 +133,95 @@ mod tests {
     #[test]
     fn launch_rejects_nonexistent_path() {
         let req = LaunchRequest {
-            project_path: "/nonexistent/path/xyz-12345".to_string(),
+            project_path: Some("/nonexistent/path/xyz-12345".to_string()),
             env: HashMap::new(),
+            args: vec![],
+            preferred_terminal: None,
         };
         let err = launch_claude_logic(req).unwrap_err();
         assert!(err.starts_with("invalid_path:"));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn osa_script_defaults_to_terminal_app() {
+        let env = HashMap::new();
+        let script = build_osa_script("terminal", Some("/tmp"), &env, &[]);
+        assert!(script.contains("tell application \"Terminal\""));
+        assert!(script.contains("do script"));
+        assert!(script.contains("cd '/tmp' && claude"));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn osa_script_uses_iterm_for_iterm2() {
+        let env = HashMap::new();
+        let script = build_osa_script("iterm2", Some("/tmp"), &env, &[]);
+        assert!(script.contains("tell application \"iTerm\""));
+        assert!(script.contains("create window with default profile"));
+        assert!(script.contains("write text"));
+        assert!(!script.contains("tell application \"Terminal\""));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn osa_script_unknown_terminal_falls_back_to_terminal_app() {
+        let env = HashMap::new();
+        let script = build_osa_script("warp", Some("/tmp"), &env, &[]);
+        assert!(script.contains("tell application \"Terminal\""));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn osa_script_includes_env_prefix() {
+        let mut env = HashMap::new();
+        env.insert("FOO".to_string(), "bar".to_string());
+        let script = build_osa_script("iterm2", Some("/tmp"), &env, &[]);
+        assert!(script.contains("FOO='bar'"));
+        assert!(script.contains("FOO='bar' claude"));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn osa_script_escapes_single_quotes_in_path() {
+        let env = HashMap::new();
+        let script = build_osa_script("terminal", Some("/tmp/it's"), &env, &[]);
+        // After shell-escape the path becomes  /tmp/it'\''s  (10 chars).
+        // After AppleScript-escape (\\ -> \\\\) it becomes  /tmp/it'\\''s  (11 chars).
+        // In a Rust string literal that's "/tmp/it'\\\\''s".
+        assert!(script.contains("/tmp/it'\\\\''s"));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn osa_script_appends_args() {
+        let env = HashMap::new();
+        let args = vec![
+            "--effort".to_string(),
+            "high".to_string(),
+            "--brief".to_string(),
+        ];
+        let script = build_osa_script("terminal", Some("/tmp"), &env, &args);
+        assert!(script.contains("claude '--effort' 'high' '--brief'"));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn osa_script_escapes_single_quotes_in_args() {
+        let env = HashMap::new();
+        let args = vec!["--name".to_string(), "it's".to_string()];
+        let script = build_osa_script("terminal", Some("/tmp"), &env, &args);
+        // it's -> it'\''s, then AppleScript escaped (\\ doubled) -> it'\\''s
+        assert!(script.contains("'it'\\\\''s'"));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn osa_script_omits_cd_when_no_project_path() {
+        let mut env = HashMap::new();
+        env.insert("CLAUDE_CONFIG_DIR".to_string(), "/foo".to_string());
+        let script = build_osa_script("terminal", None, &env, &["/login".to_string()]);
+        assert!(!script.contains("cd "));
+        assert!(script.contains("CLAUDE_CONFIG_DIR='/foo' claude '/login'"));
     }
 }

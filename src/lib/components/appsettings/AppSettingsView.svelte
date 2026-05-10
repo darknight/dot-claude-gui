@@ -45,4 +45,20 @@
       </select>
     </div>
   </section>
+
+  <section class="space-y-4">
+    <h2 class="text-lg font-medium" style="color: var(--text-primary)">{t("appsettings.launcher")}</h2>
+
+    <div>
+      <label class="block text-sm mb-1" style="color: var(--text-muted)">{t("appsettings.preferredTerminal")}</label>
+      <select
+        class="input-base w-auto"
+        value={appSettingsStore.preferences.preferredTerminal ?? "terminal"}
+        onchange={(e) => appSettingsStore.update({ preferredTerminal: (e.target as HTMLSelectElement).value as "terminal" | "iterm2" })}
+      >
+        <option value="terminal">{t("appsettings.terminalDefault")}</option>
+        <option value="iterm2">{t("appsettings.terminalIterm2")}</option>
+      </select>
+    </div>
+  </section>
 </div>

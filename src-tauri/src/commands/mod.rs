@@ -7,3 +7,4 @@ pub mod skills;
 pub mod claudemd;
 pub mod memory;
 pub mod launcher;
+pub mod accounts;

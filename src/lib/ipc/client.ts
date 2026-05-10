@@ -5,11 +5,13 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  AccountStatus,
   AddMcpServerRequest,
   AvailablePlugin,
   ClaudeMdFile,
   ClaudeMdFileDetail,
   ConfigResponse,
+  DiskAccount,
   EffectiveConfig,
   HealthResponse,
   LaunchRequest,
@@ -230,12 +232,39 @@ export class IpcClient {
     return call("delete_memory_file", { projectId, filename });
   }
 
-  // --- launcher (1) ---
+  // --- launcher (2) ---
 
   async launchClaude(req: LaunchRequest): Promise<{ status: string }> {
     // Rust: launch_claude(req: LaunchRequest) -> serde_json::Value
     // Value is { status: "launched", projectPath: "..." }
     return call("launch_claude", { req });
+  }
+
+  async getClaudeArgs(): Promise<string> {
+    // Rust: get_claude_args() -> String  (raw `claude --help` stdout)
+    return call("get_claude_args");
+  }
+
+  // --- accounts (4) ---
+
+  async listAccounts(): Promise<DiskAccount[]> {
+    return call("list_accounts");
+  }
+
+  async createAccount(name: string): Promise<DiskAccount> {
+    return call("create_account", { name });
+  }
+
+  async deleteAccount(name: string): Promise<void> {
+    return call("delete_account", { name });
+  }
+
+  async getAccountStatus(name: string): Promise<AccountStatus> {
+    return call("get_account_status", { name });
+  }
+
+  async getConfigDir(): Promise<string> {
+    return call("get_config_dir");
   }
 }
 
