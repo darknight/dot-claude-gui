@@ -587,4 +587,71 @@ mod tests {
         let cfg = read_config(&cfg_path).unwrap();
         assert!(cfg.accounts.iter().any(|a| a.name == "default"));
     }
+
+    /// One-off smoke test: copies the live user config to a tempdir and runs
+    /// migrate_at_startup against the copy. Run with:
+    ///   cargo test -p dot-claude-gui migration_real_config_smoke -- --ignored --nocapture
+    /// Does not touch the live config.
+    #[test]
+    #[ignore]
+    fn migration_real_config_smoke() {
+        let home = std::env::var("HOME").expect("HOME");
+        let live = std::path::Path::new(&home)
+            .join(".dot-claude-gui")
+            .join("config.json");
+        if !live.exists() {
+            eprintln!("no live config at {live:?} — skipping");
+            return;
+        }
+
+        let dir = tempfile::tempdir().unwrap();
+        let copy = dir.path().join("config.json");
+        std::fs::copy(&live, &copy).unwrap();
+
+        let native_exists = std::path::Path::new(&home).join(".claude").exists();
+        eprintln!("native_exists = {native_exists}");
+
+        let report = migrate_at_startup(&copy, native_exists).unwrap();
+        eprintln!("report: {report:?}");
+
+        let migrated = read_config(&copy).unwrap();
+        let pretty = serde_json::to_string_pretty(&migrated).unwrap();
+        eprintln!("migrated config:\n{pretty}");
+
+        // Assertions on shape
+        assert_eq!(migrated.schema_version, SCHEMA_VERSION, "must be v2");
+        assert!(report.migrated, "expected migration from v1");
+        assert!(report.bak_path.is_some(), "expected .bak file");
+        assert!(report.bak_path.as_ref().unwrap().exists(), "bak file must exist on disk");
+
+        // Default account presence (native exists on this machine)
+        if native_exists {
+            assert!(
+                migrated.accounts.iter().any(|a| a.name == DEFAULT_ACCOUNT_NAME && a.is_native),
+                "default native account should be injected"
+            );
+            assert!(
+                report.default_injected,
+                "default_injected should be true (had no default in v1)"
+            );
+        }
+
+        // No more subpanelWidth in the serialized v2 form
+        let value: serde_json::Value = serde_json::from_str(&pretty).unwrap();
+        assert!(
+            !value.as_object().unwrap().contains_key("subpanelWidth"),
+            "subpanelWidth must be dropped"
+        );
+
+        // launcherProjectEnv must have been lifted into projects + knownProjects
+        assert!(
+            !value.as_object().unwrap().contains_key("launcherProjectEnv"),
+            "launcherProjectEnv must be dropped"
+        );
+
+        // Re-run migration on the migrated file: should be idempotent
+        let second_report = migrate_at_startup(&copy, native_exists).unwrap();
+        assert!(!second_report.migrated, "second run should be no-op for migration");
+        assert!(second_report.bak_path.is_none(), "no new bak on idempotent run");
+    }
 }
