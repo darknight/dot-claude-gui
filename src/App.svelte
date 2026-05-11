@@ -5,7 +5,6 @@
   import { pluginsStore } from "$lib/stores/plugins.svelte";
   import { skillsStore } from "$lib/stores/skills.svelte";
   import { memoryStore } from "$lib/stores/memory.svelte";
-  import { launcherStore } from "$lib/stores/launcher.svelte";
   import { accountsStore } from "$lib/stores/accounts.svelte";
   import { mcpStore } from "$lib/stores/mcp.svelte";
   import { appSettingsStore } from "$lib/stores/appsettings.svelte";
@@ -64,9 +63,6 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   // Panel width effects
   $effect(() => {
     document.documentElement.style.setProperty("--sidebar-width", appSettingsStore.preferences.sidebarWidth + "px");
-  });
-  $effect(() => {
-    document.documentElement.style.setProperty("--subpanel-width", appSettingsStore.preferences.subpanelWidth + "px");
   });
 
   // ---------------------------------------------------------------------------
@@ -157,7 +153,6 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
         memoryStore.loadProjects(),
         mcpStore.loadServers(),
         claudeMdStore.loadFiles(),
-        launcherStore.loadClaudeArgs(),
         accountsStore.loadAccounts(),
       ]);
 
@@ -429,13 +424,6 @@ import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
           </ul>
         {/if}
       </aside>
-
-      <!-- Sub-panel resize handle -->
-      <ResizeHandle
-        min={160}
-        max={400}
-        onResize={(w) => appSettingsStore.update({ subpanelWidth: w })}
-      />
 
       <!-- Detail panel -->
       <main class="flex flex-1 flex-col overflow-hidden">

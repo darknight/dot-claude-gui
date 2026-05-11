@@ -10,10 +10,13 @@
   let saving = $state<string | null>(null); // pluginId being saved
 
   const activeProject = $derived(projectsStore.activeProject);
+  const activeProjectName = $derived(
+    activeProject?.path.replace(/^.*\//, "") ?? "",
+  );
 
   $effect(() => {
     if (activeProject) {
-      loadProjectSettings(activeProject.id);
+      loadProjectSettings(activeProject.path);
     } else {
       projectSettings = {};
     }
@@ -75,7 +78,7 @@
         const current = projectSettings.enabledPlugins ?? [];
         newEnabledPlugins = current.filter((id) => id !== pluginId);
       }
-      const res = await ipcClient.updateProjectConfig(activeProject.id, {
+      const res = await ipcClient.updateProjectConfig(activeProject.path, {
         enabledPlugins: newEnabledPlugins,
       });
       projectSettings = res.settings ?? {};
@@ -140,7 +143,7 @@
                   {t("plugins.colGlobal")}
                 </th>
                 <th class="w-32 px-4 py-2.5 text-center text-xs font-medium uppercase tracking-wider" style="color: var(--text-muted)">
-                  {activeProject.name}
+                  {activeProjectName}
                 </th>
               </tr>
             </thead>

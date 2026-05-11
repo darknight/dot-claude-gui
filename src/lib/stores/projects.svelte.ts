@@ -1,45 +1,66 @@
-import type { ProjectEntry } from "$lib/api/types";
-import { ipcClient } from "$lib/ipc/client.js";
+import { ipcClient } from "$lib/ipc/client";
+import type { LaunchConfig, ProjectEntry } from "$lib/api/types";
 
 class ProjectsStore {
-  projects = $state<ProjectEntry[]>([]);
-  activeProjectId = $state<string | null>(null);
-  loading = $state(false);
+  /** Full list from backend; one entry per path in knownProjects. */
+  entries = $state<ProjectEntry[]>([]);
+  /** Path of the currently focused project (Stage 2 wires UI to this). */
+  selectedPath = $state<string | null>(null);
 
-  get activeProject(): ProjectEntry | undefined {
-    return this.projects.find((p) => p.id === this.activeProjectId);
+  selected = $derived(
+    this.entries.find((e) => e.path === this.selectedPath) ?? null,
+  );
+
+  // ── Deprecated aliases — kept so Stage-2 components compile.
+  //    Will be cleaned up in Stage 3 once consumers are rewritten.
+  get projects(): ProjectEntry[] { return this.entries; }
+  get activeProjectId(): string | null { return this.selectedPath; }
+  get activeProject(): ProjectEntry | null { return this.selected; }
+
+  selectProject(path: string | null): void {
+    this.selectedPath = path;
   }
 
   async loadProjects(): Promise<void> {
-    this.loading = true;
     try {
-      this.projects = await ipcClient.listProjects();
-    } finally {
-      this.loading = false;
+      this.entries = await ipcClient.listProjects();
+    } catch {
+      this.entries = [];
     }
   }
 
+  async add(path: string): Promise<void> {
+    await ipcClient.addProject(path);
+    await this.loadProjects();
+  }
+
+  async bind(path: string, account: string): Promise<void> {
+    await ipcClient.bindProject(path, account);
+    await this.loadProjects();
+  }
+
+  async unbind(path: string): Promise<void> {
+    await ipcClient.unbindProject(path);
+    await this.loadProjects();
+  }
+
+  async remove(path: string): Promise<void> {
+    await ipcClient.removeProject(path);
+    await this.loadProjects();
+  }
+
+  async updateLaunch(path: string, launch: LaunchConfig): Promise<void> {
+    await ipcClient.updateProjectLaunch(path, launch);
+    await this.loadProjects();
+  }
+
+  // ── Deprecated compat methods (Stage-2 components call these names).
   async registerProject(path: string): Promise<void> {
-    const entry = await ipcClient.registerProject(path);
-    this.projects = [...this.projects, entry];
+    await this.add(path);
   }
 
-  async unregisterProject(id: string): Promise<void> {
-    await ipcClient.unregisterProject(id);
-    this.projects = this.projects.filter((p) => p.id !== id);
-    if (this.activeProjectId === id) {
-      this.activeProjectId = null;
-    }
-  }
-
-  selectProject(id: string | null): void {
-    this.activeProjectId = id;
-  }
-
-  reset(): void {
-    this.projects = [];
-    this.activeProjectId = null;
-    this.loading = false;
+  async unregisterProject(path: string): Promise<void> {
+    await this.remove(path);
   }
 }
 

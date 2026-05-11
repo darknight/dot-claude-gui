@@ -14,6 +14,7 @@ import type {
   DiskAccount,
   EffectiveConfig,
   HealthResponse,
+  LaunchConfig,
   LaunchRequest,
   MarketplaceInfo,
   McpServerInfo,
@@ -100,21 +101,30 @@ export class IpcClient {
     return call("get_effective_config", { projectId });
   }
 
-  // --- projects (3) ---
+  // --- gui projects (6) ---
 
   async listProjects(): Promise<ProjectEntry[]> {
-    return call("list_projects");
+    return call("gui_list_projects");
   }
 
-  async registerProject(path: string): Promise<ProjectEntry> {
-    // Rust: register_project(req: RegisterProjectRequest)
-    // RegisterProjectRequest has { path: String, name: String } — name is extracted from path
-    return call("register_project", { req: { path, name: "" } });
+  async addProject(path: string): Promise<ProjectEntry> {
+    return call("add_project", { req: { path } });
   }
 
-  async unregisterProject(id: string): Promise<void> {
-    // Rust: unregister_project(id: String)
-    return call("unregister_project", { id });
+  async bindProject(path: string, account: string): Promise<void> {
+    return call("bind_project", { req: { path, account } });
+  }
+
+  async unbindProject(path: string): Promise<void> {
+    return call("unbind_project", { req: { path } });
+  }
+
+  async removeProject(path: string): Promise<void> {
+    return call("remove_project", { req: { path } });
+  }
+
+  async updateProjectLaunch(path: string, launch: LaunchConfig): Promise<void> {
+    return call("update_project_launch", { req: { path, launch } });
   }
 
   // --- plugins (8) ---

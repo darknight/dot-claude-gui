@@ -11,10 +11,13 @@
   let rawExpanded = $state(false);
 
   const activeProject = $derived(projectsStore.activeProject);
+  const activeProjectName = $derived(
+    activeProject?.path.replace(/^.*\//, "") ?? "",
+  );
 
   $effect(() => {
     if (activeProject) {
-      loadEffective(activeProject.id);
+      loadEffective(activeProject.path);
     } else {
       effective = null;
     }
@@ -98,7 +101,7 @@
       <!-- Section heading -->
       <div class="mb-4">
         <h2 class="text-sm font-semibold" style="color: var(--text-primary)">
-          Effective Config — {activeProject.name}
+          Effective Config — {activeProjectName}
         </h2>
         <p class="mt-1 text-xs" style="color: var(--text-muted)">
           Merged settings with per-field source annotations.

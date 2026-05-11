@@ -88,13 +88,13 @@
         <div class="my-1" style="border-top: 1px solid var(--border-strong)"></div>
       {/if}
 
-      {#each projectsStore.projects as project}
+      {#each projectsStore.projects as project (project.path)}
         <button
           class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors"
-          style="color: {projectsStore.activeProjectId === project.id ? 'var(--accent-text)' : 'var(--text-secondary)'}"
+          style="color: {projectsStore.activeProjectId === project.path ? 'var(--accent-text)' : 'var(--text-secondary)'}"
           onmouseenter={(e) => (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-tertiary)'}
           onmouseleave={(e) => (e.currentTarget as HTMLElement).style.backgroundColor = ''}
-          onclick={() => selectProject(project.id)}
+          onclick={() => selectProject(project.path)}
           title={project.path}
         >
           <span>📁</span>
