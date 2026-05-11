@@ -258,7 +258,7 @@ pub struct MigrationReport {
 /// Read the config at `path`; if pre-v2, migrate and back up; then ensure the
 /// default account exists when `native_exists`. Writes the result back to `path`.
 pub fn migrate_at_startup(path: &Path, native_exists: bool) -> Result<MigrationReport, String> {
-    let now_iso = chrono_like_now_iso();
+    let now_iso = now_iso8601();
 
     // Case 1: file missing → create a fresh default config (with default account if applicable).
     if !path.exists() {
@@ -324,14 +324,38 @@ fn bak_path_for(path: &Path) -> PathBuf {
     path.with_file_name(bak_name)
 }
 
-fn chrono_like_now_iso() -> String {
-    // Avoid pulling chrono in just for this; use seconds-since-epoch as a
-    // sortable ISO-ish stamp. (Real ISO 8601 is unnecessary for our purpose.)
+fn now_iso8601() -> String {
     let secs = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    format!("1970-01-01T00:00:00Z+{secs}")  // monotonic stamp; frontend doesn't parse
+    unix_secs_to_iso8601(secs)
+}
+
+/// Convert unix epoch seconds (UTC) to RFC 3339 / ISO 8601 of the form
+/// `2026-05-11T17:42:33Z`. Pure arithmetic; valid for years 1970..9999.
+/// Uses Howard Hinnant's days-to-Gregorian algorithm (public domain).
+fn unix_secs_to_iso8601(secs: u64) -> String {
+    const SECS_PER_DAY: u64 = 86_400;
+    let days = secs / SECS_PER_DAY;
+    let s_in_day = secs % SECS_PER_DAY;
+    let hh = s_in_day / 3600;
+    let mm = (s_in_day % 3600) / 60;
+    let ss = s_in_day % 60;
+
+    // Days since 1970-01-01 → year/month/day (Hinnant).
+    let z = days as i64 + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = (z - era * 146_097) as u64;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe as i64 + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let year = if m <= 2 { y + 1 } else { y };
+
+    format!("{year:04}-{m:02}-{d:02}T{hh:02}:{mm:02}:{ss:02}Z")
 }
 
 #[cfg(test)]
@@ -341,6 +365,31 @@ mod tests {
     #[test]
     fn default_config_is_v2() {
         assert_eq!(AppConfig::default().schema_version, SCHEMA_VERSION);
+    }
+
+    #[test]
+    fn unix_secs_to_iso8601_known_values() {
+        assert_eq!(unix_secs_to_iso8601(0), "1970-01-01T00:00:00Z");
+        assert_eq!(unix_secs_to_iso8601(86_400), "1970-01-02T00:00:00Z");
+        // 2023-11-14T22:13:20Z (a common reference value)
+        assert_eq!(unix_secs_to_iso8601(1_700_000_000), "2023-11-14T22:13:20Z");
+        // Leap year boundary: 2024-02-29 00:00:00 UTC = 1_709_164_800
+        assert_eq!(unix_secs_to_iso8601(1_709_164_800), "2024-02-29T00:00:00Z");
+        // 2026-05-11T00:00:00Z = 1_778_457_600
+        assert_eq!(unix_secs_to_iso8601(1_778_457_600), "2026-05-11T00:00:00Z");
+    }
+
+    #[test]
+    fn now_iso8601_parses_with_chrono_like_format() {
+        let s = now_iso8601();
+        // Shape: YYYY-MM-DDTHH:MM:SSZ — 20 chars exactly
+        assert_eq!(s.len(), 20, "iso 8601 wall-time should be 20 chars: {s}");
+        assert!(s.ends_with('Z'));
+        assert_eq!(&s[4..5], "-");
+        assert_eq!(&s[7..8], "-");
+        assert_eq!(&s[10..11], "T");
+        assert_eq!(&s[13..14], ":");
+        assert_eq!(&s[16..17], ":");
     }
 
     #[test]
