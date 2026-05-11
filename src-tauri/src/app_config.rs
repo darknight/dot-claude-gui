@@ -245,6 +245,95 @@ pub fn ensure_default_account(cfg: &mut AppConfig, native_exists: bool, created_
     });
 }
 
+use std::path::PathBuf;
+use std::time::SystemTime;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MigrationReport {
+    pub migrated: bool,
+    pub bak_path: Option<PathBuf>,
+    pub default_injected: bool,
+}
+
+/// Read the config at `path`; if pre-v2, migrate and back up; then ensure the
+/// default account exists when `native_exists`. Writes the result back to `path`.
+pub fn migrate_at_startup(path: &Path, native_exists: bool) -> Result<MigrationReport, String> {
+    let now_iso = chrono_like_now_iso();
+
+    // Case 1: file missing → create a fresh default config (with default account if applicable).
+    if !path.exists() {
+        let mut cfg = AppConfig::default();
+        ensure_default_account(&mut cfg, native_exists, &now_iso);
+        write_config(path, &cfg)?;
+        return Ok(MigrationReport {
+            migrated: false,
+            bak_path: None,
+            default_injected: native_exists,
+        });
+    }
+
+    let raw_bytes = std::fs::read(path).map_err(|e| format!("read config: {e}"))?;
+    let raw_json: serde_json::Value = serde_json::from_slice(&raw_bytes)
+        .map_err(|e| format!("parse config: {e}"))?;
+
+    let is_v2 = raw_json.get("schemaVersion")
+        .and_then(|v| v.as_u64())
+        .map(|n| n as u32) == Some(SCHEMA_VERSION);
+
+    if is_v2 {
+        // No migration needed; still ensure default account is present.
+        let mut cfg: AppConfig = serde_json::from_value(raw_json)
+            .map_err(|e| format!("parse v2 config: {e}"))?;
+        let had_default = cfg.accounts.iter().any(|a| a.name == DEFAULT_ACCOUNT_NAME);
+        ensure_default_account(&mut cfg, native_exists, &now_iso);
+        let injected = native_exists && !had_default;
+        if injected {
+            write_config(path, &cfg)?;
+        }
+        return Ok(MigrationReport {
+            migrated: false,
+            bak_path: None,
+            default_injected: injected,
+        });
+    }
+
+    // Pre-v2: snapshot the original, migrate, write new.
+    let bak = bak_path_for(path);
+    std::fs::copy(path, &bak).map_err(|e| format!("write bak: {e}"))?;
+
+    let mut cfg = migrate_from_v1(raw_json)?;
+    let had_default = cfg.accounts.iter().any(|a| a.name == DEFAULT_ACCOUNT_NAME);
+    ensure_default_account(&mut cfg, native_exists, &now_iso);
+    let injected = native_exists && !had_default;
+    write_config(path, &cfg)?;
+
+    Ok(MigrationReport {
+        migrated: true,
+        bak_path: Some(bak),
+        default_injected: injected,
+    })
+}
+
+fn bak_path_for(path: &Path) -> PathBuf {
+    let unix = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let file = path.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+    let bak_name = format!("{file}.bak.{unix}");
+    path.with_file_name(bak_name)
+}
+
+fn chrono_like_now_iso() -> String {
+    // Avoid pulling chrono in just for this; use seconds-since-epoch as a
+    // sortable ISO-ish stamp. (Real ISO 8601 is unnecessary for our purpose.)
+    let secs = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    format!("1970-01-01T00:00:00Z+{secs}")  // monotonic stamp; frontend doesn't parse
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -435,5 +524,67 @@ mod tests {
         assert_eq!(cfg.accounts.len(), 2);
         assert_eq!(cfg.accounts[0].name, "default"); // default inserted at index 0
         assert_eq!(cfg.accounts[1].name, "work");
+    }
+
+    use std::fs;
+
+    fn write_raw(path: &std::path::Path, val: serde_json::Value) {
+        fs::write(path, serde_json::to_string_pretty(&val).unwrap()).unwrap();
+    }
+
+    #[test]
+    fn migrate_at_startup_backs_up_old_v1() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg_path = dir.path().join("config.json");
+        write_raw(&cfg_path, serde_json::json!({ "theme": "dark", "subpanelWidth": 200 }));
+
+        let report = migrate_at_startup(&cfg_path, /* native_exists */ false).unwrap();
+        assert!(report.migrated);
+        assert!(report.bak_path.is_some());
+
+        // .bak.<timestamp> exists alongside config.json
+        let bak = report.bak_path.unwrap();
+        assert!(bak.exists(), "expected bak file at {:?}", bak);
+        let bak_name = bak.file_name().unwrap().to_string_lossy();
+        assert!(bak_name.starts_with("config.json.bak."), "got {}", bak_name);
+
+        // New config is v2
+        let new_cfg = read_config(&cfg_path).unwrap();
+        assert_eq!(new_cfg.schema_version, SCHEMA_VERSION);
+        assert_eq!(new_cfg.theme, "dark");
+    }
+
+    #[test]
+    fn migrate_at_startup_no_op_for_v2() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg_path = dir.path().join("config.json");
+        write_config(&cfg_path, &AppConfig::default()).unwrap();
+
+        let report = migrate_at_startup(&cfg_path, false).unwrap();
+        assert!(!report.migrated);
+        assert!(report.bak_path.is_none());
+    }
+
+    #[test]
+    fn migrate_at_startup_creates_default_when_native_exists() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg_path = dir.path().join("config.json");
+        // start with v1, no accounts
+        write_raw(&cfg_path, serde_json::json!({ "theme": "dark" }));
+
+        migrate_at_startup(&cfg_path, /* native_exists */ true).unwrap();
+        let new_cfg = read_config(&cfg_path).unwrap();
+        assert!(new_cfg.accounts.iter().any(|a| a.name == "default" && a.is_native));
+    }
+
+    #[test]
+    fn migrate_at_startup_handles_missing_config() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg_path = dir.path().join("config.json");
+        let report = migrate_at_startup(&cfg_path, true).unwrap();
+        assert!(!report.migrated); // nothing to migrate
+        assert!(cfg_path.exists());
+        let cfg = read_config(&cfg_path).unwrap();
+        assert!(cfg.accounts.iter().any(|a| a.name == "default"));
     }
 }
