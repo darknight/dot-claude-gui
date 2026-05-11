@@ -32,9 +32,14 @@ class AccountsStore {
     try {
       const disk = await ipcClient.listAccounts();
       const configAccounts = appSettingsStore.preferences.accounts ?? [];
-      const fromDisk = reconcile(disk, configAccounts);
       const native = configAccounts.filter((a) => a.isNative);
-      // Native first, then disk-backed, sorted by name.
+      const nativeNames = new Set(native.map((a) => a.name));
+      // Drop disk entries that collide with a native config entry — prevents
+      // `each_key_duplicate` (CLAUDE.md Svelte 5 gotcha #3) if a user hand-creates
+      // ~/.dot-claude-gui/accounts/default/.
+      const fromDisk = reconcile(disk, configAccounts).filter(
+        (a) => !nativeNames.has(a.name),
+      );
       const sorted = [...fromDisk].sort((a, b) => a.name.localeCompare(b.name));
       this.accounts = [...native, ...sorted];
     } catch {
