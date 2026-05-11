@@ -12,10 +12,15 @@ function unixToIso(secs: number): string {
  */
 function reconcile(disk: DiskAccount[], configAccounts: Account[]): Account[] {
   const byName = new Map(configAccounts.map((a) => [a.name, a]));
-  return disk.map((d) => ({
-    name: d.name,
-    createdAt: byName.get(d.name)?.createdAt ?? unixToIso(d.createdAtUnix),
-  }));
+  return disk.map((d) => {
+    const fromConfig = byName.get(d.name);
+    return {
+      name: d.name,
+      displayName: fromConfig?.displayName ?? d.name,
+      isNative: false, // disk accounts are never native; default is virtual
+      createdAt: fromConfig?.createdAt ?? unixToIso(d.createdAtUnix),
+    };
+  });
 }
 
 class AccountsStore {
@@ -27,7 +32,11 @@ class AccountsStore {
     try {
       const disk = await ipcClient.listAccounts();
       const configAccounts = appSettingsStore.preferences.accounts ?? [];
-      this.accounts = reconcile(disk, configAccounts);
+      const fromDisk = reconcile(disk, configAccounts);
+      const native = configAccounts.filter((a) => a.isNative);
+      // Native first, then disk-backed, sorted by name.
+      const sorted = [...fromDisk].sort((a, b) => a.name.localeCompare(b.name));
+      this.accounts = [...native, ...sorted];
     } catch {
       this.accounts = [];
     }
@@ -63,16 +72,15 @@ class AccountsStore {
     const disk = await ipcClient.createAccount(name);
     const acct: Account = {
       name: disk.name,
+      displayName: disk.name,
+      isNative: false,
       createdAt: unixToIso(disk.createdAtUnix),
     };
     this.accounts = [...this.accounts, acct].sort((a, b) =>
       a.name.localeCompare(b.name),
     );
-    // Persist into AppConfig.accounts so createdAt survives next reconcile.
     const next = [...(appSettingsStore.preferences.accounts ?? []), acct];
     await appSettingsStore.update({ accounts: next });
-    // Status will be { loggedIn: false } until the user finishes OAuth in the
-    // terminal; the focus-listener in AccountsView re-fetches on window focus.
     await this.refreshStatus(name);
     return acct;
   }
