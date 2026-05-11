@@ -207,13 +207,6 @@ export interface ConfigResponse {
   version?: string;
 }
 
-export interface ProjectEntry {
-  id: string;
-  path: string;
-  name: string;
-  registeredAt?: string;
-}
-
 export interface HealthResponse {
   status: string;
   version: string;
@@ -405,11 +398,10 @@ export interface AddMcpServerRequest {
 }
 
 // ---------------------------------------------------------------------------
-// Launcher
+// Launcher (request shape used by IPC; reads project binding internally)
 // ---------------------------------------------------------------------------
 
 export interface LaunchRequest {
-  /** Working directory to cd into. Omit to run in the terminal's default cwd (e.g. ~) — used for non-project flows like OAuth. */
   projectPath?: string;
   env?: Record<string, string>;
   args?: string[];
@@ -418,70 +410,63 @@ export interface LaunchRequest {
 
 export type PreferredTerminal = "terminal" | "iterm2";
 
-export interface LauncherEnvEntry {
-  key: string;
-  value: string;
-  enabled: boolean;
-}
-
-export interface LauncherArgEntry {
-  flag: string;
-  value?: string;
-  enabled: boolean;
-}
-
-export interface LauncherProjectEnv {
-  customEnv: LauncherEnvEntry[];
-  customArgs: LauncherArgEntry[];
-  /** Name of the account whose home dir to inject as CLAUDE_CONFIG_DIR. undefined = native ~/.claude/. */
-  accountName?: string;
-}
+// ---------------------------------------------------------------------------
+// Accounts
+// ---------------------------------------------------------------------------
 
 export interface Account {
   name: string;
-  /** ISO 8601 timestamp. */
+  displayName: string;
+  isNative: boolean;
+  /** ISO-ish stamp; opaque (not parsed by frontend). */
   createdAt: string;
 }
 
 export interface DiskAccount {
   name: string;
-  /** Unix seconds (UTC). */
   createdAtUnix: number;
 }
 
 export interface AccountStatus {
   loggedIn: boolean;
-  /** OAuth account email, present iff loggedIn. */
   email?: string;
 }
 
 // ---------------------------------------------------------------------------
-// Application Config (persisted to ~/.dot-claude-gui/)
+// Project bindings
 // ---------------------------------------------------------------------------
 
-export interface ConnectionEntry {
-  id: string;
-  name: string;
-  type: "local" | "remote";
-  url: string;
-  token: string;
-  managed: boolean;
+export interface LaunchConfig {
+  env: Record<string, string>;
+  args: string[];
 }
 
-export interface ConnectionsFile {
-  activeConnectionId: string;
-  connections: ConnectionEntry[];
+export interface ProjectBinding {
+  account: string;
+  launch: LaunchConfig;
 }
+
+export interface ProjectEntry {
+  path: string;
+  /** null when unbound; otherwise account name. */
+  account: string | null;
+  launch: LaunchConfig;
+  stale: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// AppConfig v2 (persisted to ~/.dot-claude-gui/config.json)
+// ---------------------------------------------------------------------------
 
 export interface AppConfig {
+  schemaVersion: number;
   theme: "light" | "dark" | "system";
-  language?: Locale;
+  language: Locale;
   fontSize: number;
   sidebarWidth: number;
-  subpanelWidth: number;
-  preferredTerminal?: PreferredTerminal;
-  /** Per-project launcher state, keyed by absolute project path. */
-  launcherProjectEnv?: Record<string, LauncherProjectEnv>;
-  /** GUI-managed Claude accounts. Each maps to ~/.dot-claude-gui/accounts/<name>/. */
-  accounts?: Account[];
+  preferredTerminal: PreferredTerminal;
+  accounts: Account[];
+  /** path → binding */
+  projects: Record<string, ProjectBinding>;
+  knownProjects: string[];
 }
