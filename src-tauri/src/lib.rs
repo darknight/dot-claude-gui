@@ -5,26 +5,8 @@ mod executor;
 mod state;
 mod watcher;
 
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tauri::Manager;
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AppConfig {
-    pub theme: String,
-    pub language: String,
-    pub font_size: u32,
-    #[serde(default = "default_sidebar_width")]
-    pub sidebar_width: u32,
-    #[serde(default = "default_subpanel_width")]
-    pub subpanel_width: u32,
-}
-
-fn default_sidebar_width() -> u32 { 56 }
-fn default_subpanel_width() -> u32 { 240 }
 
 // ── Config-dir helpers ────────────────────────────────────────────────────────
 
@@ -40,16 +22,6 @@ fn ensure_config_dir() -> Result<PathBuf, String> {
     Ok(dir)
 }
 
-fn default_app_config() -> AppConfig {
-    AppConfig {
-        theme: "system".to_string(),
-        language: "zh-CN".to_string(),
-        font_size: 14,
-        sidebar_width: 56,
-        subpanel_width: 240,
-    }
-}
-
 // ── IPC commands ──────────────────────────────────────────────────────────────
 
 #[tauri::command]
@@ -59,24 +31,17 @@ fn get_config_dir() -> Result<String, String> {
 
 #[tauri::command]
 fn read_app_config() -> Result<String, String> {
-    let dir = ensure_config_dir()?;
-    let path = dir.join("config.json");
-    if path.exists() {
-        std::fs::read_to_string(&path)
-            .map_err(|e| format!("failed to read config.json: {}", e))
-    } else {
-        let defaults = default_app_config();
-        serde_json::to_string(&defaults)
-            .map_err(|e| format!("failed to serialize default app config: {}", e))
-    }
+    let path = ensure_config_dir()?.join("config.json");
+    let cfg = app_config::read_config(&path)?;
+    serde_json::to_string(&cfg).map_err(|e| format!("serialize app config: {e}"))
 }
 
 #[tauri::command]
 fn write_app_config(json: String) -> Result<(), String> {
-    let dir = ensure_config_dir()?;
-    let path = dir.join("config.json");
-    std::fs::write(&path, json)
-        .map_err(|e| format!("failed to write config.json: {}", e))
+    let cfg: app_config::AppConfig = serde_json::from_str(&json)
+        .map_err(|e| format!("parse app config: {e}"))?;
+    let path = ensure_config_dir()?.join("config.json");
+    app_config::write_config(&path, &cfg)
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -128,6 +93,19 @@ pub fn run() {
             commands::plugins::remove_marketplace,
         ])
         .setup(|app| {
+            // One-shot migration v1 → v2 (idempotent for v2).
+            // Runs before any state init so subsequent code reads the new schema.
+            if let Ok(dir) = ensure_config_dir() {
+                let cfg_path = dir.join("config.json");
+                let native_exists = dirs_next::home_dir()
+                    .map(|h| h.join(".claude").exists())
+                    .unwrap_or(false);
+                match app_config::migrate_at_startup(&cfg_path, native_exists) {
+                    Ok(report) => tracing::info!("config migration: {report:?}"),
+                    Err(e)     => tracing::error!("config migration failed: {e}"),
+                }
+            }
+
             let claude_home = dirs_next::home_dir()
                 .ok_or_else(|| "cannot determine home directory".to_string())?
                 .join(".claude");
