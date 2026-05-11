@@ -1,9 +1,11 @@
-# Mode-based Redesign — Design Spec
+# Phase 8 — Mode-based Redesign · Design Spec
 
 Date: 2026-05-11
 Status: Draft (pending user approval)
 Supersedes: `2026-04-30-account-switch-design.md` (only the launcher-bolt-on subset; the multi-account capabilities are kept)
 Aligns with: `2026-04-10-plan-d-account-workspace-design.md` (revives the core abstraction; explicitly drops shared plugin pool and `dotclaude-launch` CLI)
+
+> **Phase numbering**: this doc is "Phase 8" in the project's overall sequence (1–6 done; 7.1 done; 7.2–7.5 from Plan D skipped in favour of the lighter 4-30 account-switch route). Inside this doc the 4 implementation chunks are called **Stages 1–4** to avoid "phase within phase" confusion. Future docs continue the outer Phase numbering.
 
 ## Context
 
@@ -183,23 +185,23 @@ One-time on first launch of the new version:
 
 Account directories under `~/.dot-claude-gui/accounts/` are untouched. `~/.claude/` is untouched.
 
-## Phasing
+## Implementation stages
 
-Single design, four implementation phases. Each phase ends in a usable state.
+Single design, four stages. Each stage ends in a usable state.
 
-### Phase 8.1 — Data layer + migration (medium risk)
+### Stage 1 — Data layer + migration (medium risk)
 
 - New `config.json` schema (Rust types + frontend types)
 - Migration code + backup snapshot
 - Default account auto-injection on startup
 - New IPC commands: `list_projects`, `add_project`, `bind_project`, `unbind_project`, `remove_project`, `update_project_launch`
 - Existing IPC kept where it still maps (account CRUD, plugins, skills, memory, mcp, claudemd)
-- **No old-field double-write.** Old fields removed in this phase.
-- UI temporarily broken — accept this since 8.2 immediately follows
+- **No old-field double-write.** Old fields removed in this stage.
+- UI temporarily broken — accept this since Stage 2 immediately follows
 
 Acceptance: existing `~/.dot-claude-gui/` migrates cleanly; bak file exists; new schema validates; default account appears.
 
-### Phase 8.2 — New shell + Accounts mode (medium risk)
+### Stage 2 — New shell + Accounts mode (medium risk)
 
 - Top mode-tab bar + right-corner gear
 - Mode-aware sidebar component (renders accounts list / projects list / app prefs list)
@@ -207,11 +209,11 @@ Acceptance: existing `~/.dot-claude-gui/` migrates cleanly; bak file exists; new
 - Account mode: all 7 facets wired to existing backends
   - Overview: new
   - Settings/Plugins/Skills/CLAUDE.md/Memory/MCP: existing module contents moved into facet containers
-- Project mode: sidebar renders project list; main shows `Coming in 8.3` placeholder
+- Project mode: sidebar renders project list; main shows `Coming in Stage 3` placeholder
 
 Acceptance: all account facets render real data; toggle widgets persist; mode switching is instant; existing operations (login, install plugin, edit CLAUDE.md) all still work.
 
-### Phase 8.3 — Projects mode complete (low-medium risk)
+### Stage 3 — Projects mode complete (low-medium risk)
 
 - All 7 Project facets functional
 - Launcher module code relocated to Project > Launch
@@ -220,9 +222,9 @@ Acceptance: all account facets render real data; toggle widgets persist; mode sw
 - New: Project > Plugins ↓ (tri-state override, writes to project `settings.json`'s `enabledPlugins`)
 - Unbound-project degradation: only Binding tab clickable
 
-Acceptance: project facets all functional; Launcher and Effective Config also accessible via Projects mode (old sidebar routes still there for safety until 8.4); tri-state plugin override writes to `<project>/.claude/settings.json` and is reflected in Project > Effective.
+Acceptance: project facets all functional; Launcher and Effective Config also accessible via Projects mode (old sidebar routes still there for safety until Stage 4); tri-state plugin override writes to `<project>/.claude/settings.json` and is reflected in Project > Effective.
 
-### Phase 8.4 — Cleanup (low risk)
+### Stage 4 — Cleanup (low risk)
 
 - Delete old top-level routes: Settings/Plugins/Skills/Memory/CLAUDE.md/MCP/Effective Config/Launcher/AppSettings (sidebar entry)
 - Complete the right-corner gear panel (Appearance / Language / Terminal / About)
@@ -243,11 +245,11 @@ Acceptance: no old module routes accessible; gear panel covers all previous App 
 
 ## Verification
 
-### Acceptance per phase
+### Acceptance per stage
 
-See each phase above.
+See each stage above.
 
-### End-to-end check after Phase 8.4
+### End-to-end check after Stage 4
 
 1. Launch new version on a machine with existing data → toast confirms migration.
 2. Account mode → `@work` → Plugins → enable `typescript-lsp` → toggle ON.
