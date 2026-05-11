@@ -18,6 +18,17 @@ fn config_path() -> Result<PathBuf, String> {
     Ok(dir.join("config.json"))
 }
 
+/// Canonicalize a path string. Falls back to the input string if canonicalization
+/// fails (e.g., the path doesn't exist) so unbind/remove can still target stale
+/// entries that may have been written before canonicalization was enforced.
+fn canonicalize_path(input: &str) -> String {
+    std::path::Path::new(input)
+        .canonicalize()
+        .ok()
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|| input.to_string())
+}
+
 fn mutate<F>(f: F) -> Result<AppConfig, String>
 where F: FnOnce(&mut AppConfig) -> Result<(), String>
 {
@@ -91,16 +102,17 @@ pub struct BindProjectRequest { pub path: String, pub account: String }
 #[tauri::command]
 pub fn bind_project(req: BindProjectRequest) -> Result<(), String> {
     mutate(|cfg| {
+        let path = canonicalize_path(&req.path);
         let known_account =
             req.account == DEFAULT_ACCOUNT_NAME ||
             cfg.accounts.iter().any(|a| a.name == req.account);
         if !known_account {
             return Err(format!("unknown_account: {}", req.account));
         }
-        if !cfg.known_projects.contains(&req.path) {
-            cfg.known_projects.push(req.path.clone());
+        if !cfg.known_projects.contains(&path) {
+            cfg.known_projects.push(path.clone());
         }
-        cfg.projects.entry(req.path.clone())
+        cfg.projects.entry(path.clone())
             .or_insert_with(ProjectBinding::default)
             .account = req.account.clone();
         Ok(())
@@ -114,7 +126,11 @@ pub struct UnbindProjectRequest { pub path: String }
 
 #[tauri::command]
 pub fn unbind_project(req: UnbindProjectRequest) -> Result<(), String> {
-    mutate(|cfg| { cfg.projects.remove(&req.path); Ok(()) })?;
+    mutate(|cfg| {
+        let path = canonicalize_path(&req.path);
+        cfg.projects.remove(&path);
+        Ok(())
+    })?;
     Ok(())
 }
 
@@ -123,8 +139,9 @@ pub fn unbind_project(req: UnbindProjectRequest) -> Result<(), String> {
 #[tauri::command]
 pub fn remove_project(req: UnbindProjectRequest) -> Result<(), String> {
     mutate(|cfg| {
-        cfg.projects.remove(&req.path);
-        cfg.known_projects.retain(|p| p != &req.path);
+        let path = canonicalize_path(&req.path);
+        cfg.projects.remove(&path);
+        cfg.known_projects.retain(|p| p != &path);
         Ok(())
     })?;
     Ok(())
@@ -139,7 +156,8 @@ pub struct UpdateLaunchRequest { pub path: String, pub launch: LaunchConfig }
 #[tauri::command]
 pub fn update_project_launch(req: UpdateLaunchRequest) -> Result<(), String> {
     mutate(|cfg| {
-        let entry = cfg.projects.entry(req.path.clone())
+        let path = canonicalize_path(&req.path);
+        let entry = cfg.projects.entry(path)
             .or_insert_with(ProjectBinding::default);
         entry.launch = req.launch.clone();
         Ok(())
@@ -223,6 +241,32 @@ mod tests {
         remove_project(UnbindProjectRequest { path: real.clone() }).unwrap();
         let list = gui_list_projects().unwrap();
         assert!(list.iter().all(|p| p.path != real));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn bind_canonicalizes_equivalent_path() {
+        let _g = isolated();
+        // Seed with a known account so bind_project accepts it.
+        let cfg_path = config_path().unwrap();
+        let mut cfg = AppConfig::default();
+        cfg.accounts.push(Account {
+            name: "work".into(), display_name: "work".into(),
+            is_native: false, created_at: "x".into(),
+        });
+        write_config(&cfg_path, &cfg).unwrap();
+
+        let real = std::env::current_dir().unwrap().to_string_lossy().to_string();
+        // Add with canonical form.
+        add_project(AddProjectRequest { path: real.clone() }).unwrap();
+        // Bind with an equivalent non-canonical form (trailing `/.`).
+        let equivalent = format!("{real}/.");
+        bind_project(BindProjectRequest { path: equivalent, account: "work".into() }).unwrap();
+
+        let list = gui_list_projects().unwrap();
+        let matches: Vec<_> = list.iter().filter(|p| p.path == real).collect();
+        assert_eq!(matches.len(), 1, "should not create a duplicate entry for an equivalent path");
+        assert_eq!(matches[0].account.as_deref(), Some("work"));
     }
 
     #[test]
