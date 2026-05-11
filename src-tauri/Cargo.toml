@@ -29,3 +29,4 @@ tempfile = "3"
 [dev-dependencies]
 tempfile = "3"
 tokio = { version = "1", features = ["rt", "macros"] }
+serial_test = "3"

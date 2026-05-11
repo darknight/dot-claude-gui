@@ -1,6 +1,7 @@
 pub mod health;
 pub mod config;
 pub mod projects;
+pub mod gui_projects;
 pub mod plugins;
 pub mod mcp;
 pub mod skills;
