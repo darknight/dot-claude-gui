@@ -127,6 +127,109 @@ pub fn write_config(path: &Path, cfg: &AppConfig) -> Result<(), String> {
     Ok(())
 }
 
+/// Migrate any older JSON shape to the current `AppConfig`. Idempotent for v2.
+///
+/// Strategy: deserialize known v1 keys, drop subpanelWidth, lift
+/// launcherProjectEnv → projects + knownProjects, expand accounts.
+pub fn migrate_from_v1(raw: serde_json::Value) -> Result<AppConfig, String> {
+    // Fast path: already v2.
+    if raw.get("schemaVersion")
+        .and_then(|v| v.as_u64())
+        .map(|n| n as u32)
+        == Some(SCHEMA_VERSION)
+    {
+        return serde_json::from_value(raw)
+            .map_err(|e| format!("parse v2 config: {e}"));
+    }
+
+    let mut out = AppConfig::default();
+
+    // ── Preferences ──────────────────────────────────────────────
+    if let Some(s) = raw.get("theme").and_then(|v| v.as_str()) {
+        out.theme = s.to_string();
+    }
+    if let Some(s) = raw.get("language").and_then(|v| v.as_str()) {
+        out.language = s.to_string();
+    }
+    if let Some(n) = raw.get("fontSize").and_then(|v| v.as_u64()) {
+        out.font_size = n as u32;
+    }
+    if let Some(n) = raw.get("sidebarWidth").and_then(|v| v.as_u64()) {
+        out.sidebar_width = n as u32;
+    }
+    if let Some(s) = raw.get("preferredTerminal").and_then(|v| v.as_str()) {
+        out.preferred_terminal = s.to_string();
+    }
+
+    // ── Accounts ─────────────────────────────────────────────────
+    if let Some(arr) = raw.get("accounts").and_then(|v| v.as_array()) {
+        for entry in arr {
+            let name = match entry.get("name").and_then(|v| v.as_str()) {
+                Some(n) => n.to_string(),
+                None => continue,
+            };
+            let created_at = entry.get("createdAt")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            out.accounts.push(Account {
+                display_name: name.clone(),
+                name,
+                is_native: false,
+                created_at,
+            });
+        }
+    }
+
+    // ── launcherProjectEnv → projects + knownProjects ────────────
+    if let Some(obj) = raw.get("launcherProjectEnv").and_then(|v| v.as_object()) {
+        for (path, entry) in obj {
+            out.known_projects.push(path.clone());
+
+            let account = entry.get("accountName")
+                .and_then(|v| v.as_str())
+                .unwrap_or("default")
+                .to_string();
+
+            let mut env = BTreeMap::new();
+            if let Some(arr) = entry.get("customEnv").and_then(|v| v.as_array()) {
+                for kv in arr {
+                    let enabled = kv.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false);
+                    if !enabled { continue; }
+                    let key = kv.get("key").and_then(|v| v.as_str()).unwrap_or("");
+                    if key.is_empty() { continue; }
+                    let value = kv.get("value").and_then(|v| v.as_str()).unwrap_or("");
+                    env.insert(key.to_string(), value.to_string());
+                }
+            }
+
+            let mut args = Vec::new();
+            if let Some(arr) = entry.get("customArgs").and_then(|v| v.as_array()) {
+                for ka in arr {
+                    let enabled = ka.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false);
+                    if !enabled { continue; }
+                    let flag = ka.get("flag").and_then(|v| v.as_str()).unwrap_or("");
+                    if flag.is_empty() { continue; }
+                    args.push(flag.to_string());
+                    // value is Option<String>; null/missing => bare flag.
+                    if let Some(v) = ka.get("value").and_then(|v| v.as_str()) {
+                        if !v.is_empty() {
+                            args.push(v.to_string());
+                        }
+                    }
+                }
+            }
+
+            out.projects.insert(path.clone(), ProjectBinding {
+                account,
+                launch: LaunchConfig { env, args },
+            });
+        }
+    }
+
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -188,5 +291,92 @@ mod tests {
             .map(|e| e.file_name().to_string_lossy().to_string())
             .collect();
         assert_eq!(entries, vec!["config.json"]);
+    }
+
+    #[test]
+    fn migrate_v1_preserves_preferences() {
+        let v1 = serde_json::json!({
+            "theme": "dark",
+            "language": "en-US",
+            "fontSize": 16,
+            "sidebarWidth": 200,
+            "subpanelWidth": 240,
+            "preferredTerminal": "iterm2"
+        });
+        let cfg = migrate_from_v1(v1).unwrap();
+        assert_eq!(cfg.schema_version, SCHEMA_VERSION);
+        assert_eq!(cfg.theme, "dark");
+        assert_eq!(cfg.language, "en-US");
+        assert_eq!(cfg.font_size, 16);
+        assert_eq!(cfg.sidebar_width, 200);
+        assert_eq!(cfg.preferred_terminal, "iterm2");
+    }
+
+    #[test]
+    fn migrate_v1_drops_subpanel_width() {
+        let v1 = serde_json::json!({ "subpanelWidth": 999 });
+        let cfg = migrate_from_v1(v1).unwrap();
+        let json = serde_json::to_value(&cfg).unwrap();
+        assert!(!json.as_object().unwrap().contains_key("subpanelWidth"));
+    }
+
+    #[test]
+    fn migrate_v1_lifts_accounts_with_defaults() {
+        let v1 = serde_json::json!({
+            "accounts": [
+                { "name": "work", "createdAt": "2026-01-01T00:00:00Z" }
+            ]
+        });
+        let cfg = migrate_from_v1(v1).unwrap();
+        assert_eq!(cfg.accounts.len(), 1);
+        assert_eq!(cfg.accounts[0].name, "work");
+        assert_eq!(cfg.accounts[0].display_name, "work"); // fallback to name
+        assert!(!cfg.accounts[0].is_native);
+        assert_eq!(cfg.accounts[0].created_at, "2026-01-01T00:00:00Z");
+    }
+
+    #[test]
+    fn migrate_v1_lifts_launcher_project_env_to_projects_and_known() {
+        let v1 = serde_json::json!({
+            "launcherProjectEnv": {
+                "/Users/x/p1": {
+                    "accountName": "work",
+                    "customEnv": [
+                        { "key": "FOO", "value": "bar", "enabled": true },
+                        { "key": "OFF", "value": "x",   "enabled": false }
+                    ],
+                    "customArgs": [
+                        { "flag": "--effort", "value": "high",  "enabled": true },
+                        { "flag": "--brief",  "value": null,    "enabled": true },
+                        { "flag": "--skip",   "value": "x",     "enabled": false }
+                    ]
+                },
+                "/Users/x/p2": {}
+            }
+        });
+        let cfg = migrate_from_v1(v1).unwrap();
+
+        assert!(cfg.known_projects.contains(&"/Users/x/p1".to_string()));
+        assert!(cfg.known_projects.contains(&"/Users/x/p2".to_string()));
+
+        let p1 = cfg.projects.get("/Users/x/p1").expect("p1 present");
+        assert_eq!(p1.account, "work");
+        assert_eq!(p1.launch.env.get("FOO"), Some(&"bar".to_string()));
+        assert!(!p1.launch.env.contains_key("OFF"));     // disabled dropped
+        assert_eq!(p1.launch.args, vec!["--effort", "high", "--brief"]);
+
+        // p2 has no accountName → defaults to "default"
+        let p2 = cfg.projects.get("/Users/x/p2").expect("p2 present");
+        assert_eq!(p2.account, "default");
+        assert!(p2.launch.env.is_empty());
+        assert!(p2.launch.args.is_empty());
+    }
+
+    #[test]
+    fn migrate_v2_is_passthrough() {
+        let v2 = serde_json::to_value(AppConfig::default()).unwrap();
+        let cfg = migrate_from_v1(v2.clone()).unwrap();
+        let v2_again = serde_json::to_value(&cfg).unwrap();
+        assert_eq!(v2, v2_again);
     }
 }
