@@ -93,6 +93,40 @@ impl Default for AppConfig {
     }
 }
 
+use std::path::Path;
+use std::io::Write;
+
+/// Read AppConfig from `path`. Returns `AppConfig::default()` if the file
+/// doesn't exist; errors only on IO failure or unparseable JSON.
+pub fn read_config(path: &Path) -> Result<AppConfig, String> {
+    if !path.exists() {
+        return Ok(AppConfig::default());
+    }
+    let bytes = std::fs::read(path)
+        .map_err(|e| format!("read config: {e}"))?;
+    serde_json::from_slice(&bytes)
+        .map_err(|e| format!("parse config: {e}"))
+}
+
+/// Atomically write `cfg` to `path` via tempfile + rename.
+pub fn write_config(path: &Path, cfg: &AppConfig) -> Result<(), String> {
+    let dir = path.parent()
+        .ok_or_else(|| "config path has no parent".to_string())?;
+    std::fs::create_dir_all(dir)
+        .map_err(|e| format!("mkdir config dir: {e}"))?;
+
+    let json = serde_json::to_vec_pretty(cfg)
+        .map_err(|e| format!("serialize config: {e}"))?;
+
+    let mut tmp = tempfile::NamedTempFile::new_in(dir)
+        .map_err(|e| format!("create tempfile: {e}"))?;
+    tmp.write_all(&json)
+        .map_err(|e| format!("write tempfile: {e}"))?;
+    tmp.persist(path)
+        .map_err(|e| format!("rename tempfile: {e}"))?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -119,5 +153,40 @@ mod tests {
         assert!(obj.contains_key("sidebarWidth"));
         assert!(obj.contains_key("preferredTerminal"));
         assert!(obj.contains_key("knownProjects"));
+    }
+
+    #[test]
+    fn write_then_read_round_trip() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config.json");
+
+        let mut cfg = AppConfig::default();
+        cfg.theme = "dark".to_string();
+        write_config(&path, &cfg).unwrap();
+
+        let loaded = read_config(&path).unwrap();
+        assert_eq!(loaded.theme, "dark");
+    }
+
+    #[test]
+    fn read_missing_file_returns_default() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("does-not-exist.json");
+        let loaded = read_config(&path).unwrap();
+        assert_eq!(loaded, AppConfig::default());
+    }
+
+    #[test]
+    fn write_is_atomic_via_tempfile() {
+        // After write, no temp leftovers in the parent dir.
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config.json");
+        write_config(&path, &AppConfig::default()).unwrap();
+
+        let entries: Vec<_> = std::fs::read_dir(dir.path()).unwrap()
+            .filter_map(|e| e.ok())
+            .map(|e| e.file_name().to_string_lossy().to_string())
+            .collect();
+        assert_eq!(entries, vec!["config.json"]);
     }
 }
