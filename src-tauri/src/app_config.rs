@@ -230,6 +230,21 @@ pub fn migrate_from_v1(raw: serde_json::Value) -> Result<AppConfig, String> {
     Ok(out)
 }
 
+pub const DEFAULT_ACCOUNT_NAME: &str = "default";
+
+/// If `native_exists` and no `default` account is in `cfg.accounts`, inserts
+/// one at index 0 with `isNative: true` and the given `created_at`.
+pub fn ensure_default_account(cfg: &mut AppConfig, native_exists: bool, created_at: &str) {
+    if !native_exists { return; }
+    if cfg.accounts.iter().any(|a| a.name == DEFAULT_ACCOUNT_NAME) { return; }
+    cfg.accounts.insert(0, Account {
+        name: DEFAULT_ACCOUNT_NAME.to_string(),
+        display_name: "Native ~/.claude/".to_string(),
+        is_native: true,
+        created_at: created_at.to_string(),
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -378,5 +393,47 @@ mod tests {
         let cfg = migrate_from_v1(v2.clone()).unwrap();
         let v2_again = serde_json::to_value(&cfg).unwrap();
         assert_eq!(v2, v2_again);
+    }
+
+    #[test]
+    fn inject_default_adds_native_when_missing() {
+        let mut cfg = AppConfig::default();
+        ensure_default_account(&mut cfg, /* native_exists */ true, "2026-05-11T00:00:00Z");
+        assert_eq!(cfg.accounts.len(), 1);
+        assert_eq!(cfg.accounts[0].name, "default");
+        assert!(cfg.accounts[0].is_native);
+        assert_eq!(cfg.accounts[0].display_name, "Native ~/.claude/");
+        assert_eq!(cfg.accounts[0].created_at, "2026-05-11T00:00:00Z");
+    }
+
+    #[test]
+    fn inject_default_idempotent() {
+        let mut cfg = AppConfig::default();
+        ensure_default_account(&mut cfg, true, "ts1");
+        ensure_default_account(&mut cfg, true, "ts2");
+        assert_eq!(cfg.accounts.len(), 1);
+        assert_eq!(cfg.accounts[0].created_at, "ts1"); // first one wins
+    }
+
+    #[test]
+    fn inject_default_skipped_when_native_missing() {
+        let mut cfg = AppConfig::default();
+        ensure_default_account(&mut cfg, false, "ts");
+        assert!(cfg.accounts.iter().all(|a| a.name != "default"));
+    }
+
+    #[test]
+    fn inject_default_does_not_disturb_other_accounts() {
+        let mut cfg = AppConfig::default();
+        cfg.accounts.push(Account {
+            name: "work".into(),
+            display_name: "work".into(),
+            is_native: false,
+            created_at: "x".into(),
+        });
+        ensure_default_account(&mut cfg, true, "ts");
+        assert_eq!(cfg.accounts.len(), 2);
+        assert_eq!(cfg.accounts[0].name, "default"); // default inserted at index 0
+        assert_eq!(cfg.accounts[1].name, "work");
     }
 }
