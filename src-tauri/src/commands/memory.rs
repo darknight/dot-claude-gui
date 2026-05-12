@@ -168,23 +168,15 @@ pub(crate) async fn list_memory_projects_logic(state: &AppState) -> Vec<MemoryPr
     result
 }
 
-pub(crate) async fn list_memory_files_logic(
-    state: &AppState,
-    project_id: String,
+/// Scan `memory_dir` for `.md` files and return their metadata.
+///
+/// Returns `Err` if the directory cannot be read (e.g. does not exist).
+/// This is a pure directory-scanning helper; it does not need `AppState`.
+pub(crate) fn list_memory_files_in_dir(
+    memory_dir: &std::path::Path,
 ) -> Result<Vec<MemoryFile>, String> {
-    let memory_dir = state
-        .current_dir()
-        .await
-        .join("projects")
-        .join(&project_id)
-        .join("memory");
-
-    let read_dir = std::fs::read_dir(&memory_dir).map_err(|_| {
-        format!(
-            "project_not_found: No memory directory found for project '{}'",
-            project_id
-        )
-    })?;
+    let read_dir = std::fs::read_dir(memory_dir)
+        .map_err(|_| format!("memory_dir_not_found: {}", memory_dir.display()))?;
 
     let mut files = Vec::new();
 
@@ -210,15 +202,33 @@ pub(crate) async fn list_memory_files_logic(
             Err(_) => (None, None, None),
         };
 
-        files.push(MemoryFile {
-            filename,
-            name,
-            description,
-            memory_type,
-        });
+        files.push(MemoryFile { filename, name, description, memory_type });
     }
 
     Ok(files)
+}
+
+pub(crate) async fn list_memory_files_logic(
+    state: &AppState,
+    project_id: String,
+) -> Result<Vec<MemoryFile>, String> {
+    let memory_dir = state
+        .current_dir()
+        .await
+        .join("projects")
+        .join(&project_id)
+        .join("memory");
+
+    list_memory_files_in_dir(&memory_dir).map_err(|e| {
+        if e.starts_with("memory_dir_not_found") {
+            format!(
+                "project_not_found: No memory directory found for project '{}'",
+                project_id
+            )
+        } else {
+            e
+        }
+    })
 }
 
 pub(crate) async fn get_memory_file_logic(

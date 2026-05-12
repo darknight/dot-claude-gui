@@ -103,6 +103,10 @@ pub fn run() {
             commands::project_facets::project_write_settings,
             commands::project_facets::project_read_claudemd,
             commands::project_facets::project_write_claudemd,
+            commands::project_facets::project_list_memory,
+            commands::project_facets::project_read_memory_file,
+            commands::project_facets::project_write_memory_file,
+            commands::project_facets::project_delete_memory_file,
         ])
         .setup(|app| {
             // One-shot migration v1 → v2 (idempotent for v2).

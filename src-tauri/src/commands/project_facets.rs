@@ -204,6 +204,95 @@ pub async fn project_write_claudemd(
 }
 
 // ---------------------------------------------------------------------------
+// Project memory — account-scoped via binding
+// ---------------------------------------------------------------------------
+
+use claude_types::memory::MemoryFile;
+
+/// Resolve `<account_dir>/projects/<encoded_path>/memory/` for a project path.
+///
+/// `encoded_path` = `project_path.replace('/', "-")` (Claude Code's convention).
+pub(crate) async fn project_memory_dir(
+    state: &AppState,
+    project_path: &str,
+) -> Result<PathBuf, String> {
+    let account_dir = state.resolve_project_account_dir(project_path).await?;
+    let encoded = project_path.replace('/', "-");
+    Ok(account_dir.join("projects").join(encoded).join("memory"))
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProjectMemoryListResponse {
+    pub path: String,
+    pub files: Vec<MemoryFile>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ProjectMemoryFileRequest {
+    pub project_path: String,
+    pub file_name: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WriteProjectMemoryRequest {
+    pub project_path: String,
+    pub file_name: String,
+    pub content: String,
+}
+
+#[tauri::command]
+pub async fn project_list_memory(
+    state: State<'_, AppState>,
+    project_path: String,
+) -> Result<ProjectMemoryListResponse, String> {
+    let dir = project_memory_dir(&state, &project_path).await?;
+    let files = if dir.exists() {
+        crate::commands::memory::list_memory_files_in_dir(&dir)?
+    } else {
+        Vec::new()
+    };
+    Ok(ProjectMemoryListResponse {
+        path: dir.to_string_lossy().into_owned(),
+        files,
+    })
+}
+
+#[tauri::command]
+pub async fn project_read_memory_file(
+    state: State<'_, AppState>,
+    request: ProjectMemoryFileRequest,
+) -> Result<String, String> {
+    let dir = project_memory_dir(&state, &request.project_path).await?;
+    let path = dir.join(&request.file_name);
+    std::fs::read_to_string(&path).map_err(|e| format!("read {}: {e}", path.display()))
+}
+
+#[tauri::command]
+pub async fn project_write_memory_file(
+    state: State<'_, AppState>,
+    request: WriteProjectMemoryRequest,
+) -> Result<(), String> {
+    let dir = project_memory_dir(&state, &request.project_path).await?;
+    std::fs::create_dir_all(&dir).map_err(|e| format!("mkdir {}: {e}", dir.display()))?;
+    let path = dir.join(&request.file_name);
+    claude_config::write::atomic_write(&path, request.content.as_bytes())
+        .map_err(|e| format!("write {}: {e}", path.display()))
+}
+
+#[tauri::command]
+pub async fn project_delete_memory_file(
+    state: State<'_, AppState>,
+    request: ProjectMemoryFileRequest,
+) -> Result<(), String> {
+    let dir = project_memory_dir(&state, &request.project_path).await?;
+    let path = dir.join(&request.file_name);
+    if path.exists() {
+        std::fs::remove_file(&path).map_err(|e| format!("remove {}: {e}", path.display()))?;
+    }
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -211,6 +300,39 @@ pub async fn project_write_claudemd(
 mod tests {
     use super::*;
     use tempfile::tempdir;
+
+    /// Assert that the encoded-path rule (slashes → dashes) is applied correctly
+    /// when building the memory dir. We test the pure path construction rule
+    /// without needing to spin up a full AppState backed by $HOME.
+    #[test]
+    fn project_memory_dir_encodes_slashes_as_dashes() {
+        let account_dir = std::path::PathBuf::from("/home/u/.dot-claude-gui/accounts/work");
+        let encoded = "/Users/eric/code/foo".replace('/', "-");
+        let expected = account_dir.join("projects").join(encoded).join("memory");
+        assert_eq!(
+            expected.to_string_lossy(),
+            "/home/u/.dot-claude-gui/accounts/work/projects/-Users-eric-code-foo/memory"
+        );
+    }
+
+    #[test]
+    fn list_memory_files_in_dir_empty_when_missing() {
+        let proj = tempdir().unwrap();
+        // Memory dir does not exist:
+        let result =
+            crate::commands::memory::list_memory_files_in_dir(&proj.path().join("memory"));
+        assert!(result.is_err(), "expected error for missing dir");
+    }
+
+    #[test]
+    fn list_memory_files_in_dir_returns_md_files() {
+        let dir = tempdir().unwrap();
+        std::fs::write(dir.path().join("a.md"), "x").unwrap();
+        std::fs::write(dir.path().join("b.md"), "x").unwrap();
+        std::fs::write(dir.path().join("c.txt"), "x").unwrap();
+        let files = crate::commands::memory::list_memory_files_in_dir(dir.path()).unwrap();
+        assert_eq!(files.len(), 2);
+    }
 
     #[test]
     fn project_settings_path_resolves_under_dot_claude() {
