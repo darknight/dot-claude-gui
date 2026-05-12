@@ -331,6 +331,81 @@ pub async fn project_list_plugins(
 }
 
 // ---------------------------------------------------------------------------
+// Effective config — User (bound account) + Project + Local merge
+// ---------------------------------------------------------------------------
+
+use claude_config::merge::{merge_layers, ConfigLayer, MergedConfig};
+use claude_types::settings::ConfigSource;
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectEffectiveResponse {
+    pub project_path: String,
+    pub account: String,
+    pub settings: claude_types::Settings,
+    pub field_sources: std::collections::HashMap<String, ConfigSource>,
+}
+
+/// Build merged layers given pre-read settings. Pure for testability.
+pub(crate) fn merge_project_layers(
+    user: claude_types::Settings,
+    project: claude_types::Settings,
+    local: claude_types::Settings,
+) -> MergedConfig {
+    merge_layers(&[
+        ConfigLayer { source: ConfigSource::User, settings: user },
+        ConfigLayer { source: ConfigSource::Project, settings: project },
+        ConfigLayer { source: ConfigSource::Local, settings: local },
+    ])
+}
+
+pub(crate) async fn read_effective_for_project(
+    state: &AppState,
+    project_path: &str,
+) -> Result<ProjectEffectiveResponse, String> {
+    let account_dir = state.resolve_project_account_dir(project_path).await?;
+
+    // Determine the bound account name from AppConfig.
+    let home = dirs_next::home_dir().ok_or("cannot determine home directory")?;
+    let cfg = crate::app_config::read_config(&home.join(".dot-claude-gui").join("config.json"))?;
+    let account = cfg.projects.get(project_path)
+        .map(|b| b.account.clone())
+        .ok_or_else(|| format!("Unbound project: {project_path}"))?;
+
+    // Layer 1: User — bound account's settings.json, read from disk.
+    let user_settings_path = account_dir.join("settings.json");
+    let user_settings = claude_config::parse::read_settings(&user_settings_path)
+        .map_err(|e| format!("read user settings {}: {e}", user_settings_path.display()))?;
+
+    // Layer 2: Project
+    let project_settings_path = std::path::Path::new(project_path).join(".claude").join("settings.json");
+    let project_settings = claude_config::parse::read_settings(&project_settings_path)
+        .map_err(|e| format!("read project settings {}: {e}", project_settings_path.display()))?;
+
+    // Layer 3: Local
+    let local_settings_path = std::path::Path::new(project_path).join(".claude").join("settings.local.json");
+    let local_settings = claude_config::parse::read_settings(&local_settings_path)
+        .map_err(|e| format!("read local settings {}: {e}", local_settings_path.display()))?;
+
+    let merged = merge_project_layers(user_settings, project_settings, local_settings);
+
+    Ok(ProjectEffectiveResponse {
+        project_path: project_path.to_string(),
+        account,
+        settings: merged.settings,
+        field_sources: merged.field_sources,
+    })
+}
+
+#[tauri::command]
+pub async fn project_read_effective(
+    state: State<'_, AppState>,
+    project_path: String,
+) -> Result<ProjectEffectiveResponse, String> {
+    read_effective_for_project(&state, &project_path).await
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -486,5 +561,73 @@ mod tests {
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].id, "my-plugin@my-marketplace");
         assert_eq!(result[0].enabled, false);
+    }
+
+    // ── merge_project_layers tests ──────────────────────────────────────────
+
+    /// enabledPlugins uses HashMap key-by-key overlay (NOT Vec concat).
+    /// The comment in merge.rs line 38 says "Vec append" — that comment is
+    /// stale. The actual implementation (lines 120-128) does HashMap overlay
+    /// per key: later layer wins per key, missing keys from earlier layers
+    /// are preserved.
+    #[test]
+    fn merge_project_layers_project_overrides_user_for_enabled_plugins() {
+        use std::collections::HashMap;
+        let mut user = claude_types::Settings::default();
+        let mut user_plugins = HashMap::new();
+        user_plugins.insert("a".to_string(), true);
+        user.enabled_plugins = Some(user_plugins);
+
+        let mut project = claude_types::Settings::default();
+        let mut proj_plugins = HashMap::new();
+        proj_plugins.insert("a".to_string(), false);
+        proj_plugins.insert("b".to_string(), true);
+        project.enabled_plugins = Some(proj_plugins);
+
+        let local = claude_types::Settings::default();
+        let merged = merge_project_layers(user, project, local);
+
+        let plugins = merged.settings.enabled_plugins.as_ref().expect("plugins present");
+        // enabledPlugins is HashMap overlay: project's 'a=false' overrides user's 'a=true'.
+        assert_eq!(plugins.get("a"), Some(&false), "project overrides user");
+        // 'b=true' is only in project layer, still present in merged output.
+        assert_eq!(plugins.get("b"), Some(&true), "project-only key present");
+
+        use claude_types::settings::ConfigSource;
+        assert_eq!(merged.field_sources.get("enabledPlugins.a"), Some(&ConfigSource::Project));
+        assert_eq!(merged.field_sources.get("enabledPlugins.b"), Some(&ConfigSource::Project));
+    }
+
+    #[test]
+    fn merge_project_layers_local_overrides_project_scalar() {
+        let mut project = claude_types::Settings::default();
+        project.language = Some("en".to_string());
+
+        let mut local = claude_types::Settings::default();
+        local.language = Some("fr".to_string());
+
+        let merged = merge_project_layers(
+            claude_types::Settings::default(),
+            project,
+            local,
+        );
+        assert_eq!(merged.settings.language, Some("fr".to_string()));
+        use claude_types::settings::ConfigSource;
+        assert_eq!(merged.field_sources.get("language"), Some(&ConfigSource::Local));
+    }
+
+    #[test]
+    fn merge_project_layers_user_only_key_preserved() {
+        let mut user = claude_types::Settings::default();
+        user.language = Some("zh-CN".to_string());
+
+        let merged = merge_project_layers(
+            user,
+            claude_types::Settings::default(),
+            claude_types::Settings::default(),
+        );
+        assert_eq!(merged.settings.language, Some("zh-CN".to_string()));
+        use claude_types::settings::ConfigSource;
+        assert_eq!(merged.field_sources.get("language"), Some(&ConfigSource::User));
     }
 }

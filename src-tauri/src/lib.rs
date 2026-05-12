@@ -108,6 +108,7 @@ pub fn run() {
             commands::project_facets::project_write_memory_file,
             commands::project_facets::project_delete_memory_file,
             commands::project_facets::project_list_plugins,
+            commands::project_facets::project_read_effective,
         ])
         .setup(|app| {
             // One-shot migration v1 → v2 (idempotent for v2).
