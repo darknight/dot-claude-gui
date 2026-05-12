@@ -6,7 +6,7 @@ mod state;
 mod watcher;
 
 use std::path::PathBuf;
-use tauri::{Emitter, Manager};
+use tauri::Manager;
 
 // ── Config-dir helpers ────────────────────────────────────────────────────────
 
@@ -103,23 +103,33 @@ pub fn run() {
             commands::project_facets::project_delete_memory_file,
             commands::project_facets::project_list_plugins,
             commands::project_facets::project_read_effective,
+            commands::migration::take_migration_report,
         ])
         .setup(|app| {
             // One-shot migration v1 → v2 (idempotent for v2).
             // Runs before any state init so subsequent code reads the new schema.
-            if let Ok(dir) = ensure_config_dir() {
-                let cfg_path = dir.join("config.json");
-                let native_exists = dirs_next::home_dir()
-                    .map(|h| h.join(".claude").exists())
-                    .unwrap_or(false);
-                match app_config::migrate_at_startup(&cfg_path, native_exists) {
-                    Ok(report) => {
-                        tracing::info!("config migration: {report:?}");
-                        let _ = app.emit("app-migration-report", &report);
+            // Report is stashed in AppState and pulled via IPC (not emitted as an
+            // event) to avoid the setup-vs-mount race: setup runs before the WebView
+            // window / JS bundle exist, so events emitted here are lost.
+            let pending_report: Option<app_config::MigrationReport> =
+                if let Ok(dir) = ensure_config_dir() {
+                    let cfg_path = dir.join("config.json");
+                    let native_exists = dirs_next::home_dir()
+                        .map(|h| h.join(".claude").exists())
+                        .unwrap_or(false);
+                    match app_config::migrate_at_startup(&cfg_path, native_exists) {
+                        Ok(report) => {
+                            tracing::info!("config migration: {report:?}");
+                            Some(report)
+                        }
+                        Err(e) => {
+                            tracing::error!("config migration failed: {e}");
+                            None
+                        }
                     }
-                    Err(e) => tracing::error!("config migration failed: {e}"),
-                }
-            }
+                } else {
+                    None
+                };
 
             let claude_home = dirs_next::home_dir()
                 .ok_or_else(|| "cannot determine home directory".to_string())?
@@ -133,6 +143,10 @@ pub fn run() {
             tauri::async_runtime::block_on(async {
                 if let Err(e) = state_clone.load_user_settings().await {
                     tracing::warn!("failed to load initial user settings: {e}");
+                }
+                // Stash migration report (if any) now that AppState is ready.
+                if let Some(report) = pending_report {
+                    state_clone.set_migration_report(report).await;
                 }
             });
 

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use claude_config::parse::read_settings;
 use claude_types::Settings;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 /// The inner state shared across all Tauri command handlers.
 pub struct AppStateInner {
@@ -14,6 +14,8 @@ pub struct AppStateInner {
     pub active_account_dir: RwLock<PathBuf>,
     pub user_settings: RwLock<Settings>,
     pub started_at: std::time::Instant,
+    /// One-shot migration report cached at startup; cleared after first IPC pull.
+    pub(crate) migration_report: Mutex<Option<crate::app_config::MigrationReport>>,
 }
 
 /// Arc-wrapped state, cheap to clone across Tauri commands.
@@ -31,6 +33,7 @@ impl AppState {
                 claude_home,
                 user_settings: RwLock::new(Settings::default()),
                 started_at: std::time::Instant::now(),
+                migration_report: Mutex::new(None),
             }),
         }
     }
@@ -56,6 +59,16 @@ impl AppState {
         let settings = read_settings(&settings_path)?;
         *self.inner.user_settings.write().await = settings;
         Ok(())
+    }
+
+    /// Stash the one-shot migration report for later IPC pull.
+    pub async fn set_migration_report(&self, report: crate::app_config::MigrationReport) {
+        *self.inner.migration_report.lock().await = Some(report);
+    }
+
+    /// Take (and clear) the one-shot migration report. Subsequent calls return `None`.
+    pub async fn take_migration_report(&self) -> Option<crate::app_config::MigrationReport> {
+        self.inner.migration_report.lock().await.take()
     }
 
     /// Given a project path (absolute), look up its account binding in

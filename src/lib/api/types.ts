@@ -535,3 +535,13 @@ export interface ProjectEffectiveResponse {
   settings: Settings;
   fieldSources: Record<string, ConfigSource>;
 }
+
+// ---------------------------------------------------------------------------
+// Migration report (IPC pull — one-shot at startup)
+// ---------------------------------------------------------------------------
+
+export interface AppMigrationReport {
+  migrated: boolean;
+  bakPath?: string | null;
+  defaultInjected: boolean;
+}

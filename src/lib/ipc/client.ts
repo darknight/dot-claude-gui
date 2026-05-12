@@ -8,6 +8,7 @@ import type {
   AccountOverview,
   AccountStatus,
   AddMcpServerRequest,
+  AppMigrationReport,
   AvailablePlugin,
   ClaudeMdFile,
   ClaudeMdFileDetail,
@@ -70,6 +71,12 @@ async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> 
 // ---------------------------------------------------------------------------
 
 export class IpcClient {
+  // --- migration (1) ---
+
+  async takeMigrationReport(): Promise<AppMigrationReport | null> {
+    return call("take_migration_report");
+  }
+
   // --- health (1) ---
 
   async health(): Promise<HealthResponse> {

@@ -10,7 +10,8 @@
   import { claudeMdStore } from "$lib/stores/claudemd.svelte";
   import { appSettingsStore } from "$lib/stores/appsettings.svelte";
   import { modeStore } from "$lib/stores/mode.svelte";
-  import { onConfigChanged, onAppMigrationReport, type AppMigrationReportPayload } from "$lib/ipc/events.js";
+  import { onConfigChanged } from "$lib/ipc/events.js";
+  import { ipcClient } from "$lib/ipc/client.js";
   import { toastStore } from "$lib/stores/toast.svelte";
   import { t } from "$lib/i18n";
 
@@ -57,7 +58,6 @@
   });
 
   let unlistenConfigChanged: (() => void) | undefined;
-  let unlistenMigration: (() => void) | undefined;
   let settingsModalOpen = $state(false);
 
   onMount(() => {
@@ -76,16 +76,20 @@
       unlistenConfigChanged = await onConfigChanged((payload) => {
         configStore.setUserConfig(payload.settings);
       });
-      unlistenMigration = await onAppMigrationReport((report: AppMigrationReportPayload) => {
-        if (report.migrated) {
+      // Pull the one-shot migration report (IPC pull avoids setup-vs-mount race).
+      try {
+        const report = await ipcClient.takeMigrationReport();
+        if (report?.migrated) {
           toastStore.success(t("migration.toastSuccess", { backup: report.bakPath ?? "" }));
         }
-      });
+      } catch (e) {
+        // Migration IPC failure is non-fatal — don't break startup.
+        console.warn("take_migration_report failed", e);
+      }
     })();
 
     return () => {
       unlistenConfigChanged?.();
-      unlistenMigration?.();
     };
   });
 </script>
