@@ -6,7 +6,6 @@
     { id: "installed", labelKey: "plugins.installed" },
     { id: "marketplace", labelKey: "plugins.marketplace" },
     { id: "manage-marketplaces", labelKey: "plugins.manageMarketplaces" },
-    { id: "per-project", labelKey: "plugins.perProject" },
   ] satisfies { id: string; labelKey: MessageKey }[];
 
   let active = $state("installed");
