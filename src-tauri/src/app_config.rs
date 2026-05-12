@@ -250,7 +250,7 @@ pub fn resolve_account_dir_for_project(
         .projects
         .get(project_path)
         .ok_or_else(|| format!("Unbound project: {project_path}"))?;
-    if cfg.accounts.iter().all(|a| a.name != binding.account) {
+    if !cfg.accounts.iter().any(|a| a.name == binding.account) {
         return Err(format!("Unknown account: {}", binding.account));
     }
     Ok(account_dir(home, &binding.account))
@@ -814,6 +814,27 @@ mod tests {
         assert!(
             lower.contains("unbound"),
             "expected error containing 'unbound', got: {err}"
+        );
+    }
+
+    #[test]
+    fn resolve_account_dir_for_project_orphaned_binding_returns_error() {
+        // make_cfg_with_project inserts both account "ghost" and the binding;
+        // remove "ghost" from cfg.accounts to simulate a dangling reference.
+        let cfg = make_cfg_with_project("/p", "ghost");
+        let cfg_no_ghost = AppConfig {
+            accounts: cfg.accounts.iter().filter(|a| a.name != "ghost").cloned().collect(),
+            ..cfg
+        };
+        let err = resolve_account_dir_for_project(
+            std::path::Path::new("/u/eric"),
+            &cfg_no_ghost,
+            "/p",
+        )
+        .unwrap_err();
+        assert!(
+            err.to_lowercase().contains("unknown account"),
+            "expected error containing 'unknown account', got: {err}"
         );
     }
 }
