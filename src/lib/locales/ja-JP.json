@@ -325,5 +325,6 @@
   "shell.modeNavLabel": "モード切替",
   "shell.accountsMode": "アカウント",
   "shell.projectsMode": "プロジェクト",
-  "shell.appSettings": "アプリ設定"
+  "shell.appSettings": "アプリ設定",
+  "shell.close": "閉じる"
 }

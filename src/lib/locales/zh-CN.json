@@ -325,5 +325,6 @@
   "shell.modeNavLabel": "模式切换",
   "shell.accountsMode": "账号",
   "shell.projectsMode": "项目",
-  "shell.appSettings": "应用设置"
+  "shell.appSettings": "应用设置",
+  "shell.close": "关闭"
 }
