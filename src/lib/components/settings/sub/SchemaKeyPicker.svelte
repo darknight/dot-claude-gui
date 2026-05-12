@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from "$lib/i18n";
+  import { t, hasTranslation } from "$lib/i18n";
   import { schemaSnapshot, categorizeField, type SchemaField } from "$lib/api/schema-snapshot";
 
   let {
@@ -75,7 +75,7 @@
     {#if visibleFields.length > 0}
       <div class="space-y-1">
         <h4 class="text-xs font-semibold uppercase" style="color: var(--text-muted)">
-          {t(labelKey)} ({visibleFields.length})
+          {hasTranslation(labelKey) ? t(labelKey) : labelKey} ({visibleFields.length})
         </h4>
         <ul class="text-sm">
           {#each visibleFields as f (f.name)}

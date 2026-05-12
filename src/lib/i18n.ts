@@ -72,3 +72,7 @@ export function localeDisplayName(loc: Locale): string {
 export function isSupportedLocale(s: unknown): s is Locale {
   return typeof s === "string" && (SUPPORTED_LOCALES as readonly string[]).includes(s);
 }
+
+export function hasTranslation(k: string): k is MessageKey {
+  return k in zhCN;
+}
