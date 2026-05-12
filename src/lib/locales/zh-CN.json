@@ -348,5 +348,22 @@
   "accountMode.claudemd": "CLAUDE.md",
   "accountMode.memory": "记忆",
   "accountMode.mcp": "MCP",
-  "accountMode.selectAccountHint": "请从左侧选择一个账号"
+  "accountMode.selectAccountHint": "请从左侧选择一个账号",
+  "accountMode.loading": "加载中…",
+  "accountMode.configDir": "配置目录",
+  "accountMode.status": "状态",
+  "accountMode.loggedIn": "已登录",
+  "accountMode.notLoggedIn": "未登录",
+  "accountMode.projectCount": "项目数",
+  "accountMode.pluginCount": "插件数",
+  "accountMode.skillCount": "技能数",
+  "accountMode.relogin": "重新登录",
+  "accountMode.reloginHint": "重新登录将在 Stage 3 Project > Launch 中实现",
+  "accountMode.copyDir": "复制目录",
+  "accountMode.openDirFailed": "复制失败",
+  "accountMode.dirCopied": "已复制",
+  "accountMode.delete": "删除账号",
+  "accountMode.deleteConfirm": "确认删除账号 {name}？",
+  "accountMode.deleteSuccess": "已删除",
+  "accountMode.deleteFailed": "删除失败"
 }

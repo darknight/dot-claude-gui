@@ -348,5 +348,22 @@
   "accountMode.claudemd": "CLAUDE.md",
   "accountMode.memory": "Memory",
   "accountMode.mcp": "MCP",
-  "accountMode.selectAccountHint": "Select an account on the left"
+  "accountMode.selectAccountHint": "Select an account on the left",
+  "accountMode.loading": "Loading…",
+  "accountMode.configDir": "Config dir",
+  "accountMode.status": "Status",
+  "accountMode.loggedIn": "Logged in",
+  "accountMode.notLoggedIn": "Not logged in",
+  "accountMode.projectCount": "Projects",
+  "accountMode.pluginCount": "Plugins",
+  "accountMode.skillCount": "Skills",
+  "accountMode.relogin": "Re-login",
+  "accountMode.reloginHint": "Re-login lands in Stage 3 Project > Launch",
+  "accountMode.copyDir": "Copy path",
+  "accountMode.openDirFailed": "Copy failed",
+  "accountMode.dirCopied": "Copied",
+  "accountMode.delete": "Delete account",
+  "accountMode.deleteConfirm": "Delete account {name}?",
+  "accountMode.deleteSuccess": "Deleted",
+  "accountMode.deleteFailed": "Delete failed"
 }

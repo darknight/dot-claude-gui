@@ -348,5 +348,22 @@
   "accountMode.claudemd": "CLAUDE.md",
   "accountMode.memory": "メモリ",
   "accountMode.mcp": "MCP",
-  "accountMode.selectAccountHint": "左側からアカウントを選択してください"
+  "accountMode.selectAccountHint": "左側からアカウントを選択してください",
+  "accountMode.loading": "読み込み中…",
+  "accountMode.configDir": "設定ディレクトリ",
+  "accountMode.status": "状態",
+  "accountMode.loggedIn": "ログイン済み",
+  "accountMode.notLoggedIn": "未ログイン",
+  "accountMode.projectCount": "プロジェクト数",
+  "accountMode.pluginCount": "プラグイン数",
+  "accountMode.skillCount": "スキル数",
+  "accountMode.relogin": "再ログイン",
+  "accountMode.reloginHint": "再ログインは Stage 3 Project > Launch で実装予定",
+  "accountMode.copyDir": "パスをコピー",
+  "accountMode.openDirFailed": "コピー失敗",
+  "accountMode.dirCopied": "コピーしました",
+  "accountMode.delete": "アカウント削除",
+  "accountMode.deleteConfirm": "アカウント {name} を削除しますか？",
+  "accountMode.deleteSuccess": "削除しました",
+  "accountMode.deleteFailed": "削除失敗"
 }
