@@ -82,3 +82,7 @@ These caused multi-round debugging sessions. Check here FIRST when UI doesn't up
 7. **Validation lists drift from Claude Code's schema.** Hook event names, settings keys, etc. Source of truth is `https://json.schemastore.org/claude-code-settings.json`. If a save fails with "unknown X", check the schema before assuming the user's config is wrong.
 
 8. **`config-changed` events carry `source: "file-watcher"`** (not `"user"`). Filter handlers accordingly — overly strict source checks silently break live reload.
+
+9. **Tauri IPC request structs need explicit `#[serde(rename_all = "camelCase")]`.** Top-level command params (`fn cmd(project_path: String)` → `{ projectPath }` from JS) auto-rename, but inner struct fields do NOT. A `WriteFooRequest { project_path }` without `rename_all` requires JS to send `{ project_path }` snake_case or the call fails at runtime with "missing field". Stage 3 hit this — landed `feat(stage3): IPC client wrappers...` then needed `fix(stage3): camelCase rename_all...` immediately after.
+
+10. **TS ↔ Rust type drift on shared shapes is silent until used.** `Settings.enabledPlugins` was `string[]` in `src/lib/api/types.ts` long after Rust changed to `HashMap<String, bool>`. Since old code only read the field as a free-form, tsc didn't complain. New code assuming the Rust shape will type-error or worse, work-then-fail at IPC boundary. When adding a new consumer of a `claude-types::Settings` field, **diff the Rust definition against `src/lib/api/types.ts`** first.
