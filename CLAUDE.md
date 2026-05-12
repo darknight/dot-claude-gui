@@ -55,9 +55,10 @@ pnpm tauri build                          # Build production .app and .dmg
 - **Svelte 5 runes only** — no legacy `$:` reactive statements, use `$state`, `$effect`, `$derived`
 - **Tailwind CSS 4** via `@tailwindcss/vite` plugin
 - **CSS variable theming** — colors defined in `app.css` as `:root` (light) and `.dark` (dark) variables; use `var(--bg-primary)` etc. instead of hardcoded Tailwind color classes in layout components
-- **Three-panel layout** in App.svelte: sidebar (resizable, 56-180px) → sub-panel (resizable, 160-400px) → detail panel
-- **Sidebar** uses SVG icons (Heroicons outline) + text labels; text auto-hides at narrow widths
-- **9 navigation modules:** Settings, Plugins, Skills, Memory, CLAUDE.md, MCP, Effective Config, Launcher, App Settings
+- **Mode-based shell** in App.svelte: top mode tabs (Accounts / Projects) + right-corner gear; per-mode 2-panel layout (mode-aware sidebar → main facet area)
+- **Account mode** (sidebar = accounts list) renders 7 facets: Overview, Settings, Plugins, Skills, CLAUDE.md, Memory, MCP
+- **Project mode** (sidebar = projects list) renders 7 facets: Binding, Launch, Plugins↓ (tri-state override), Settings, CLAUDE.md, Memory, Effective
+- **Gear panel** (modal): Appearance / Language / Terminal / About
 - **TypeScript strict mode** enabled
 - **pnpm** as package manager (not npm/yarn)
 - Frontend has no test suite; all tests are Rust-side with `cargo test`
@@ -86,3 +87,9 @@ These caused multi-round debugging sessions. Check here FIRST when UI doesn't up
 9. **Tauri IPC request structs need explicit `#[serde(rename_all = "camelCase")]`.** Top-level command params (`fn cmd(project_path: String)` → `{ projectPath }` from JS) auto-rename, but inner struct fields do NOT. A `WriteFooRequest { project_path }` without `rename_all` requires JS to send `{ project_path }` snake_case or the call fails at runtime with "missing field". Stage 3 hit this — landed `feat(stage3): IPC client wrappers...` then needed `fix(stage3): camelCase rename_all...` immediately after.
 
 10. **TS ↔ Rust type drift on shared shapes is silent until used.** `Settings.enabledPlugins` was `string[]` in `src/lib/api/types.ts` long after Rust changed to `HashMap<String, bool>`. Since old code only read the field as a free-form, tsc didn't complain. New code assuming the Rust shape will type-error or worse, work-then-fail at IPC boundary. When adding a new consumer of a `claude-types::Settings` field, **diff the Rust definition against `src/lib/api/types.ts`** first.
+
+11. **`tauri::App::setup` runs BEFORE the WebView exists — `app.emit(...)` from inside `setup` is silently lost.** Frontend listeners attach in `onMount`, which runs after the JS bundle loads (hundreds of ms after setup returns). Tauri events are not buffered for late subscribers. For one-shot setup-time signals (migration reports, first-run flags, etc.), stash the payload in `AppState` and expose a one-shot IPC the frontend pulls on mount. Stage 4 hit this: `feat(stage4): emit and surface v1→v2 migration toast` (commit `144bb3e`) used emit; the toast never fired in practice; the fix `fix(stage4): migration report — switch from emit to IPC pull` (commit `ff019dc`) introduced `take_migration_report`. Use IPC-pull, not emit, for anything fired during setup.
+
+12. **Tauri 2 split `emit()` off `Manager` into a separate `Emitter` trait.** `use tauri::Manager;` is no longer enough to call `app.emit("...")` — you also need `use tauri::Emitter;`. Tauri 1 had this on `Manager`. Cargo's error is `method not found in '&App'` (or `&AppHandle`), which doesn't point at the missing import.
+
+13. **Svelte `{...}` inside double-quoted HTML attributes is JS interpolation, not literal text.** `placeholder="https://x.com/{owner}/{repo}/pull/{number}"` triggers `Cannot find name 'owner'` / `'number' only refers to a type, but is being used as a value here` from svelte-check, because Svelte parses the bracketed names as JS expressions. To put literal `{token}` placeholders into an attribute, wrap the whole string as a JS expression: `placeholder={"https://x.com/{owner}/{repo}/pull/{number}"}`. Stage 4 spent multiple debugging cycles on this one before realizing it was an attribute-parse issue.
