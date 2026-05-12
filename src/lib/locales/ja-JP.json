@@ -321,5 +321,9 @@
   "mcp.removeServer": "サーバーを削除",
   "settings.statusLineType": "タイプ",
   "settings.statusLinePadding": "パディング",
-  "settings.hooksEmptyDirtyHint": "このイベントのルールはローカルで消去されていますが、保存済みファイルにはまだ残っています。「保存」で適用、「元に戻す」で復元します。"
+  "settings.hooksEmptyDirtyHint": "このイベントのルールはローカルで消去されていますが、保存済みファイルにはまだ残っています。「保存」で適用、「元に戻す」で復元します。",
+  "shell.modeNavLabel": "モード切替",
+  "shell.accountsMode": "アカウント",
+  "shell.projectsMode": "プロジェクト",
+  "shell.appSettings": "アプリ設定"
 }

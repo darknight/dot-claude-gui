@@ -321,5 +321,9 @@
   "mcp.removeServer": "移除服务器",
   "settings.statusLineType": "类型",
   "settings.statusLinePadding": "内边距",
-  "settings.hooksEmptyDirtyHint": "本地已清空该事件的规则，磁盘上仍保留原始内容。点击「保存」以应用清空操作，或「还原」恢复磁盘内容。"
+  "settings.hooksEmptyDirtyHint": "本地已清空该事件的规则，磁盘上仍保留原始内容。点击「保存」以应用清空操作，或「还原」恢复磁盘内容。",
+  "shell.modeNavLabel": "模式切换",
+  "shell.accountsMode": "账号",
+  "shell.projectsMode": "项目",
+  "shell.appSettings": "应用设置"
 }

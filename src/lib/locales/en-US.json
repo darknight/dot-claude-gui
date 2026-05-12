@@ -321,5 +321,9 @@
   "mcp.removeServer": "Remove server",
   "settings.statusLineType": "Type",
   "settings.statusLinePadding": "Padding",
-  "settings.hooksEmptyDirtyHint": "This event's rules are cleared locally; the saved file still has them. Click Save to apply, or Revert to restore."
+  "settings.hooksEmptyDirtyHint": "This event's rules are cleared locally; the saved file still has them. Click Save to apply, or Revert to restore.",
+  "shell.modeNavLabel": "Mode switcher",
+  "shell.accountsMode": "Accounts",
+  "shell.projectsMode": "Projects",
+  "shell.appSettings": "App settings"
 }
