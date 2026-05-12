@@ -333,5 +333,10 @@
   "shell.addAccount": "Add",
   "shell.accountAlreadyExists": "Account already exists",
   "shell.createAccountFailed": "Create account failed",
-  "shell.switchAccountFailed": "Switch account failed"
+  "shell.switchAccountFailed": "Switch account failed",
+  "shell.projectsList": "Projects",
+  "shell.unbound": "Unbound",
+  "shell.stale": "stale",
+  "shell.addProject": "Add project",
+  "shell.addProjectFailed": "Add project failed"
 }
