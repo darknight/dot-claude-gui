@@ -400,5 +400,16 @@
   "projectMode.launch.saveBtn": "Save",
   "projectMode.launch.savedLabel": "Saved",
   "projectMode.launch.launchBtn": "Launch Claude Code",
-  "projectMode.launch.saved": "Launch settings saved"
+  "projectMode.launch.saved": "Launch settings saved",
+  "projectMode.plugins.title": "Plugins Override",
+  "projectMode.plugins.hint": "Inherit = use account setting; Disable/Enable writes to project settings.json",
+  "projectMode.plugins.name": "Plugin",
+  "projectMode.plugins.version": "Version",
+  "projectMode.plugins.override": "Override",
+  "projectMode.plugins.disable": "Disable",
+  "projectMode.plugins.inherit": "Inherit",
+  "projectMode.plugins.enable": "Enable",
+  "projectMode.plugins.noPluginsAccount": "No plugins installed under the bound account",
+  "projectMode.plugins.loading": "Loading...",
+  "projectMode.plugins.saved": "Saved"
 }

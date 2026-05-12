@@ -400,5 +400,16 @@
   "projectMode.launch.saveBtn": "保存",
   "projectMode.launch.savedLabel": "保存済み",
   "projectMode.launch.launchBtn": "Claude Code を起動",
-  "projectMode.launch.saved": "起動設定を保存しました"
+  "projectMode.launch.saved": "起動設定を保存しました",
+  "projectMode.plugins.title": "Plugins オーバーライド",
+  "projectMode.plugins.hint": "Inherit = アカウント設定を継承;Disable/Enable は project settings.json に書き込み",
+  "projectMode.plugins.name": "プラグイン",
+  "projectMode.plugins.version": "バージョン",
+  "projectMode.plugins.override": "オーバーライド",
+  "projectMode.plugins.disable": "Disable",
+  "projectMode.plugins.inherit": "Inherit",
+  "projectMode.plugins.enable": "Enable",
+  "projectMode.plugins.noPluginsAccount": "バインドされたアカウントにはインストール済みプラグインがありません",
+  "projectMode.plugins.loading": "読み込み中...",
+  "projectMode.plugins.saved": "保存しました"
 }

@@ -400,5 +400,16 @@
   "projectMode.launch.saveBtn": "保存",
   "projectMode.launch.savedLabel": "已保存",
   "projectMode.launch.launchBtn": "启动 Claude Code",
-  "projectMode.launch.saved": "启动配置已保存"
+  "projectMode.launch.saved": "启动配置已保存",
+  "projectMode.plugins.title": "Plugins 覆写",
+  "projectMode.plugins.hint": "Inherit = 继承账号设置;Disable/Enable 写入项目 settings.json",
+  "projectMode.plugins.name": "插件",
+  "projectMode.plugins.version": "版本",
+  "projectMode.plugins.override": "覆写状态",
+  "projectMode.plugins.disable": "Disable",
+  "projectMode.plugins.inherit": "Inherit",
+  "projectMode.plugins.enable": "Enable",
+  "projectMode.plugins.noPluginsAccount": "绑定账号下没有已安装的插件",
+  "projectMode.plugins.loading": "加载中...",
+  "projectMode.plugins.saved": "已保存"
 }
