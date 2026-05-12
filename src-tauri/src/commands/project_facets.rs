@@ -293,6 +293,44 @@ pub async fn project_delete_memory_file(
 }
 
 // ---------------------------------------------------------------------------
+// Project plugins — account-scoped via binding
+// ---------------------------------------------------------------------------
+
+use claude_types::plugins::PluginInfo;
+
+pub(crate) async fn list_plugins_for_project(
+    state: &AppState,
+    project_path: &str,
+) -> Result<Vec<PluginInfo>, String> {
+    let account_dir = state.resolve_project_account_dir(project_path).await?;
+    let plugins_dir = account_dir.join("plugins");
+
+    // Read bound account's user-layer settings.json directly to get its
+    // enabled_plugins map. Empty map if missing or unparseable — matches the
+    // behavior of the cached path in list_plugins_logic.
+    let settings_path = account_dir.join("settings.json");
+    let enabled_map = if settings_path.exists() {
+        std::fs::read_to_string(&settings_path)
+            .ok()
+            .and_then(|raw| serde_json::from_str::<claude_types::Settings>(&raw).ok())
+            .and_then(|s| s.enabled_plugins)
+            .unwrap_or_default()
+    } else {
+        std::collections::HashMap::new()
+    };
+
+    Ok(crate::commands::plugins::list_plugins_in_dir(&plugins_dir, &enabled_map))
+}
+
+#[tauri::command]
+pub async fn project_list_plugins(
+    state: State<'_, AppState>,
+    project_path: String,
+) -> Result<Vec<PluginInfo>, String> {
+    list_plugins_for_project(&state, &project_path).await
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -409,5 +447,44 @@ mod tests {
         assert!(!proj.path().join(".claude").exists());
         write_claudemd_for_path(proj.path().to_str().unwrap(), "x").unwrap();
         assert!(proj.path().join(".claude").join("CLAUDE.md").exists());
+    }
+
+    #[test]
+    fn list_plugins_in_dir_returns_empty_when_no_installed_file() {
+        let dir = tempdir().unwrap();
+        // No installed_plugins.json:
+        let result = crate::commands::plugins::list_plugins_in_dir(
+            dir.path(),
+            &std::collections::HashMap::new(),
+        );
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn list_plugins_in_dir_reads_installed_file_and_applies_enabled_map() {
+        let dir = tempdir().unwrap();
+        // Match the on-disk format the existing module expects:
+        // installed_plugins.json: { "version": 1, "plugins": { "<key>": [<entry>] } }
+        let json = r#"{
+            "version": 1,
+            "plugins": {
+                "my-plugin@my-marketplace": [{
+                    "version": "1.0.0",
+                    "installPath": "/tmp/nonexistent",
+                    "installedAt": "2026-05-12T00:00:00Z",
+                    "lastUpdated": "2026-05-12T00:00:00Z",
+                    "scope": "user"
+                }]
+            }
+        }"#;
+        std::fs::write(dir.path().join("installed_plugins.json"), json).unwrap();
+
+        // Enabled map sets my-plugin@my-marketplace to false:
+        let mut enabled = std::collections::HashMap::new();
+        enabled.insert("my-plugin@my-marketplace".to_string(), false);
+        let result = crate::commands::plugins::list_plugins_in_dir(dir.path(), &enabled);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].id, "my-plugin@my-marketplace");
+        assert_eq!(result[0].enabled, false);
     }
 }

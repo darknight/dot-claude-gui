@@ -63,9 +63,17 @@ fn read_plugin_description(install_path: &str) -> Option<String> {
 // list_plugins — ASYNC (reads user_settings RwLock for enabledPlugins)
 // ---------------------------------------------------------------------------
 
-pub(crate) async fn list_plugins_logic(state: &AppState) -> Vec<PluginInfo> {
-    let plugins_dir = state.current_dir().await.join("plugins");
-
+/// Pure, synchronous helper: scans `plugins_dir` for `installed_plugins.json`
+/// and `blocklist.json`, then composes a `Vec<PluginInfo>` using the provided
+/// `enabled_map` (from the caller's relevant account settings.json).
+///
+/// This is `pub(crate)` so that `project_facets` can call it directly with an
+/// enabled_map read from the *bound* account's settings — not from the GUI's
+/// active-account cache.
+pub(crate) fn list_plugins_in_dir(
+    plugins_dir: &std::path::Path,
+    enabled_map: &HashMap<String, bool>,
+) -> Vec<PluginInfo> {
     // Read installed_plugins.json (empty default if missing).
     let installed: InstalledPluginsFile =
         read_json_file_opt(&plugins_dir.join("installed_plugins.json"))
@@ -80,12 +88,6 @@ pub(crate) async fn list_plugins_logic(state: &AppState) -> Vec<PluginInfo> {
     let blocked_ids: HashSet<String> = blocklist_opt
         .map(|b| b.plugins.into_iter().map(|p| p.plugin).collect())
         .unwrap_or_default();
-
-    // Read enabledPlugins from cached user settings.
-    let enabled_map: HashMap<String, bool> = {
-        let settings = state.inner.user_settings.read().await;
-        settings.enabled_plugins.clone().unwrap_or_default()
-    };
 
     let mut result = Vec::new();
 
@@ -114,6 +116,15 @@ pub(crate) async fn list_plugins_logic(state: &AppState) -> Vec<PluginInfo> {
     }
 
     result
+}
+
+pub(crate) async fn list_plugins_logic(state: &AppState) -> Vec<PluginInfo> {
+    let plugins_dir = state.current_dir().await.join("plugins");
+    let enabled_map: HashMap<String, bool> = {
+        let settings = state.inner.user_settings.read().await;
+        settings.enabled_plugins.clone().unwrap_or_default()
+    };
+    list_plugins_in_dir(&plugins_dir, &enabled_map)
 }
 
 #[tauri::command]
