@@ -390,5 +390,15 @@
   "projectMode.binding.removeBtn": "リストから削除",
   "projectMode.binding.bound": "{account} にバインド済み",
   "projectMode.binding.confirmUnbind": "バインドを解除しますか?",
-  "projectMode.binding.confirmRemove": "既知プロジェクトから削除しますか?"
+  "projectMode.binding.confirmRemove": "既知プロジェクトから削除しますか?",
+  "projectMode.launch.title": "起動設定",
+  "projectMode.launch.account": "使用するアカウント: {account}",
+  "projectMode.launch.envTitle": "環境変数",
+  "projectMode.launch.argsTitle": "起動引数",
+  "projectMode.launch.addEnv": "+ 環境変数を追加",
+  "projectMode.launch.addArg": "+ 引数を追加",
+  "projectMode.launch.saveBtn": "保存",
+  "projectMode.launch.savedLabel": "保存済み",
+  "projectMode.launch.launchBtn": "Claude Code を起動",
+  "projectMode.launch.saved": "起動設定を保存しました"
 }

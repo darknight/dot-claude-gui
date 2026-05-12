@@ -390,5 +390,15 @@
   "projectMode.binding.removeBtn": "Remove from list",
   "projectMode.binding.bound": "Bound to {account}",
   "projectMode.binding.confirmUnbind": "Unbind from account?",
-  "projectMode.binding.confirmRemove": "Remove from known projects?"
+  "projectMode.binding.confirmRemove": "Remove from known projects?",
+  "projectMode.launch.title": "Launch Settings",
+  "projectMode.launch.account": "Will use account: {account}",
+  "projectMode.launch.envTitle": "Environment Variables",
+  "projectMode.launch.argsTitle": "CLI Args",
+  "projectMode.launch.addEnv": "+ Add env var",
+  "projectMode.launch.addArg": "+ Add arg",
+  "projectMode.launch.saveBtn": "Save",
+  "projectMode.launch.savedLabel": "Saved",
+  "projectMode.launch.launchBtn": "Launch Claude Code",
+  "projectMode.launch.saved": "Launch settings saved"
 }

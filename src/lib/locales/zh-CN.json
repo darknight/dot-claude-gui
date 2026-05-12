@@ -390,5 +390,15 @@
   "projectMode.binding.removeBtn": "从列表移除",
   "projectMode.binding.bound": "已绑定到 {account}",
   "projectMode.binding.confirmUnbind": "确认取消绑定?",
-  "projectMode.binding.confirmRemove": "确认从已知项目移除?"
+  "projectMode.binding.confirmRemove": "确认从已知项目移除?",
+  "projectMode.launch.title": "启动配置",
+  "projectMode.launch.account": "将使用账号: {account}",
+  "projectMode.launch.envTitle": "环境变量",
+  "projectMode.launch.argsTitle": "启动参数",
+  "projectMode.launch.addEnv": "+ 添加环境变量",
+  "projectMode.launch.addArg": "+ 添加参数",
+  "projectMode.launch.saveBtn": "保存",
+  "projectMode.launch.savedLabel": "已保存",
+  "projectMode.launch.launchBtn": "启动 Claude Code",
+  "projectMode.launch.saved": "启动配置已保存"
 }
