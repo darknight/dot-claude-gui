@@ -1,14 +1,9 @@
 <script lang="ts">
   import { memoryStore } from "$lib/stores/memory.svelte";
   import { projectsStore } from "$lib/stores/projects.svelte";
-  import { configStore } from "$lib/stores/config.svelte";
   import { t } from "$lib/i18n";
 
-  // In project scope, the memory project is dictated by ScopeSelector.
-  // Disable the manual dropdown so the UI is unambiguous.
-  const isProjectScope = $derived(configStore.activeScope === "project");
-
-  // Auto-sync with the active project in ScopeSelector:
+  // Auto-sync with the active project:
   // when the active project has a memory dir, show its memory files.
   // If the active project has no memory, clear the selection so the user
   // sees an explicit "no memory" state instead of stale files from another project.
@@ -64,11 +59,9 @@
       <span class="text-xs" style="color: var(--text-muted)">{t("memory.noProjects")}</span>
     {:else}
       <select
-        class="input-base w-full text-xs disabled:cursor-not-allowed disabled:opacity-60"
+        class="input-base w-full text-xs"
         style="padding: 0.375rem 0.5rem"
         value={memoryStore.activeProjectId ?? ""}
-        disabled={isProjectScope}
-        title={isProjectScope ? t("memory.dropdownDisabledInProjectScope") : ""}
         onchange={(e) => {
           const val = (e.target as HTMLSelectElement).value;
           if (val) memoryStore.selectProject(val);

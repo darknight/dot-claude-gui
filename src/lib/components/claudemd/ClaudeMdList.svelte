@@ -1,25 +1,11 @@
 <script lang="ts">
   import { claudeMdStore } from "$lib/stores/claudemd.svelte";
-  import { projectsStore } from "$lib/stores/projects.svelte";
-  import { configStore } from "$lib/stores/config.svelte";
   import { t } from "$lib/i18n";
 
-  const isProjectScope = $derived(
-    configStore.activeScope === "project" && projectsStore.activeProjectId !== null,
+  // Only show global-scope CLAUDE.md entries.
+  const visibleFiles = $derived(
+    claudeMdStore.files.filter((f) => f.scope === "global"),
   );
-
-  // Files filtered by the current scope — only show the entry that matches
-  // so the user can't accidentally edit an out-of-scope CLAUDE.md.
-  const visibleFiles = $derived.by(() => {
-    if (isProjectScope) {
-      return claudeMdStore.files.filter(
-        (f) =>
-          f.scope === "project" &&
-          f.projectId === projectsStore.activeProjectId,
-      );
-    }
-    return claudeMdStore.files.filter((f) => f.scope === "global");
-  });
 
   // Auto-select the single visible entry whenever scope changes.
   $effect(() => {
@@ -45,7 +31,7 @@
     {:else}
       <li class="px-4 pt-2 pb-1">
         <span class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-muted)">
-          {isProjectScope ? t("claudemd.groupProject") : t("claudemd.groupGlobal")}
+          {t("claudemd.groupGlobal")}
         </span>
       </li>
       {#each visibleFiles as file (file.id)}
