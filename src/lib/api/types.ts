@@ -432,6 +432,20 @@ export interface AccountStatus {
   email?: string;
 }
 
+export interface AccountOverview {
+  name: string;
+  displayName: string;
+  isNative: boolean;
+  configDir: string;
+  loggedIn: boolean;
+  email?: string;
+  projectCount: number;
+  pluginCount: number;
+  skillCount: number;
+}
+
+export type GuiMode = "account" | "project";
+
 // ---------------------------------------------------------------------------
 // Project bindings
 // ---------------------------------------------------------------------------
