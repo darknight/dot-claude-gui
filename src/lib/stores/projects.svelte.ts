@@ -11,6 +11,20 @@ class ProjectsStore {
     this.entries.find((e) => e.path === this.selectedPath) ?? null,
   );
 
+  /** Same as `selected` — semantic alias used by project-mode facets. */
+  currentBinding = $derived(this.selected);
+
+  /** True only if the project is in `projects` map (has a non-empty account binding). */
+  currentBound = $derived(
+    this.currentBinding != null && this.currentBinding.account != null && this.currentBinding.account !== "",
+  );
+
+  currentStale = $derived(this.currentBinding?.stale === true);
+
+  currentAccount = $derived<string | null>(this.currentBinding?.account ?? null);
+
+  currentLaunch = $derived<LaunchConfig | null>(this.currentBinding?.launch ?? null);
+
   // ── Deprecated aliases — kept so Stage-2 components compile.
   //    Will be cleaned up in Stage 3 once consumers are rewritten.
   get projects(): ProjectEntry[] { return this.entries; }
