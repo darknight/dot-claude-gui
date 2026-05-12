@@ -23,7 +23,11 @@ import type {
   MemoryFileDetail,
   MemoryProject,
   PluginInfo,
+  ProjectClaudeMdResponse,
+  ProjectEffectiveResponse,
   ProjectEntry,
+  ProjectMemoryListResponse,
+  ProjectSettingsResponse,
   Settings,
   SkillContentResponse,
   SkillInfo,
@@ -282,6 +286,48 @@ export class IpcClient {
 
   async accountOverview(name: string): Promise<AccountOverview> {
     return call("account_overview", { name });
+  }
+
+  // --- project facets (10) — Stage 3 ---
+
+  async projectReadSettings(projectPath: string): Promise<ProjectSettingsResponse> {
+    return call("project_read_settings", { projectPath });
+  }
+
+  async projectWriteSettings(projectPath: string, settings: Settings): Promise<void> {
+    return call("project_write_settings", { request: { projectPath, settings } });
+  }
+
+  async projectReadClaudeMd(projectPath: string): Promise<ProjectClaudeMdResponse> {
+    return call("project_read_claudemd", { projectPath });
+  }
+
+  async projectWriteClaudeMd(projectPath: string, content: string): Promise<void> {
+    return call("project_write_claudemd", { request: { projectPath, content } });
+  }
+
+  async projectListMemory(projectPath: string): Promise<ProjectMemoryListResponse> {
+    return call("project_list_memory", { projectPath });
+  }
+
+  async projectReadMemoryFile(projectPath: string, fileName: string): Promise<string> {
+    return call("project_read_memory_file", { request: { projectPath, fileName } });
+  }
+
+  async projectWriteMemoryFile(projectPath: string, fileName: string, content: string): Promise<void> {
+    return call("project_write_memory_file", { request: { projectPath, fileName, content } });
+  }
+
+  async projectDeleteMemoryFile(projectPath: string, fileName: string): Promise<void> {
+    return call("project_delete_memory_file", { request: { projectPath, fileName } });
+  }
+
+  async projectListPlugins(projectPath: string): Promise<PluginInfo[]> {
+    return call("project_list_plugins", { projectPath });
+  }
+
+  async projectReadEffective(projectPath: string): Promise<ProjectEffectiveResponse> {
+    return call("project_read_effective", { projectPath });
   }
 
   async getConfigDir(): Promise<string> {

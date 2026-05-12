@@ -406,6 +406,7 @@ export interface LaunchRequest {
   env?: Record<string, string>;
   args?: string[];
   preferredTerminal?: PreferredTerminal;
+  account?: string;
 }
 
 export type PreferredTerminal = "terminal" | "iterm2";
@@ -483,4 +484,53 @@ export interface AppConfig {
   /** path → binding */
   projects: Record<string, ProjectBinding>;
   knownProjects: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Project-facet (Stage 3) — path-keyed responses
+// ---------------------------------------------------------------------------
+
+export interface ProjectSettingsResponse {
+  path: string;
+  exists: boolean;
+  settings: Settings;
+}
+
+export interface WriteProjectSettingsRequest {
+  projectPath: string;
+  settings: Settings;
+}
+
+export interface ProjectClaudeMdResponse {
+  path: string;
+  exists: boolean;
+  content: string;
+}
+
+export interface WriteProjectClaudeMdRequest {
+  projectPath: string;
+  content: string;
+}
+
+export interface ProjectMemoryListResponse {
+  path: string;
+  files: MemoryFile[];
+}
+
+export interface ProjectMemoryFileRequest {
+  projectPath: string;
+  fileName: string;
+}
+
+export interface WriteProjectMemoryRequest {
+  projectPath: string;
+  fileName: string;
+  content: string;
+}
+
+export interface ProjectEffectiveResponse {
+  projectPath: string;
+  account: string;
+  settings: Settings;
+  fieldSources: Record<string, ConfigSource>;
 }
