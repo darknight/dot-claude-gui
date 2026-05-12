@@ -10,3 +10,4 @@ pub mod memory;
 pub mod launcher;
 pub mod accounts;
 pub mod account_session;
+pub mod project_facets;

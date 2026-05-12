@@ -99,6 +99,8 @@ pub fn run() {
             commands::plugins::uninstall_plugin,
             commands::plugins::add_marketplace,
             commands::plugins::remove_marketplace,
+            commands::project_facets::project_read_settings,
+            commands::project_facets::project_write_settings,
         ])
         .setup(|app| {
             // One-shot migration v1 → v2 (idempotent for v2).
