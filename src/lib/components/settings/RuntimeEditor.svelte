@@ -349,7 +349,7 @@
     <input id="prUrlTemplate" type="text"
            bind:value={prUrlTemplate}
            oninput={() => configStore.markDirty()}
-           placeholder="https://reviews.example.com/{owner}/{repo}/pull/{number}"
+           placeholder={"https://reviews.example.com/{owner}/{repo}/pull/{number}"}
            class="input-base font-mono text-xs" />
   </div>
 
