@@ -434,5 +434,14 @@
   "projectMode.memory.discardUnsaved": "放弃未保存的修改?",
   "projectMode.memory.confirmDelete": "删除 {name}?",
   "projectMode.memory.newFilePrompt": "新文件名 (例如 note.md)",
-  "projectMode.memory.deleteAria": "删除"
+  "projectMode.memory.deleteAria": "删除",
+  "projectMode.effective.title": "Effective 配置(合并视图)",
+  "projectMode.effective.account": "基于账号: {account}",
+  "projectMode.effective.refreshBtn": "刷新",
+  "projectMode.effective.loading": "加载中...",
+  "projectMode.effective.mergedTitle": "合并后的配置",
+  "projectMode.effective.sourcesTitle": "字段来源",
+  "projectMode.effective.field": "字段",
+  "projectMode.effective.source": "来源",
+  "projectMode.effective.noOverrides": "没有字段覆写"
 }

@@ -434,5 +434,14 @@
   "projectMode.memory.discardUnsaved": "未保存の変更を破棄しますか?",
   "projectMode.memory.confirmDelete": "{name} を削除しますか?",
   "projectMode.memory.newFilePrompt": "新しいファイル名 (例: note.md)",
-  "projectMode.memory.deleteAria": "削除"
+  "projectMode.memory.deleteAria": "削除",
+  "projectMode.effective.title": "Effective 設定(マージビュー)",
+  "projectMode.effective.account": "アカウントベース: {account}",
+  "projectMode.effective.refreshBtn": "更新",
+  "projectMode.effective.loading": "読み込み中...",
+  "projectMode.effective.mergedTitle": "マージされた設定",
+  "projectMode.effective.sourcesTitle": "フィールドソース",
+  "projectMode.effective.field": "フィールド",
+  "projectMode.effective.source": "ソース",
+  "projectMode.effective.noOverrides": "オーバーライドなし"
 }

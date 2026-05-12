@@ -434,5 +434,14 @@
   "projectMode.memory.discardUnsaved": "Discard unsaved changes?",
   "projectMode.memory.confirmDelete": "Delete {name}?",
   "projectMode.memory.newFilePrompt": "New file name (e.g. note.md)",
-  "projectMode.memory.deleteAria": "Delete"
+  "projectMode.memory.deleteAria": "Delete",
+  "projectMode.effective.title": "Effective Config (merged)",
+  "projectMode.effective.account": "Based on account: {account}",
+  "projectMode.effective.refreshBtn": "Refresh",
+  "projectMode.effective.loading": "Loading...",
+  "projectMode.effective.mergedTitle": "Merged settings",
+  "projectMode.effective.sourcesTitle": "Field sources",
+  "projectMode.effective.field": "Field",
+  "projectMode.effective.source": "Source",
+  "projectMode.effective.noOverrides": "No field overrides"
 }
