@@ -18,7 +18,17 @@ use crate::state::AppState;
 /// from an async-capable context).
 pub fn start_watcher(app: AppHandle, state: AppState) {
     let claude_home = state.inner.claude_home.clone();
-    let paths = vec![claude_home.clone()];
+    let mut paths = vec![claude_home.clone()];
+
+    // Also watch the GUI accounts root so events fire for any account's
+    // user-layer files (Stage 2: account-scoped settings live under
+    // ~/.dot-claude-gui/accounts/<name>/).
+    if let Some(home) = dirs_next::home_dir() {
+        let gui_accounts = home.join(".dot-claude-gui").join("accounts");
+        if gui_accounts.exists() {
+            paths.push(gui_accounts);
+        }
+    }
 
     // Capture the current tokio runtime handle before spawning the OS thread.
     // This is safe because setup runs inside Tauri's async runtime.
@@ -40,9 +50,8 @@ pub fn start_watcher(app: AppHandle, state: AppState) {
                 Ok(event) => {
                     let app = app.clone();
                     let state = state.clone();
-                    let claude_home = claude_home.clone();
                     handle.spawn(async move {
-                        handle_file_event(&app, &state, &claude_home, &event.path).await;
+                        handle_file_event(&app, &state, &event.path).await;
                     });
                 }
                 Err(_) => {
@@ -58,11 +67,13 @@ pub fn start_watcher(app: AppHandle, state: AppState) {
 async fn handle_file_event(
     app: &AppHandle,
     state: &AppState,
-    claude_home: &Path,
     changed: &Path,
 ) {
     // ── User settings ────────────────────────────────────────────────────────
-    let user_settings_path = claude_home.join("settings.json");
+    // User-layer settings live in the currently-active account dir (defaults
+    // to ~/.claude/, may be ~/.dot-claude-gui/accounts/<name>/).
+    let account_dir = state.current_dir().await;
+    let user_settings_path = account_dir.join("settings.json");
     if changed == user_settings_path {
         debug!("user settings changed: {}", changed.display());
         match claude_config::parse::read_settings(&user_settings_path) {

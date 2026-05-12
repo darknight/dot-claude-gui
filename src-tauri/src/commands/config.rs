@@ -68,7 +68,7 @@ pub(crate) async fn update_user_config_logic(
     }
 
     // Write atomically to disk.
-    let settings_path = state.inner.claude_home.join("settings.json");
+    let settings_path = state.current_dir().await.join("settings.json");
     write_settings(&settings_path, &merged.settings)
         .map_err(|e| format!("write: failed to write settings: {}", e))?;
 

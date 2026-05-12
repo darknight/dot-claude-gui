@@ -64,7 +64,7 @@ fn read_plugin_description(install_path: &str) -> Option<String> {
 // ---------------------------------------------------------------------------
 
 pub(crate) async fn list_plugins_logic(state: &AppState) -> Vec<PluginInfo> {
-    let plugins_dir = state.inner.claude_home.join("plugins");
+    let plugins_dir = state.current_dir().await.join("plugins");
 
     // Read installed_plugins.json (empty default if missing).
     let installed: InstalledPluginsFile =
@@ -125,8 +125,8 @@ pub async fn list_plugins(state: State<'_, AppState>) -> Result<Vec<PluginInfo>,
 // list_marketplaces — SYNC (only reads filesystem, no RwLock)
 // ---------------------------------------------------------------------------
 
-pub(crate) fn list_marketplaces_logic(state: &AppState) -> Vec<MarketplaceInfo> {
-    let plugins_dir = state.inner.claude_home.join("plugins");
+pub(crate) async fn list_marketplaces_logic(state: &AppState) -> Vec<MarketplaceInfo> {
+    let plugins_dir = state.current_dir().await.join("plugins");
 
     let known: HashMap<String, KnownMarketplace> =
         read_json_file_or_default(&plugins_dir.join("known_marketplaces.json"));
@@ -161,19 +161,21 @@ pub(crate) fn list_marketplaces_logic(state: &AppState) -> Vec<MarketplaceInfo> 
 }
 
 #[tauri::command]
-pub fn list_marketplaces(state: State<'_, AppState>) -> Result<Vec<MarketplaceInfo>, String> {
-    Ok(list_marketplaces_logic(&state))
+pub async fn list_marketplaces(
+    state: State<'_, AppState>,
+) -> Result<Vec<MarketplaceInfo>, String> {
+    Ok(list_marketplaces_logic(&state).await)
 }
 
 // ---------------------------------------------------------------------------
 // get_marketplace_plugins — SYNC (only reads filesystem, no RwLock)
 // ---------------------------------------------------------------------------
 
-pub(crate) fn get_marketplace_plugins_logic(
+pub(crate) async fn get_marketplace_plugins_logic(
     state: &AppState,
     marketplace_id: String,
 ) -> Result<Vec<AvailablePlugin>, String> {
-    let plugins_dir = state.inner.claude_home.join("plugins");
+    let plugins_dir = state.current_dir().await.join("plugins");
 
     let known: HashMap<String, KnownMarketplace> =
         read_json_file_or_default(&plugins_dir.join("known_marketplaces.json"));
@@ -243,11 +245,11 @@ pub(crate) fn get_marketplace_plugins_logic(
 }
 
 #[tauri::command]
-pub fn get_marketplace_plugins(
+pub async fn get_marketplace_plugins(
     state: State<'_, AppState>,
     marketplace_id: String,
 ) -> Result<Vec<AvailablePlugin>, String> {
-    get_marketplace_plugins_logic(&state, marketplace_id)
+    get_marketplace_plugins_logic(&state, marketplace_id).await
 }
 
 // ---------------------------------------------------------------------------
@@ -267,7 +269,7 @@ pub(crate) async fn toggle_plugin_logic(
     enabled_plugins.insert(id, enabled);
 
     // Write to disk atomically.
-    let settings_path = state.inner.claude_home.join("settings.json");
+    let settings_path = state.current_dir().await.join("settings.json");
     write_settings(&settings_path, &settings)
         .map_err(|e| format!("write_error: Failed to write settings: {}", e))?;
 
@@ -503,18 +505,18 @@ mod tests {
     }
 
     // 5. list_marketplaces_empty_when_no_file
-    #[test]
-    fn list_marketplaces_empty_when_no_file() {
+    #[tokio::test]
+    async fn list_marketplaces_empty_when_no_file() {
         let dir = tempdir().unwrap();
         let state = AppState::new(dir.path().to_path_buf());
 
-        let result = list_marketplaces_logic(&state);
+        let result = list_marketplaces_logic(&state).await;
         assert!(result.is_empty());
     }
 
     // 6. list_marketplaces_reads_known_marketplaces_json
-    #[test]
-    fn list_marketplaces_reads_known_marketplaces_json() {
+    #[tokio::test]
+    async fn list_marketplaces_reads_known_marketplaces_json() {
         let dir = tempdir().unwrap();
         let plugins_dir = dir.path().join("plugins");
         std::fs::create_dir_all(&plugins_dir).unwrap();
@@ -529,7 +531,7 @@ mod tests {
         std::fs::write(plugins_dir.join("known_marketplaces.json"), json).unwrap();
 
         let state = AppState::new(dir.path().to_path_buf());
-        let result = list_marketplaces_logic(&state);
+        let result = list_marketplaces_logic(&state).await;
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].id, "official");
@@ -541,13 +543,13 @@ mod tests {
     }
 
     // 7. get_marketplace_plugins_returns_error_when_marketplace_not_found
-    #[test]
-    fn get_marketplace_plugins_returns_error_when_marketplace_not_found() {
+    #[tokio::test]
+    async fn get_marketplace_plugins_returns_error_when_marketplace_not_found() {
         let dir = tempdir().unwrap();
         let state = AppState::new(dir.path().to_path_buf());
 
         let err =
-            get_marketplace_plugins_logic(&state, "nonexistent".to_string()).unwrap_err();
+            get_marketplace_plugins_logic(&state, "nonexistent".to_string()).await.unwrap_err();
         assert!(
             err.starts_with("marketplace_not_found:"),
             "expected 'marketplace_not_found:' error, got: {}",

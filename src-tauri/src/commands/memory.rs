@@ -113,8 +113,8 @@ fn read_cwd_from_sessions(project_dir: &std::path::Path) -> Option<String> {
 // Logic helpers (testable without Tauri State)
 // ---------------------------------------------------------------------------
 
-pub(crate) fn list_memory_projects_logic(state: &AppState) -> Vec<MemoryProject> {
-    let projects_dir = state.inner.claude_home.join("projects");
+pub(crate) async fn list_memory_projects_logic(state: &AppState) -> Vec<MemoryProject> {
+    let projects_dir = state.current_dir().await.join("projects");
 
     let read_dir = match std::fs::read_dir(&projects_dir) {
         Ok(rd) => rd,
@@ -168,13 +168,13 @@ pub(crate) fn list_memory_projects_logic(state: &AppState) -> Vec<MemoryProject>
     result
 }
 
-pub(crate) fn list_memory_files_logic(
+pub(crate) async fn list_memory_files_logic(
     state: &AppState,
     project_id: String,
 ) -> Result<Vec<MemoryFile>, String> {
     let memory_dir = state
-        .inner
-        .claude_home
+        .current_dir()
+        .await
         .join("projects")
         .join(&project_id)
         .join("memory");
@@ -221,14 +221,14 @@ pub(crate) fn list_memory_files_logic(
     Ok(files)
 }
 
-pub(crate) fn get_memory_file_logic(
+pub(crate) async fn get_memory_file_logic(
     state: &AppState,
     project_id: String,
     filename: String,
 ) -> Result<MemoryFileDetail, String> {
     let file_path = state
-        .inner
-        .claude_home
+        .current_dir()
+        .await
         .join("projects")
         .join(&project_id)
         .join("memory")
@@ -256,15 +256,15 @@ pub(crate) fn get_memory_file_logic(
     })
 }
 
-pub(crate) fn update_memory_file_logic(
+pub(crate) async fn update_memory_file_logic(
     state: &AppState,
     project_id: String,
     filename: String,
     content: String,
 ) -> Result<(), String> {
     let file_path = state
-        .inner
-        .claude_home
+        .current_dir()
+        .await
         .join("projects")
         .join(&project_id)
         .join("memory")
@@ -276,14 +276,14 @@ pub(crate) fn update_memory_file_logic(
     Ok(())
 }
 
-pub(crate) fn delete_memory_file_logic(
+pub(crate) async fn delete_memory_file_logic(
     state: &AppState,
     project_id: String,
     filename: String,
 ) -> Result<(), String> {
     let file_path = state
-        .inner
-        .claude_home
+        .current_dir()
+        .await
         .join("projects")
         .join(&project_id)
         .join("memory")
@@ -304,44 +304,46 @@ pub(crate) fn delete_memory_file_logic(
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
-pub fn list_memory_projects(state: State<'_, AppState>) -> Result<Vec<MemoryProject>, String> {
-    Ok(list_memory_projects_logic(&state))
+pub async fn list_memory_projects(
+    state: State<'_, AppState>,
+) -> Result<Vec<MemoryProject>, String> {
+    Ok(list_memory_projects_logic(&state).await)
 }
 
 #[tauri::command]
-pub fn list_memory_files(
+pub async fn list_memory_files(
     state: State<'_, AppState>,
     project_id: String,
 ) -> Result<Vec<MemoryFile>, String> {
-    list_memory_files_logic(&state, project_id)
+    list_memory_files_logic(&state, project_id).await
 }
 
 #[tauri::command]
-pub fn get_memory_file(
+pub async fn get_memory_file(
     state: State<'_, AppState>,
     project_id: String,
     filename: String,
 ) -> Result<MemoryFileDetail, String> {
-    get_memory_file_logic(&state, project_id, filename)
+    get_memory_file_logic(&state, project_id, filename).await
 }
 
 #[tauri::command]
-pub fn update_memory_file(
+pub async fn update_memory_file(
     state: State<'_, AppState>,
     project_id: String,
     filename: String,
     content: String,
 ) -> Result<(), String> {
-    update_memory_file_logic(&state, project_id, filename, content)
+    update_memory_file_logic(&state, project_id, filename, content).await
 }
 
 #[tauri::command]
-pub fn delete_memory_file(
+pub async fn delete_memory_file(
     state: State<'_, AppState>,
     project_id: String,
     filename: String,
 ) -> Result<(), String> {
-    delete_memory_file_logic(&state, project_id, filename)
+    delete_memory_file_logic(&state, project_id, filename).await
 }
 
 // ---------------------------------------------------------------------------
@@ -355,18 +357,18 @@ mod tests {
     use tempfile::tempdir;
 
     // 1. list_memory_projects_empty_when_none
-    #[test]
-    fn list_memory_projects_empty_when_none() {
+    #[tokio::test]
+    async fn list_memory_projects_empty_when_none() {
         let dir = tempdir().unwrap();
         let state = AppState::new(dir.path().to_path_buf());
 
-        let result = list_memory_projects_logic(&state);
+        let result = list_memory_projects_logic(&state).await;
         assert!(result.is_empty(), "expected empty list when no projects dir exists");
     }
 
     // 2. list_memory_projects_returns_project_with_md_files
-    #[test]
-    fn list_memory_projects_returns_project_with_md_files() {
+    #[tokio::test]
+    async fn list_memory_projects_returns_project_with_md_files() {
         let dir = tempdir().unwrap();
         // Create projects/-Users-test-proj/memory/notes.md
         let project_dir = dir.path().join("projects").join("-Users-test-proj");
@@ -375,7 +377,7 @@ mod tests {
         std::fs::write(memory_dir.join("notes.md"), "# Notes\n").unwrap();
 
         let state = AppState::new(dir.path().to_path_buf());
-        let result = list_memory_projects_logic(&state);
+        let result = list_memory_projects_logic(&state).await;
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].id, "-Users-test-proj");
@@ -385,8 +387,8 @@ mod tests {
     }
 
     // Verify the cwd-based decoding resolves ambiguous dashes
-    #[test]
-    fn list_memory_projects_uses_cwd_from_session_jsonl() {
+    #[tokio::test]
+    async fn list_memory_projects_uses_cwd_from_session_jsonl() {
         let dir = tempdir().unwrap();
         // Ambiguous id: "-Users-eric-whoishiring-insight" could decode to
         // either "/Users/eric/whoishiring/insight" or "/Users/eric/whoishiring-insight".
@@ -407,29 +409,29 @@ mod tests {
         .unwrap();
 
         let state = AppState::new(dir.path().to_path_buf());
-        let result = list_memory_projects_logic(&state);
+        let result = list_memory_projects_logic(&state).await;
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].project_path, real_path);
     }
 
     // 3. list_memory_projects_skips_projects_without_memory_dir
-    #[test]
-    fn list_memory_projects_skips_projects_without_memory_dir() {
+    #[tokio::test]
+    async fn list_memory_projects_skips_projects_without_memory_dir() {
         let dir = tempdir().unwrap();
         // A project dir with no memory/ subdir
         let project_dir = dir.path().join("projects").join("-Users-no-memory");
         std::fs::create_dir_all(&project_dir).unwrap();
 
         let state = AppState::new(dir.path().to_path_buf());
-        let result = list_memory_projects_logic(&state);
+        let result = list_memory_projects_logic(&state).await;
 
         assert!(result.is_empty(), "expected empty list when no memory/ subdir");
     }
 
     // 4. list_memory_files_returns_md_files_with_frontmatter
-    #[test]
-    fn list_memory_files_returns_md_files_with_frontmatter() {
+    #[tokio::test]
+    async fn list_memory_files_returns_md_files_with_frontmatter() {
         let dir = tempdir().unwrap();
         let project_id = "-Users-test-project";
         let memory_dir = dir
@@ -443,7 +445,7 @@ mod tests {
         std::fs::write(memory_dir.join("my-note.md"), content).unwrap();
 
         let state = AppState::new(dir.path().to_path_buf());
-        let files = list_memory_files_logic(&state, project_id.to_string()).unwrap();
+        let files = list_memory_files_logic(&state, project_id.to_string()).await.unwrap();
 
         assert_eq!(files.len(), 1);
         let f = &files[0];
@@ -454,12 +456,12 @@ mod tests {
     }
 
     // 5. list_memory_files_returns_error_for_missing_project
-    #[test]
-    fn list_memory_files_returns_error_for_missing_project() {
+    #[tokio::test]
+    async fn list_memory_files_returns_error_for_missing_project() {
         let dir = tempdir().unwrap();
         let state = AppState::new(dir.path().to_path_buf());
 
-        let err = list_memory_files_logic(&state, "nonexistent".to_string()).unwrap_err();
+        let err = list_memory_files_logic(&state, "nonexistent".to_string()).await.unwrap_err();
         assert!(
             err.starts_with("project_not_found:"),
             "expected 'project_not_found:' error, got: {}",
@@ -468,8 +470,8 @@ mod tests {
     }
 
     // 6. get_memory_file_returns_content_and_frontmatter
-    #[test]
-    fn get_memory_file_returns_content_and_frontmatter() {
+    #[tokio::test]
+    async fn get_memory_file_returns_content_and_frontmatter() {
         let dir = tempdir().unwrap();
         let project_id = "-Users-eric-proj";
         let memory_dir = dir
@@ -485,6 +487,7 @@ mod tests {
         let state = AppState::new(dir.path().to_path_buf());
         let detail =
             get_memory_file_logic(&state, project_id.to_string(), "detail.md".to_string())
+                .await
                 .unwrap();
 
         assert_eq!(detail.filename, "detail.md");
@@ -495,8 +498,8 @@ mod tests {
     }
 
     // 7. get_memory_file_returns_error_when_missing
-    #[test]
-    fn get_memory_file_returns_error_when_missing() {
+    #[tokio::test]
+    async fn get_memory_file_returns_error_when_missing() {
         let dir = tempdir().unwrap();
         let project_id = "-Users-test";
         let memory_dir = dir
@@ -509,6 +512,7 @@ mod tests {
         let state = AppState::new(dir.path().to_path_buf());
         let err =
             get_memory_file_logic(&state, project_id.to_string(), "missing.md".to_string())
+                .await
                 .unwrap_err();
 
         assert!(
@@ -519,8 +523,8 @@ mod tests {
     }
 
     // 8. update_memory_file_writes_content
-    #[test]
-    fn update_memory_file_writes_content() {
+    #[tokio::test]
+    async fn update_memory_file_writes_content() {
         let dir = tempdir().unwrap();
         let project_id = "-Users-write-test";
         let memory_dir = dir
@@ -537,6 +541,7 @@ mod tests {
             "new-file.md".to_string(),
             "# Written by test\n".to_string(),
         )
+        .await
         .unwrap();
 
         let on_disk = std::fs::read_to_string(memory_dir.join("new-file.md")).unwrap();
@@ -544,8 +549,8 @@ mod tests {
     }
 
     // 9. delete_memory_file_removes_file
-    #[test]
-    fn delete_memory_file_removes_file() {
+    #[tokio::test]
+    async fn delete_memory_file_removes_file() {
         let dir = tempdir().unwrap();
         let project_id = "-Users-delete-test";
         let memory_dir = dir
@@ -564,14 +569,15 @@ mod tests {
             project_id.to_string(),
             "to-delete.md".to_string(),
         )
+        .await
         .unwrap();
 
         assert!(!file_path.exists(), "file should be deleted");
     }
 
     // 10. delete_memory_file_returns_error_when_missing
-    #[test]
-    fn delete_memory_file_returns_error_when_missing() {
+    #[tokio::test]
+    async fn delete_memory_file_returns_error_when_missing() {
         let dir = tempdir().unwrap();
         let project_id = "-Users-delete-err";
         let memory_dir = dir
@@ -587,6 +593,7 @@ mod tests {
             project_id.to_string(),
             "nonexistent.md".to_string(),
         )
+        .await
         .unwrap_err();
 
         assert!(

@@ -11,7 +11,7 @@ use crate::state::AppState;
 
 async fn resolve_claudemd_path(state: &AppState, id: &str) -> Result<PathBuf, String> {
     if id == "global" {
-        return Ok(state.inner.claude_home.join("CLAUDE.md"));
+        return Ok(state.current_dir().await.join("CLAUDE.md"));
     }
 
     if let Some(project_id) = id.strip_prefix("project:") {
@@ -33,7 +33,7 @@ async fn resolve_claudemd_path(state: &AppState, id: &str) -> Result<PathBuf, St
 pub(crate) async fn list_claudemd_files_logic(state: &AppState) -> Vec<ClaudeMdFile> {
     let mut result = Vec::new();
 
-    let global_path = state.inner.claude_home.join("CLAUDE.md");
+    let global_path = state.current_dir().await.join("CLAUDE.md");
     result.push(ClaudeMdFile {
         id: "global".to_string(),
         scope: "global".to_string(),

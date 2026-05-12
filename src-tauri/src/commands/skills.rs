@@ -248,7 +248,7 @@ pub(crate) fn get_skill_content_logic(
 
 #[tauri::command]
 pub async fn list_skills(state: State<'_, AppState>) -> Result<Vec<SkillInfo>, String> {
-    let claude_home = state.inner.claude_home.clone();
+    let claude_home = state.current_dir().await;
     Ok(list_skills_logic(&claude_home))
 }
 
@@ -257,7 +257,7 @@ pub async fn get_skill_content(
     state: State<'_, AppState>,
     id: String,
 ) -> Result<SkillContentResponse, String> {
-    let claude_home = state.inner.claude_home.clone();
+    let claude_home = state.current_dir().await;
     get_skill_content_logic(&claude_home, id)
 }
 
