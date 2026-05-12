@@ -326,5 +326,12 @@
   "shell.accountsMode": "账号",
   "shell.projectsMode": "项目",
   "shell.appSettings": "应用设置",
-  "shell.close": "关闭"
+  "shell.close": "关闭",
+  "shell.accountsList": "账号列表",
+  "shell.native": "原生",
+  "shell.newAccountPlaceholder": "新账号名",
+  "shell.addAccount": "添加",
+  "shell.accountAlreadyExists": "账号已存在",
+  "shell.createAccountFailed": "创建账号失败",
+  "shell.switchAccountFailed": "切换账号失败"
 }

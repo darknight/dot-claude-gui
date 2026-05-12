@@ -326,5 +326,12 @@
   "shell.accountsMode": "Accounts",
   "shell.projectsMode": "Projects",
   "shell.appSettings": "App settings",
-  "shell.close": "Close"
+  "shell.close": "Close",
+  "shell.accountsList": "Accounts",
+  "shell.native": "native",
+  "shell.newAccountPlaceholder": "New account name",
+  "shell.addAccount": "Add",
+  "shell.accountAlreadyExists": "Account already exists",
+  "shell.createAccountFailed": "Create account failed",
+  "shell.switchAccountFailed": "Switch account failed"
 }

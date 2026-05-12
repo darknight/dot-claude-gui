@@ -326,5 +326,12 @@
   "shell.accountsMode": "アカウント",
   "shell.projectsMode": "プロジェクト",
   "shell.appSettings": "アプリ設定",
-  "shell.close": "閉じる"
+  "shell.close": "閉じる",
+  "shell.accountsList": "アカウント一覧",
+  "shell.native": "ネイティブ",
+  "shell.newAccountPlaceholder": "新規アカウント名",
+  "shell.addAccount": "追加",
+  "shell.accountAlreadyExists": "アカウントは既に存在します",
+  "shell.createAccountFailed": "アカウント作成に失敗しました",
+  "shell.switchAccountFailed": "アカウント切替に失敗しました"
 }
