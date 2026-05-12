@@ -96,58 +96,6 @@ async fn handle_file_event(
         return;
     }
 
-    // ── Project settings ─────────────────────────────────────────────────────
-    let projects = state.inner.projects.read().await;
-    for project in projects.iter() {
-        let dot_claude = project.path.join(".claude");
-        let project_settings_path = dot_claude.join("settings.json");
-        let local_settings_path = dot_claude.join("settings.local.json");
-
-        if changed == project_settings_path || changed == local_settings_path {
-            let is_local = changed == local_settings_path;
-            debug!(
-                "project {} settings changed (local={}): {}",
-                project.id,
-                is_local,
-                changed.display()
-            );
-
-            match claude_config::parse::read_settings(changed) {
-                Ok(new_settings) => {
-                    if is_local {
-                        state
-                            .inner
-                            .local_settings
-                            .write()
-                            .await
-                            .insert(project.id.clone(), new_settings.clone());
-                    } else {
-                        state
-                            .inner
-                            .project_settings
-                            .write()
-                            .await
-                            .insert(project.id.clone(), new_settings.clone());
-                    }
-                    let _ = app.emit(
-                        EVT_CONFIG_CHANGED,
-                        ConfigChangedPayload {
-                            settings: new_settings,
-                            source: Some("file-watcher".to_string()),
-                        },
-                    );
-                }
-                Err(e) => {
-                    warn!(
-                        "failed to parse project settings {}: {e}",
-                        changed.display()
-                    );
-                    emit_validation_error(app, changed, &e.to_string());
-                }
-            }
-            return;
-        }
-    }
 }
 
 /// Emit a `validation-error` Tauri event with a single parse error.

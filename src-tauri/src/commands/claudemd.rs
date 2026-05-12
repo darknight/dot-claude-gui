@@ -14,15 +14,6 @@ async fn resolve_claudemd_path(state: &AppState, id: &str) -> Result<PathBuf, St
         return Ok(state.current_dir().await.join("CLAUDE.md"));
     }
 
-    if let Some(project_id) = id.strip_prefix("project:") {
-        let projects = state.inner.projects.read().await;
-        let project = projects
-            .iter()
-            .find(|p| p.id == project_id)
-            .ok_or_else(|| format!("not_found: Project '{}' not found", project_id))?;
-        return Ok(project.path.join("CLAUDE.md"));
-    }
-
     Err(format!("invalid_id: Invalid CLAUDE.md id format: '{}'", id))
 }
 
@@ -43,21 +34,6 @@ pub(crate) async fn list_claudemd_files_logic(state: &AppState) -> Vec<ClaudeMdF
         project_name: None,
         exists: global_path.exists(),
     });
-
-    let projects = state.inner.projects.read().await;
-    for project in projects.iter() {
-        let project_path = project.path.join("CLAUDE.md");
-        let id = format!("project:{}", project.id);
-        result.push(ClaudeMdFile {
-            id,
-            scope: "project".to_string(),
-            filename: "CLAUDE.md".to_string(),
-            path: project_path.to_string_lossy().into_owned(),
-            project_id: Some(project.id.clone()),
-            project_name: Some(project.name.clone()),
-            exists: project_path.exists(),
-        });
-    }
 
     result
 }
@@ -152,7 +128,7 @@ pub async fn delete_claudemd_file(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::{AppState, ProjectInfo};
+    use crate::state::AppState;
     use tempfile::tempdir;
 
     // 1. list_returns_global_entry_even_when_missing
@@ -240,32 +216,4 @@ mod tests {
         );
     }
 
-    // 6. project_entry_appears_in_list
-    #[tokio::test]
-    async fn project_entry_appears_in_list() {
-        let dir = tempdir().unwrap();
-        let project_dir = dir.path().join("my-project");
-        std::fs::create_dir_all(&project_dir).unwrap();
-
-        let state = AppState::new(dir.path().to_path_buf());
-
-        // Register a project manually
-        {
-            let mut projects = state.inner.projects.write().await;
-            projects.push(ProjectInfo {
-                id: "proj-001".to_string(),
-                path: project_dir.clone(),
-                name: "my-project".to_string(),
-            });
-        }
-
-        let result = list_claudemd_files_logic(&state).await;
-        assert_eq!(result.len(), 2, "expected global + 1 project entry");
-
-        let proj = result.iter().find(|e| e.scope == "project").unwrap();
-        assert_eq!(proj.id, "project:proj-001");
-        assert_eq!(proj.project_id.as_deref(), Some("proj-001"));
-        assert_eq!(proj.project_name.as_deref(), Some("my-project"));
-        assert!(!proj.exists);
-    }
 }

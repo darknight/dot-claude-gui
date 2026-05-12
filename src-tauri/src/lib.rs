@@ -57,9 +57,6 @@ pub fn run() {
             commands::health::health,
             commands::config::get_user_config,
             commands::config::update_user_config,
-            commands::projects::list_projects,
-            commands::projects::register_project,
-            commands::projects::unregister_project,
             commands::gui_projects::gui_list_projects,
             commands::gui_projects::add_project,
             commands::gui_projects::bind_project,
@@ -124,20 +121,15 @@ pub fn run() {
             let claude_home = dirs_next::home_dir()
                 .ok_or_else(|| "cannot determine home directory".to_string())?
                 .join(".claude");
-            // Persist the registered-project list at ~/.dot-claude-gui/projects.json.
-            let projects_file = config_dir().ok().map(|d| d.join("projects.json"));
-            let app_state = crate::state::AppState::with_projects_file(claude_home, projects_file);
+            let app_state = crate::state::AppState::new(claude_home);
             app.manage(app_state);
 
-            // Load initial user settings and project registry before the watcher starts.
+            // Load initial user settings before the watcher starts.
             let state_handle = app.state::<crate::state::AppState>();
             let state_clone = (*state_handle).clone();
             tauri::async_runtime::block_on(async {
                 if let Err(e) = state_clone.load_user_settings().await {
                     tracing::warn!("failed to load initial user settings: {e}");
-                }
-                if let Err(e) = state_clone.load_projects().await {
-                    tracing::warn!("failed to load projects.json: {e}");
                 }
             });
 
