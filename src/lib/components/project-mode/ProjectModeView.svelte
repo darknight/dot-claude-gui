@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from "$lib/i18n";
+  import { t, type MessageKey } from "$lib/i18n";
   import { projectsStore } from "$lib/stores/projects.svelte";
   import { modeStore, type ProjectFacetKey } from "$lib/stores/mode.svelte";
   import BindingFacet from "./BindingFacet.svelte";
@@ -12,7 +12,7 @@
   import StalePathBanner from "./StalePathBanner.svelte";
   import UnboundHint from "./UnboundHint.svelte";
 
-  const FACETS: Array<{ key: ProjectFacetKey; labelKey: string }> = [
+  const FACETS: Array<{ key: ProjectFacetKey; labelKey: MessageKey }> = [
     { key: "binding",   labelKey: "projectMode.facet.binding" },
     { key: "launch",    labelKey: "projectMode.facet.launch" },
     { key: "plugins",   labelKey: "projectMode.facet.plugins" },

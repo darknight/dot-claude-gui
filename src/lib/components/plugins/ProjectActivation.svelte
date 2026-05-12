@@ -38,15 +38,13 @@
    * Returns true/false if there's an explicit project override,
    * or null if the project doesn't override this plugin.
    *
-   * Since enabledPlugins is a string[] (allowlist), a project override
-   * is represented by the presence of the array itself.
-   * We treat: array exists + id in array → true, array exists + id absent → false,
-   * array absent → null (inherit).
+   * `enabledPlugins` is a `Record<string, boolean>` map.
+   * Missing key → null (inherit); value `true` → enable; `false` → disable.
    */
   function getProjectOverride(pluginId: string): boolean | null {
-    const arr = projectSettings.enabledPlugins;
-    if (!arr) return null; // no project-level setting at all
-    return arr.includes(pluginId);
+    const map = projectSettings.enabledPlugins;
+    if (!map || !(pluginId in map)) return null;
+    return map[pluginId];
   }
 
   async function toggleGlobal(pluginId: string, enabled: boolean) {
@@ -57,29 +55,15 @@
     if (!activeProject) return;
     saving = pluginId;
     try {
-      let newEnabledPlugins: string[] | undefined;
+      const cur: Record<string, boolean> = { ...(projectSettings.enabledPlugins ?? {}) };
       if (nextState === null) {
-        // Remove override: clear this plugin from the list.
-        // If the list would become empty and represents "no override", set to undefined.
-        const current = projectSettings.enabledPlugins ?? [];
-        const updated = current.filter((id) => id !== pluginId);
-        // Keep the array (even empty) to preserve other overrides; set to undefined only if never set
-        newEnabledPlugins = updated.length === 0 && !projectSettings.enabledPlugins ? undefined : updated;
-      } else if (nextState === true) {
-        // Add to allowlist
-        const current = projectSettings.enabledPlugins ?? [];
-        if (!current.includes(pluginId)) {
-          newEnabledPlugins = [...current, pluginId];
-        } else {
-          newEnabledPlugins = current;
-        }
+        delete cur[pluginId];
       } else {
-        // nextState === false: explicitly disable — remove from allowlist (keep array to signal override)
-        const current = projectSettings.enabledPlugins ?? [];
-        newEnabledPlugins = current.filter((id) => id !== pluginId);
+        cur[pluginId] = nextState;
       }
+      const next = Object.keys(cur).length === 0 ? undefined : cur;
       const res = await ipcClient.updateProjectConfig(activeProject.path, {
-        enabledPlugins: newEnabledPlugins,
+        enabledPlugins: next,
       });
       projectSettings = res.settings ?? {};
     } catch {

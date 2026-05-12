@@ -14,7 +14,8 @@ export interface Settings {
   hooks?: Record<string, HookGroup[]>;
   deniedMcpServers?: McpServerRef[];
   statusLine?: StatusLine;
-  enabledPlugins?: string[];
+  /** Map of plugin id → enabled. Missing key = inherit from parent layer. */
+  enabledPlugins?: Record<string, boolean>;
   extraKnownMarketplaces?: MarketplaceSource[];
   language?: string;
   alwaysThinkingEnabled?: boolean;
