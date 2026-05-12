@@ -424,5 +424,15 @@
   "projectMode.claudemd.saveBtn": "Save",
   "projectMode.claudemd.revertBtn": "Revert",
   "projectMode.claudemd.saved": "Saved",
-  "projectMode.claudemd.loading": "Loading..."
+  "projectMode.claudemd.loading": "Loading...",
+  "projectMode.memory.title": "Project Memory",
+  "projectMode.memory.noFiles": "No memory files",
+  "projectMode.memory.selectFile": "Select a memory file",
+  "projectMode.memory.saveBtn": "Save",
+  "projectMode.memory.saved": "Saved",
+  "projectMode.memory.loading": "Loading...",
+  "projectMode.memory.discardUnsaved": "Discard unsaved changes?",
+  "projectMode.memory.confirmDelete": "Delete {name}?",
+  "projectMode.memory.newFilePrompt": "New file name (e.g. note.md)",
+  "projectMode.memory.deleteAria": "Delete"
 }

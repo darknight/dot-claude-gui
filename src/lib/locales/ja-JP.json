@@ -424,5 +424,15 @@
   "projectMode.claudemd.saveBtn": "保存",
   "projectMode.claudemd.revertBtn": "変更を破棄",
   "projectMode.claudemd.saved": "保存しました",
-  "projectMode.claudemd.loading": "読み込み中..."
+  "projectMode.claudemd.loading": "読み込み中...",
+  "projectMode.memory.title": "プロジェクトメモリ",
+  "projectMode.memory.noFiles": "メモリファイルがありません",
+  "projectMode.memory.selectFile": "メモリファイルを選択",
+  "projectMode.memory.saveBtn": "保存",
+  "projectMode.memory.saved": "保存しました",
+  "projectMode.memory.loading": "読み込み中...",
+  "projectMode.memory.discardUnsaved": "未保存の変更を破棄しますか?",
+  "projectMode.memory.confirmDelete": "{name} を削除しますか?",
+  "projectMode.memory.newFilePrompt": "新しいファイル名 (例: note.md)",
+  "projectMode.memory.deleteAria": "削除"
 }

@@ -424,5 +424,15 @@
   "projectMode.claudemd.saveBtn": "保存",
   "projectMode.claudemd.revertBtn": "撤销修改",
   "projectMode.claudemd.saved": "已保存",
-  "projectMode.claudemd.loading": "加载中..."
+  "projectMode.claudemd.loading": "加载中...",
+  "projectMode.memory.title": "项目记忆",
+  "projectMode.memory.noFiles": "没有记忆文件",
+  "projectMode.memory.selectFile": "选择一个记忆文件",
+  "projectMode.memory.saveBtn": "保存",
+  "projectMode.memory.saved": "已保存",
+  "projectMode.memory.loading": "加载中...",
+  "projectMode.memory.discardUnsaved": "放弃未保存的修改?",
+  "projectMode.memory.confirmDelete": "删除 {name}?",
+  "projectMode.memory.newFilePrompt": "新文件名 (例如 note.md)",
+  "projectMode.memory.deleteAria": "删除"
 }
