@@ -86,6 +86,7 @@ pub fn run() {
             commands::accounts::create_account,
             commands::accounts::delete_account,
             commands::accounts::get_account_status,
+            commands::account_session::set_active_account,
             commands::mcp::list_mcp_servers,
             commands::mcp::add_mcp_server,
             commands::mcp::remove_mcp_server,
