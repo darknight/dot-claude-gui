@@ -25,9 +25,10 @@ pub fn start_watcher(app: AppHandle, state: AppState) {
     // ~/.dot-claude-gui/accounts/<name>/).
     if let Some(home) = dirs_next::home_dir() {
         let gui_accounts = home.join(".dot-claude-gui").join("accounts");
-        if gui_accounts.exists() {
-            paths.push(gui_accounts);
-        }
+        // Create unconditionally so first-account creation fires events for
+        // the existing watch (otherwise the watcher would miss the mkdir).
+        let _ = std::fs::create_dir_all(&gui_accounts);
+        paths.push(gui_accounts);
     }
 
     // Capture the current tokio runtime handle before spawning the OS thread.

@@ -1,23 +1,18 @@
 <script lang="ts">
   import { accountsStore } from "$lib/stores/accounts.svelte";
   import { modeStore } from "$lib/stores/mode.svelte";
-  import { ipcClient } from "$lib/ipc/client";
   import { toastStore } from "$lib/stores/toast.svelte";
   import { t } from "$lib/i18n";
 
   let addingName = $state("");
   let creating = $state(false);
 
-  async function selectAccount(name: string) {
+  function selectAccount(name: string) {
     if (modeStore.selectedAccount === name) return;
+    // AccountModeView's $effect on modeStore.selectedAccount owns the
+    // setActiveAccount IPC + all store reloads. Don't call setActiveAccount
+    // here too — it'd produce two IPCs per click.
     modeStore.setSelectedAccount(name);
-    try {
-      await ipcClient.setActiveAccount(name);
-      // AccountModeView (Task 14) handles store reloads via $effect on modeStore.selectedAccount.
-    } catch (e) {
-      toastStore.error(t("shell.switchAccountFailed"));
-      console.error("setActiveAccount failed", e);
-    }
   }
 
   async function addAccount(e: SubmitEvent) {
@@ -32,7 +27,7 @@
     try {
       await accountsStore.createAccount(name);
       addingName = "";
-      await selectAccount(name);
+      selectAccount(name);
     } catch (e) {
       toastStore.error(t("shell.createAccountFailed"));
       console.error("createAccount failed", e);

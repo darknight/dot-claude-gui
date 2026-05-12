@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ipcClient } from "$lib/ipc/client";
   import { accountsStore } from "$lib/stores/accounts.svelte";
+  import { modeStore } from "$lib/stores/mode.svelte";
   import { toastStore } from "$lib/stores/toast.svelte";
   import { t } from "$lib/i18n";
   import type { AccountOverview } from "$lib/api/types";
@@ -51,6 +52,10 @@
     if (!confirm(t("accountMode.deleteConfirm", { name: overview.name }))) return;
     try {
       await accountsStore.deleteAccount(overview.name);
+      // Clear selection so the AccountModeView $effect doesn't try to
+      // setActiveAccount on the just-deleted name. The default-selection
+      // $effect picks the next account automatically.
+      modeStore.setSelectedAccount(null);
       toastStore.info(t("accountMode.deleteSuccess"));
     } catch (e) {
       toastStore.error(t("accountMode.deleteFailed"));
