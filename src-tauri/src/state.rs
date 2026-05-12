@@ -19,6 +19,9 @@ pub struct ProjectInfo {
 /// The inner state shared across all Tauri command handlers.
 pub struct AppStateInner {
     pub claude_home: PathBuf,
+    /// Currently-targeted account directory. Defaults to `claude_home`
+    /// (native ~/.claude/). Mutated via `commands::account_session::set_active_account`.
+    pub active_account_dir: RwLock<PathBuf>,
     pub projects_file: Option<PathBuf>,
     pub user_settings: RwLock<Settings>,
     pub project_settings: RwLock<HashMap<String, Settings>>,
@@ -43,6 +46,7 @@ impl AppState {
     pub fn with_projects_file(claude_home: PathBuf, projects_file: Option<PathBuf>) -> Self {
         Self {
             inner: Arc::new(AppStateInner {
+                active_account_dir: RwLock::new(claude_home.clone()),
                 claude_home,
                 projects_file,
                 user_settings: RwLock::new(Settings::default()),
@@ -54,9 +58,24 @@ impl AppState {
         }
     }
 
+    /// Snapshot of the currently-active account dir. All IPC handlers that
+    /// read user-layer files (settings, plugins, skills, CLAUDE.md, memory,
+    /// MCP) should go through this rather than `inner.claude_home`.
+    pub async fn current_dir(&self) -> PathBuf {
+        self.inner.active_account_dir.read().await.clone()
+    }
+
+    /// Swap the active account dir. Caller is responsible for downstream
+    /// invalidation (cache reload + watcher restart) — see
+    /// `commands::account_session::set_active_account`.
+    pub async fn set_active_account_dir(&self, dir: PathBuf) {
+        *self.inner.active_account_dir.write().await = dir;
+    }
+
     /// Read user settings from disk and populate the cache.
     pub async fn load_user_settings(&self) -> Result<()> {
-        let settings_path = self.inner.claude_home.join("settings.json");
+        let dir = self.current_dir().await;
+        let settings_path = dir.join("settings.json");
         let settings = read_settings(&settings_path)?;
         *self.inner.user_settings.write().await = settings;
         Ok(())
