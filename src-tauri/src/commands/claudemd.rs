@@ -47,16 +47,13 @@ pub(crate) async fn get_claudemd_file_logic(
     let content = std::fs::read_to_string(&file_path)
         .map_err(|_| format!("not_found: CLAUDE.md not found at '{}'", file_path.display()))?;
 
-    let scope = if id == "global" { "global" } else { "project" };
-    let project_id = id.strip_prefix("project:").map(|s| s.to_string());
-
     Ok(ClaudeMdFileDetail {
         id,
-        scope: scope.to_string(),
+        scope: "global".to_string(),
         filename: "CLAUDE.md".to_string(),
         path: file_path.to_string_lossy().into_owned(),
         content,
-        project_id,
+        project_id: None,
     })
 }
 
