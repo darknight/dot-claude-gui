@@ -1,5 +1,16 @@
 <script lang="ts">
-  // Stage-2 facet placeholder; Tasks 16-21 flesh out per facet.
+  import ClaudeMdList from "$lib/components/claudemd/ClaudeMdList.svelte";
+  import ClaudeMdModule from "$lib/components/claudemd/ClaudeMdModule.svelte";
 </script>
 
-<div class="p-4 text-sm" style="color: var(--text-muted)">ClaudeMdFacet placeholder</div>
+<div class="flex flex-1 overflow-hidden">
+  <aside
+    class="w-64 flex-shrink-0 overflow-hidden"
+    style="background-color: var(--bg-secondary); border-right: 1px solid var(--border-color)"
+  >
+    <ClaudeMdList />
+  </aside>
+  <div class="flex-1 overflow-hidden">
+    <ClaudeMdModule />
+  </div>
+</div>
