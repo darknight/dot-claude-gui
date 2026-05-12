@@ -411,5 +411,12 @@
   "projectMode.plugins.enable": "Enable",
   "projectMode.plugins.noPluginsAccount": "No plugins installed under the bound account",
   "projectMode.plugins.loading": "Loading...",
-  "projectMode.plugins.saved": "Saved"
+  "projectMode.plugins.saved": "Saved",
+  "projectMode.settings.title": "Project Settings (JSON)",
+  "projectMode.settings.hint": "Overrides account settings: {path}",
+  "projectMode.settings.saveBtn": "Save",
+  "projectMode.settings.revertBtn": "Revert",
+  "projectMode.settings.saved": "Saved",
+  "projectMode.settings.loading": "Loading...",
+  "projectMode.settings.notObject": "Settings must be a JSON object"
 }

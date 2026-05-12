@@ -411,5 +411,12 @@
   "projectMode.plugins.enable": "Enable",
   "projectMode.plugins.noPluginsAccount": "绑定账号下没有已安装的插件",
   "projectMode.plugins.loading": "加载中...",
-  "projectMode.plugins.saved": "已保存"
+  "projectMode.plugins.saved": "已保存",
+  "projectMode.settings.title": "项目层 settings.json",
+  "projectMode.settings.hint": "覆写账号层设置:{path}",
+  "projectMode.settings.saveBtn": "保存",
+  "projectMode.settings.revertBtn": "撤销修改",
+  "projectMode.settings.saved": "已保存",
+  "projectMode.settings.loading": "加载中...",
+  "projectMode.settings.notObject": "Settings 必须是一个对象"
 }
