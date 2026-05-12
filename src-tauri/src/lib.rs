@@ -6,7 +6,7 @@ mod state;
 mod watcher;
 
 use std::path::PathBuf;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 // ── Config-dir helpers ────────────────────────────────────────────────────────
 
@@ -113,8 +113,11 @@ pub fn run() {
                     .map(|h| h.join(".claude").exists())
                     .unwrap_or(false);
                 match app_config::migrate_at_startup(&cfg_path, native_exists) {
-                    Ok(report) => tracing::info!("config migration: {report:?}"),
-                    Err(e)     => tracing::error!("config migration failed: {e}"),
+                    Ok(report) => {
+                        tracing::info!("config migration: {report:?}");
+                        let _ = app.emit("app-migration-report", &report);
+                    }
+                    Err(e) => tracing::error!("config migration failed: {e}"),
                 }
             }
 

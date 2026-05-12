@@ -447,5 +447,6 @@
   "projectMode.effective.sourcesTitle": "Field sources",
   "projectMode.effective.field": "Field",
   "projectMode.effective.source": "Source",
-  "projectMode.effective.noOverrides": "No field overrides"
+  "projectMode.effective.noOverrides": "No field overrides",
+  "migration.toastSuccess": "Migrated to v2 config. Old file backed up to {backup}"
 }

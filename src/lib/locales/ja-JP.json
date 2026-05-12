@@ -447,5 +447,6 @@
   "projectMode.effective.sourcesTitle": "フィールドソース",
   "projectMode.effective.field": "フィールド",
   "projectMode.effective.source": "ソース",
-  "projectMode.effective.noOverrides": "オーバーライドなし"
+  "projectMode.effective.noOverrides": "オーバーライドなし",
+  "migration.toastSuccess": "v2 設定に移行しました。旧ファイルのバックアップ: {backup}"
 }

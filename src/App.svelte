@@ -10,7 +10,9 @@
   import { claudeMdStore } from "$lib/stores/claudemd.svelte";
   import { appSettingsStore } from "$lib/stores/appsettings.svelte";
   import { modeStore } from "$lib/stores/mode.svelte";
-  import { onConfigChanged } from "$lib/ipc/events.js";
+  import { onConfigChanged, onAppMigrationReport, type AppMigrationReportPayload } from "$lib/ipc/events.js";
+  import { toastStore } from "$lib/stores/toast.svelte";
+  import { t } from "$lib/i18n";
 
   import TopBar from "$lib/components/shell/TopBar.svelte";
   import AppSettingsModal from "$lib/components/shell/AppSettingsModal.svelte";
@@ -55,6 +57,7 @@
   });
 
   let unlistenConfigChanged: (() => void) | undefined;
+  let unlistenMigration: (() => void) | undefined;
   let settingsModalOpen = $state(false);
 
   onMount(() => {
@@ -73,10 +76,16 @@
       unlistenConfigChanged = await onConfigChanged((payload) => {
         configStore.setUserConfig(payload.settings);
       });
+      unlistenMigration = await onAppMigrationReport((report: AppMigrationReportPayload) => {
+        if (report.migrated) {
+          toastStore.success(t("migration.toastSuccess", { backup: report.bakPath ?? "" }));
+        }
+      });
     })();
 
     return () => {
       unlistenConfigChanged?.();
+      unlistenMigration?.();
     };
   });
 </script>

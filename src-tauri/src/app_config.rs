@@ -289,6 +289,7 @@ use std::path::PathBuf;
 use std::time::SystemTime;
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MigrationReport {
     pub migrated: bool,
     pub bak_path: Option<PathBuf>,
@@ -571,6 +572,19 @@ mod tests {
         let cfg = migrate_from_v1(v2.clone()).unwrap();
         let v2_again = serde_json::to_value(&cfg).unwrap();
         assert_eq!(v2, v2_again);
+    }
+
+    #[test]
+    fn migration_report_serializes_camel_case() {
+        let r = MigrationReport {
+            migrated: true,
+            bak_path: Some(PathBuf::from("/tmp/foo.bak.123")),
+            default_injected: false,
+        };
+        let json = serde_json::to_string(&r).unwrap();
+        assert!(json.contains("\"migrated\":true"), "got: {json}");
+        assert!(json.contains("\"bakPath\":\"/tmp/foo.bak.123\""), "got: {json}");
+        assert!(json.contains("\"defaultInjected\":false"), "got: {json}");
     }
 
     #[test]

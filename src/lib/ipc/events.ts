@@ -60,3 +60,19 @@ export function onCommandCompleted(
 ): Promise<UnlistenFn> {
   return listen<CommandCompletedPayload>("command-completed", (e) => handler(e.payload));
 }
+
+export interface AppMigrationReportPayload {
+  migrated: boolean;
+  bakPath?: string | null;
+  defaultInjected: boolean;
+}
+
+/**
+ * Subscribe to the `app-migration-report` event emitted once at startup if the
+ * v1→v2 config migration ran. Returns a function to unsubscribe.
+ */
+export function onAppMigrationReport(
+  handler: (p: AppMigrationReportPayload) => void,
+): Promise<UnlistenFn> {
+  return listen<AppMigrationReportPayload>("app-migration-report", (e) => handler(e.payload));
+}
