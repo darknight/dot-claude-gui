@@ -92,6 +92,82 @@ pub(crate) fn write_settings_for_path(
 }
 
 // ---------------------------------------------------------------------------
+// ProjectClaudeMd response / request types
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProjectClaudeMdResponse {
+    pub path: String,
+    pub exists: bool,
+    pub content: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WriteProjectClaudeMdRequest {
+    pub project_path: String,
+    pub content: String,
+}
+
+// ---------------------------------------------------------------------------
+// ProjectClaudeMd pure helpers
+// ---------------------------------------------------------------------------
+
+/// Returns `<project_path>/.claude/CLAUDE.md`.
+pub(crate) fn project_claudemd_path(project_path: &str) -> PathBuf {
+    PathBuf::from(project_path).join(".claude").join("CLAUDE.md")
+}
+
+/// Read the CLAUDE.md for a given project path.
+///
+/// - If the file does not exist, returns `{exists: false, content: "", …}`.
+/// - If the file exists, returns `{exists: true, content: …}`.
+pub(crate) fn read_claudemd_for_path(project_path: &str) -> Result<ProjectClaudeMdResponse, String> {
+    let path = project_claudemd_path(project_path);
+    if !path.exists() {
+        return Ok(ProjectClaudeMdResponse {
+            path: path.to_string_lossy().to_string(),
+            exists: false,
+            content: String::new(),
+        });
+    }
+
+    let content = std::fs::read_to_string(&path)
+        .map_err(|e| format!("read {}: {e}", path.display()))?;
+
+    Ok(ProjectClaudeMdResponse {
+        path: path.to_string_lossy().to_string(),
+        exists: true,
+        content,
+    })
+}
+
+/// Write CLAUDE.md atomically to `<project_path>/.claude/CLAUDE.md`.
+///
+/// Creates `.claude/` if it does not exist. Uses tempfile → rename for atomicity.
+pub(crate) fn write_claudemd_for_path(
+    project_path: &str,
+    content: &str,
+) -> Result<(), String> {
+    use std::io::Write as _;
+
+    let path = project_claudemd_path(project_path);
+    let dir = path.parent()
+        .ok_or_else(|| "CLAUDE.md path has no parent directory".to_string())?;
+
+    std::fs::create_dir_all(dir)
+        .map_err(|e| format!("mkdir {}: {e}", dir.display()))?;
+
+    let mut tmp = tempfile::NamedTempFile::new_in(dir)
+        .map_err(|e| format!("create tempfile in {}: {e}", dir.display()))?;
+    tmp.write_all(content.as_bytes())
+        .map_err(|e| format!("write tempfile: {e}"))?;
+    tmp.persist(&path)
+        .map_err(|e| format!("rename tempfile to {}: {e}", path.display()))?;
+
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
 // Tauri IPC commands
 // ---------------------------------------------------------------------------
 
@@ -109,6 +185,22 @@ pub async fn project_write_settings(
     request: WriteProjectSettingsRequest,
 ) -> Result<(), String> {
     write_settings_for_path(&request.project_path, &request.settings)
+}
+
+#[tauri::command]
+pub async fn project_read_claudemd(
+    _state: State<'_, AppState>,
+    project_path: String,
+) -> Result<ProjectClaudeMdResponse, String> {
+    read_claudemd_for_path(&project_path)
+}
+
+#[tauri::command]
+pub async fn project_write_claudemd(
+    _state: State<'_, AppState>,
+    request: WriteProjectClaudeMdRequest,
+) -> Result<(), String> {
+    write_claudemd_for_path(&request.project_path, &request.content)
 }
 
 // ---------------------------------------------------------------------------
@@ -163,5 +255,37 @@ mod tests {
         )
         .unwrap();
         assert!(proj.path().join(".claude").join("settings.json").exists());
+    }
+
+    #[test]
+    fn project_claudemd_path_resolves_under_dot_claude() {
+        let proj = tempdir().unwrap();
+        let p = project_claudemd_path(proj.path().to_str().unwrap());
+        assert_eq!(p, proj.path().join(".claude").join("CLAUDE.md"));
+    }
+
+    #[test]
+    fn read_missing_claudemd_returns_empty_with_exists_false() {
+        let proj = tempdir().unwrap();
+        let resp = read_claudemd_for_path(proj.path().to_str().unwrap()).unwrap();
+        assert!(!resp.exists);
+        assert_eq!(resp.content, "");
+    }
+
+    #[test]
+    fn write_then_read_claudemd_round_trips() {
+        let proj = tempdir().unwrap();
+        write_claudemd_for_path(proj.path().to_str().unwrap(), "# Hello\n").unwrap();
+        let resp = read_claudemd_for_path(proj.path().to_str().unwrap()).unwrap();
+        assert!(resp.exists);
+        assert_eq!(resp.content, "# Hello\n");
+    }
+
+    #[test]
+    fn write_claudemd_creates_dot_claude_dir_if_missing() {
+        let proj = tempdir().unwrap();
+        assert!(!proj.path().join(".claude").exists());
+        write_claudemd_for_path(proj.path().to_str().unwrap(), "x").unwrap();
+        assert!(proj.path().join(".claude").join("CLAUDE.md").exists());
     }
 }

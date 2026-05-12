@@ -101,6 +101,8 @@ pub fn run() {
             commands::plugins::remove_marketplace,
             commands::project_facets::project_read_settings,
             commands::project_facets::project_write_settings,
+            commands::project_facets::project_read_claudemd,
+            commands::project_facets::project_write_claudemd,
         ])
         .setup(|app| {
             // One-shot migration v1 → v2 (idempotent for v2).
