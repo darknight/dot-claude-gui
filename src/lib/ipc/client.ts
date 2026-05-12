@@ -13,7 +13,6 @@ import type {
   ClaudeMdFileDetail,
   ConfigResponse,
   DiskAccount,
-  EffectiveConfig,
   HealthResponse,
   LaunchConfig,
   LaunchRequest,
@@ -77,7 +76,7 @@ export class IpcClient {
     return call("health");
   }
 
-  // --- config (5) ---
+  // --- config (2) ---
 
   async getUserConfig(): Promise<ConfigResponse> {
     return call("get_user_config");
@@ -87,23 +86,6 @@ export class IpcClient {
     // Rust: update_user_config(req: UpdateConfigRequest)
     // UpdateConfigRequest has { settings: Settings, if_match: Option<String> }
     return call("update_user_config", { req: { settings } });
-  }
-
-  async getProjectConfig(projectId: string): Promise<ConfigResponse> {
-    // Rust: get_project_config(project_id: String)
-    return call("get_project_config", { projectId });
-  }
-
-  async updateProjectConfig(projectId: string, settings: Partial<Settings>): Promise<ConfigResponse> {
-    // Rust: update_project_config(project_id: String, req: UpdateConfigRequest)
-    return call("update_project_config", { projectId, req: { settings } });
-  }
-
-  async getEffectiveConfig(projectId: string): Promise<EffectiveConfig> {
-    // Rust: get_effective_config(project_id: String) -> EffectiveConfigResponse
-    // EffectiveConfigResponse { settings, field_sources } serializes to { settings, fieldSources }
-    // which matches the TS EffectiveConfig type { settings, fieldSources }.
-    return call("get_effective_config", { projectId });
   }
 
   // --- gui projects (6) ---
