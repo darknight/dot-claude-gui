@@ -84,8 +84,14 @@ pub async fn account_overview(name: String) -> Result<AccountOverview, String> {
 
     let plugin_count = read_plugin_count(&dir);
 
+    // Match `commands::skills::scan_skills_dir`: a real skill is a subdir
+    // containing SKILL.md. Bare subdirs don't count.
     let skill_count = std::fs::read_dir(dir.join("skills"))
-        .map(|it| it.filter_map(|e| e.ok()).filter(|e| e.path().is_dir()).count() as u32)
+        .map(|it| {
+            it.filter_map(|e| e.ok())
+                .filter(|e| e.path().is_dir() && e.path().join("SKILL.md").exists())
+                .count() as u32
+        })
         .unwrap_or(0);
 
     let (logged_in, email) = read_oauth_status(&dir);
@@ -104,13 +110,19 @@ pub async fn account_overview(name: String) -> Result<AccountOverview, String> {
 }
 
 fn read_plugin_count(dir: &std::path::Path) -> u32 {
-    // installed.json shape: { "plugins": [...] } per existing plugins module.
-    let path = dir.join("plugins").join("installed.json");
+    // installed_plugins.json shape: { "plugins": { <marketplace>: [InstalledPlugin, ...], ... } }
+    // — see crates/claude-types/src/plugins.rs::InstalledPluginsFile.
+    let path = dir.join("plugins").join("installed_plugins.json");
     let Ok(bytes) = std::fs::read(&path) else { return 0; };
     let Ok(json): Result<serde_json::Value, _> = serde_json::from_slice(&bytes) else { return 0; };
     json.get("plugins")
-        .and_then(|v| v.as_array())
-        .map(|a| a.len() as u32)
+        .and_then(|v| v.as_object())
+        .map(|obj| {
+            obj.values()
+                .filter_map(|v| v.as_array())
+                .map(|a| a.len() as u32)
+                .sum()
+        })
         .unwrap_or(0)
 }
 
