@@ -787,9 +787,9 @@ git commit -m "docs(stage4): correct merge.rs comment — enabledPlugins is Hash
 ### Task 14: Reorganize `AppSettingsView` into 4 sections (Appearance / Language / Terminal / About)
 
 **Files:**
+- Modify: `package.json` (add `repository.url` field; current file has none — verified at planning time)
 - Modify: `src/lib/components/appsettings/AppSettingsView.svelte`
 - Modify: `src/lib/i18n.ts` (add About-section keys to all 3 ACTIVE locales)
-- Possibly modify: `package.json` (read app version)
 
 Spec line 230: _"Complete the right-corner gear panel (Appearance / Language / Terminal / About)"_. Today the file has 2 sections: `appearance` (which includes theme + font + language) and `launcher` (terminal). The Stage 4 layout is 4 separate sections.
 
@@ -814,20 +814,38 @@ For each of the 3 ACTIVE locales (`zh-CN`, `en-US`, `ja-JP`), add (at minimum) t
 
 If the file currently has `appsettings.launcher` and no other consumer, you can either rename to `appsettings.terminal` or just deprecate the old key. Pick rename for cleanliness — fewer dead keys to maintain.
 
-- [ ] **Step 3: Read app version**
+- [ ] **Step 3: Add a `repository` field to `package.json`**
+
+`package.json` currently has no `repository` field (verified at planning time). The `git remote -v` is `https://github.com/darknight/dot-claude-gui.git`. Add (top-level, after `name`/`version`):
+
+```json
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/darknight/dot-claude-gui.git"
+  },
+```
+
+Run: `node -e "console.log(require('./package.json').repository.url)"` and confirm the URL prints.
+
+- [ ] **Step 4: Read app version + repo URL from package.json**
 
 The Tauri config (`src-tauri/tauri.conf.json`) and `package.json` both have a version string. Pick `package.json` since it's directly importable; alternative is exposing a backend `app_version` command. Use the imported approach:
 
 ```ts
 import pkg from "../../../../package.json" with { type: "json" };
-const APP_VERSION = pkg.version as string;
+const APP_VERSION = (pkg as { version: string }).version;
+const REPO_URL = (pkg as { repository: { url: string } }).repository.url
+  .replace(/^git\+/, "")
+  .replace(/\.git$/, "");
 ```
+
+The two `replace` calls normalize a typical npm-style `git+https://….git` URL into a clean browser link.
 
 (Adjust the relative path to wherever the file ends up. Vite handles the JSON import natively.)
 
 If TypeScript's `resolveJsonModule` is off, enable it in `tsconfig.json` first — it's the cheapest fix.
 
-- [ ] **Step 4: Rewrite `AppSettingsView.svelte`**
+- [ ] **Step 5: Rewrite `AppSettingsView.svelte`**
 
 Replace the file with a 4-section layout. Sketch:
 
@@ -837,8 +855,10 @@ Replace the file with a 4-section layout. Sketch:
   import { t, ACTIVE_LOCALES, localeDisplayName, type Locale } from "$lib/i18n";
   import pkg from "../../../../package.json" with { type: "json" };
 
-  const APP_VERSION: string = (pkg as { version: string }).version;
-  const REPO_URL = "https://github.com/darknight/dot-claude-gui"; // confirm in package.json or hardcode the canonical URL
+  const APP_VERSION = (pkg as { version: string }).version;
+  const REPO_URL = (pkg as { repository: { url: string } }).repository.url
+    .replace(/^git\+/, "")
+    .replace(/\.git$/, "");
 </script>
 
 <div class="p-6 space-y-8">
@@ -880,10 +900,6 @@ Replace the file with a 4-section layout. Sketch:
 
 Move the existing widgets into the matching section (theme + font into Appearance; language select into Language; preferred terminal into Terminal). Don't duplicate widgets.
 
-- [ ] **Step 5: Verify the repo URL**
-
-Read `package.json` `repository.url` field; if it exists, use it. If not, use the canonical GitHub URL.
-
 - [ ] **Step 6: Typecheck + svelte-check**
 
 Run: `pnpm exec tsc --noEmit && pnpm exec svelte-check --threshold error 2>&1 | tail -3`
@@ -891,7 +907,7 @@ Expected: `0 ERRORS`.
 
 - [ ] **Step 7: Visual smoke check**
 
-Run: `pnpm tauri dev` (background OK), open the gear panel, confirm 4 distinct sections render and that language switching still re-renders the entire panel. Then kill the dev server.
+Run: `pnpm tauri dev` (background OK), open the gear panel, confirm 4 distinct sections render and that language switching still re-renders the entire panel. The About panel must show app name, version, and a clickable repo link extracted from `package.json`. Then kill the dev server.
 
 - [ ] **Step 8: Commit**
 
