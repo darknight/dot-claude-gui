@@ -338,5 +338,7 @@
   "shell.unbound": "未バインド",
   "shell.stale": "失効",
   "shell.addProject": "プロジェクト追加",
-  "shell.addProjectFailed": "プロジェクト追加に失敗しました"
+  "shell.addProjectFailed": "プロジェクト追加に失敗しました",
+  "shell.projectModeComing": "{path} のプロジェクトビューは Stage 3 で構築中です。",
+  "shell.projectModeSelectHint": "左でプロジェクトを選択してください。Stage 3 で全機能が有効になります。"
 }

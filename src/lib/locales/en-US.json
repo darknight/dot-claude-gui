@@ -338,5 +338,7 @@
   "shell.unbound": "Unbound",
   "shell.stale": "stale",
   "shell.addProject": "Add project",
-  "shell.addProjectFailed": "Add project failed"
+  "shell.addProjectFailed": "Add project failed",
+  "shell.projectModeComing": "Project view for {path} is being built in Stage 3.",
+  "shell.projectModeSelectHint": "Select a project on the left. Full Project mode lands in Stage 3."
 }

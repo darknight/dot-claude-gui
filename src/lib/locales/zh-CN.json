@@ -338,5 +338,7 @@
   "shell.unbound": "未绑定",
   "shell.stale": "失效",
   "shell.addProject": "添加项目",
-  "shell.addProjectFailed": "添加项目失败"
+  "shell.addProjectFailed": "添加项目失败",
+  "shell.projectModeComing": "{path} 的项目视图正在 Stage 3 中构建。",
+  "shell.projectModeSelectHint": "选择一个项目（左侧）查看详情，Stage 3 启用所有功能。"
 }
