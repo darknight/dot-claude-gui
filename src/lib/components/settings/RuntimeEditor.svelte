@@ -154,7 +154,7 @@
       fastModePerSessionOptIn,
       showTurnDuration,
       terminalProgressBarEnabled,
-      teammateMode: teammateMode || undefined,
+      teammateMode: (teammateMode || undefined) as "auto" | "in-process" | "tmux" | undefined,
       useAutoModeDuringPlan,
       voiceEnabled,
       wslInheritsWindowsSettings,
