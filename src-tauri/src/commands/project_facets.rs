@@ -15,6 +15,7 @@ use crate::state::AppState;
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProjectSettingsResponse {
     pub path: String,
     pub exists: bool,
@@ -22,6 +23,7 @@ pub struct ProjectSettingsResponse {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WriteProjectSettingsRequest {
     pub project_path: String,
     pub settings: claude_types::Settings,
@@ -96,6 +98,7 @@ pub(crate) fn write_settings_for_path(
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProjectClaudeMdResponse {
     pub path: String,
     pub exists: bool,
@@ -103,6 +106,7 @@ pub struct ProjectClaudeMdResponse {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WriteProjectClaudeMdRequest {
     pub project_path: String,
     pub content: String,
@@ -222,18 +226,21 @@ pub(crate) async fn project_memory_dir(
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProjectMemoryListResponse {
     pub path: String,
     pub files: Vec<MemoryFile>,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProjectMemoryFileRequest {
     pub project_path: String,
     pub file_name: String,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WriteProjectMemoryRequest {
     pub project_path: String,
     pub file_name: String,
