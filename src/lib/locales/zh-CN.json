@@ -418,5 +418,11 @@
   "projectMode.settings.revertBtn": "撤销修改",
   "projectMode.settings.saved": "已保存",
   "projectMode.settings.loading": "加载中...",
-  "projectMode.settings.notObject": "Settings 必须是一个对象"
+  "projectMode.settings.notObject": "Settings 必须是一个对象",
+  "projectMode.claudemd.title": "项目 CLAUDE.md",
+  "projectMode.claudemd.hint": "项目专属 Claude 上下文:{path}",
+  "projectMode.claudemd.saveBtn": "保存",
+  "projectMode.claudemd.revertBtn": "撤销修改",
+  "projectMode.claudemd.saved": "已保存",
+  "projectMode.claudemd.loading": "加载中..."
 }

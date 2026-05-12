@@ -418,5 +418,11 @@
   "projectMode.settings.revertBtn": "変更を破棄",
   "projectMode.settings.saved": "保存しました",
   "projectMode.settings.loading": "読み込み中...",
-  "projectMode.settings.notObject": "Settings はオブジェクトでなければなりません"
+  "projectMode.settings.notObject": "Settings はオブジェクトでなければなりません",
+  "projectMode.claudemd.title": "プロジェクト CLAUDE.md",
+  "projectMode.claudemd.hint": "プロジェクト固有の Claude コンテキスト:{path}",
+  "projectMode.claudemd.saveBtn": "保存",
+  "projectMode.claudemd.revertBtn": "変更を破棄",
+  "projectMode.claudemd.saved": "保存しました",
+  "projectMode.claudemd.loading": "読み込み中..."
 }

@@ -418,5 +418,11 @@
   "projectMode.settings.revertBtn": "Revert",
   "projectMode.settings.saved": "Saved",
   "projectMode.settings.loading": "Loading...",
-  "projectMode.settings.notObject": "Settings must be a JSON object"
+  "projectMode.settings.notObject": "Settings must be a JSON object",
+  "projectMode.claudemd.title": "Project CLAUDE.md",
+  "projectMode.claudemd.hint": "Project-specific Claude context: {path}",
+  "projectMode.claudemd.saveBtn": "Save",
+  "projectMode.claudemd.revertBtn": "Revert",
+  "projectMode.claudemd.saved": "Saved",
+  "projectMode.claudemd.loading": "Loading..."
 }
