@@ -379,5 +379,16 @@
   "projectMode.facet.settings": "Settings",
   "projectMode.facet.memory": "Memory",
   "projectMode.facet.claudemd": "CLAUDE.md",
-  "projectMode.facet.effective": "Effective"
+  "projectMode.facet.effective": "Effective",
+  "projectMode.binding.title": "账号绑定",
+  "projectMode.binding.pathLabel": "项目路径",
+  "projectMode.binding.accountLabel": "绑定账号",
+  "projectMode.binding.selectAccount": "选择账号...",
+  "projectMode.binding.bindBtn": "绑定",
+  "projectMode.binding.openTerminal": "在终端启动",
+  "projectMode.binding.unbindBtn": "取消绑定",
+  "projectMode.binding.removeBtn": "从列表移除",
+  "projectMode.binding.bound": "已绑定到 {account}",
+  "projectMode.binding.confirmUnbind": "确认取消绑定?",
+  "projectMode.binding.confirmRemove": "确认从已知项目移除?"
 }

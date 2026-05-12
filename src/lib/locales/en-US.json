@@ -379,5 +379,16 @@
   "projectMode.facet.settings": "Settings",
   "projectMode.facet.memory": "Memory",
   "projectMode.facet.claudemd": "CLAUDE.md",
-  "projectMode.facet.effective": "Effective"
+  "projectMode.facet.effective": "Effective",
+  "projectMode.binding.title": "Account Binding",
+  "projectMode.binding.pathLabel": "Project Path",
+  "projectMode.binding.accountLabel": "Bound Account",
+  "projectMode.binding.selectAccount": "Select account...",
+  "projectMode.binding.bindBtn": "Bind",
+  "projectMode.binding.openTerminal": "Open in Terminal",
+  "projectMode.binding.unbindBtn": "Unbind",
+  "projectMode.binding.removeBtn": "Remove from list",
+  "projectMode.binding.bound": "Bound to {account}",
+  "projectMode.binding.confirmUnbind": "Unbind from account?",
+  "projectMode.binding.confirmRemove": "Remove from known projects?"
 }

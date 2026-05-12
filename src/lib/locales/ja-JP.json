@@ -379,5 +379,16 @@
   "projectMode.facet.settings": "Settings",
   "projectMode.facet.memory": "Memory",
   "projectMode.facet.claudemd": "CLAUDE.md",
-  "projectMode.facet.effective": "Effective"
+  "projectMode.facet.effective": "Effective",
+  "projectMode.binding.title": "アカウントバインディング",
+  "projectMode.binding.pathLabel": "プロジェクトパス",
+  "projectMode.binding.accountLabel": "バインドされたアカウント",
+  "projectMode.binding.selectAccount": "アカウントを選択...",
+  "projectMode.binding.bindBtn": "バインド",
+  "projectMode.binding.openTerminal": "ターミナルで起動",
+  "projectMode.binding.unbindBtn": "バインド解除",
+  "projectMode.binding.removeBtn": "リストから削除",
+  "projectMode.binding.bound": "{account} にバインド済み",
+  "projectMode.binding.confirmUnbind": "バインドを解除しますか?",
+  "projectMode.binding.confirmRemove": "既知プロジェクトから削除しますか?"
 }
