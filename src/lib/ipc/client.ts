@@ -5,6 +5,7 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  AccountOverview,
   AccountStatus,
   AddMcpServerRequest,
   AvailablePlugin,
@@ -271,6 +272,16 @@ export class IpcClient {
 
   async getAccountStatus(name: string): Promise<AccountStatus> {
     return call("get_account_status", { name });
+  }
+
+  // --- account session (2) ---
+
+  async setActiveAccount(name: string): Promise<string> {
+    return call("set_active_account", { name });
+  }
+
+  async accountOverview(name: string): Promise<AccountOverview> {
+    return call("account_overview", { name });
   }
 
   async getConfigDir(): Promise<string> {
