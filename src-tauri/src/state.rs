@@ -96,6 +96,21 @@ impl AppState {
         Ok(())
     }
 
+    /// Given a project path (absolute), look up its account binding in
+    /// `~/.dot-claude-gui/config.json` and return the resolved account directory.
+    ///
+    /// - Unbound project → `Err("Unbound project: …")`
+    /// - Unknown account name → `Err("Unknown account: …")`
+    /// - `"default"` binding → `<home>/.claude/`
+    /// - named account → `<home>/.dot-claude-gui/accounts/<name>/`
+    pub async fn resolve_project_account_dir(&self, project_path: &str) -> Result<PathBuf, String> {
+        let home = dirs_next::home_dir()
+            .ok_or_else(|| "cannot determine home directory".to_string())?;
+        let cfg_path = home.join(".dot-claude-gui").join("config.json");
+        let cfg = crate::app_config::read_config(&cfg_path)?;
+        crate::app_config::resolve_account_dir_for_project(&home, &cfg, project_path)
+    }
+
     /// Persist the current project registry to disk.
     /// No-op if no projects_file is configured.
     pub async fn save_projects(&self) -> Result<()> {

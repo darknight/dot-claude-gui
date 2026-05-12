@@ -232,6 +232,30 @@ pub fn migrate_from_v1(raw: serde_json::Value) -> Result<AppConfig, String> {
 
 pub const DEFAULT_ACCOUNT_NAME: &str = "default";
 
+/// Given an in-memory `AppConfig` and a `project_path`, return the absolute
+/// account directory that the project is bound to.
+///
+/// - Project not in `cfg.projects` → `Err("Unbound project: …")`
+/// - Project bound to an account name not in `cfg.accounts` → `Err("Unknown account: …")`
+/// - `account == "default"` → `<home>/.claude/`
+/// - any other name → `<home>/.dot-claude-gui/accounts/<name>/`
+///
+/// Pure function: no disk I/O, easily unit-testable.
+pub fn resolve_account_dir_for_project(
+    home: &Path,
+    cfg: &AppConfig,
+    project_path: &str,
+) -> Result<PathBuf, String> {
+    let binding = cfg
+        .projects
+        .get(project_path)
+        .ok_or_else(|| format!("Unbound project: {project_path}"))?;
+    if cfg.accounts.iter().all(|a| a.name != binding.account) {
+        return Err(format!("Unknown account: {}", binding.account));
+    }
+    Ok(account_dir(home, &binding.account))
+}
+
 /// Resolve the on-disk directory for an account name relative to `home`.
 ///
 /// - `"default"` (or empty) → `<home>/.claude/` (the native Claude dir)
@@ -739,5 +763,57 @@ mod tests {
     fn account_dir_treats_empty_name_as_default() {
         let home = std::path::Path::new("/u/eric");
         assert_eq!(account_dir(home, ""), home.join(".claude"));
+    }
+
+    // ── resolve_account_dir_for_project tests ───────────────────────────────
+
+    fn make_cfg_with_project(project_path: &str, account_name: &str) -> AppConfig {
+        let mut cfg = AppConfig::default();
+        cfg.accounts.push(Account {
+            name: account_name.to_string(),
+            display_name: account_name.to_string(),
+            is_native: account_name == DEFAULT_ACCOUNT_NAME,
+            created_at: "2026-01-01T00:00:00Z".to_string(),
+        });
+        cfg.projects.insert(
+            project_path.to_string(),
+            ProjectBinding {
+                account: account_name.to_string(),
+                launch: LaunchConfig::default(),
+            },
+        );
+        cfg
+    }
+
+    #[test]
+    fn resolve_account_dir_for_project_bound_non_default() {
+        let home = std::path::Path::new("/u/eric");
+        let cfg = make_cfg_with_project("/Users/eric/myproject", "work");
+        let result = resolve_account_dir_for_project(home, &cfg, "/Users/eric/myproject").unwrap();
+        assert_eq!(
+            result,
+            home.join(".dot-claude-gui").join("accounts").join("work")
+        );
+    }
+
+    #[test]
+    fn resolve_account_dir_for_project_bound_default() {
+        let home = std::path::Path::new("/u/eric");
+        let cfg = make_cfg_with_project("/Users/eric/myproject", DEFAULT_ACCOUNT_NAME);
+        let result = resolve_account_dir_for_project(home, &cfg, "/Users/eric/myproject").unwrap();
+        assert_eq!(result, home.join(".claude"));
+    }
+
+    #[test]
+    fn resolve_account_dir_for_project_unbound_returns_error() {
+        let home = std::path::Path::new("/u/eric");
+        let cfg = AppConfig::default(); // no projects
+        let err = resolve_account_dir_for_project(home, &cfg, "/Users/eric/unknown")
+            .unwrap_err();
+        let lower = err.to_lowercase();
+        assert!(
+            lower.contains("unbound"),
+            "expected error containing 'unbound', got: {err}"
+        );
     }
 }
