@@ -1,9 +1,17 @@
 <script lang="ts">
   import { appSettingsStore } from "$lib/stores/appsettings.svelte.js";
   import { t, ACTIVE_LOCALES, localeDisplayName, type Locale } from "$lib/i18n";
+  import pkg from "../../../../package.json" with { type: "json" };
+
+  const APP_VERSION = (pkg as { version: string }).version;
+  const REPO_URL = (pkg as { repository: { url: string } }).repository.url
+    .replace(/^git\+/, "")
+    .replace(/\.git$/, "");
 </script>
 
 <div class="p-6 space-y-8">
+
+  <!-- 1. Appearance -->
   <section class="space-y-4">
     <h2 class="text-lg font-medium" style="color: var(--text-primary)">{t("appsettings.appearance")}</h2>
 
@@ -31,6 +39,11 @@
         oninput={(e) => appSettingsStore.update({ fontSize: parseInt((e.target as HTMLInputElement).value) })}
       />
     </div>
+  </section>
+
+  <!-- 2. Language -->
+  <section class="space-y-4">
+    <h2 class="text-lg font-medium" style="color: var(--text-primary)">{t("appsettings.language")}</h2>
 
     <div>
       <label class="block text-sm mb-1" style="color: var(--text-muted)">{t("appsettings.languageLabel")}</label>
@@ -46,8 +59,9 @@
     </div>
   </section>
 
+  <!-- 3. Terminal -->
   <section class="space-y-4">
-    <h2 class="text-lg font-medium" style="color: var(--text-primary)">{t("appsettings.launcher")}</h2>
+    <h2 class="text-lg font-medium" style="color: var(--text-primary)">{t("appsettings.terminal")}</h2>
 
     <div>
       <label class="block text-sm mb-1" style="color: var(--text-muted)">{t("appsettings.preferredTerminal")}</label>
@@ -61,4 +75,18 @@
       </select>
     </div>
   </section>
+
+  <!-- 4. About -->
+  <section class="space-y-4">
+    <h2 class="text-lg font-medium" style="color: var(--text-primary)">{t("appsettings.about")}</h2>
+    <div class="space-y-1 text-sm" style="color: var(--text-muted)">
+      <div>{t("appsettings.appName")}</div>
+      <div>{t("appsettings.version", { version: APP_VERSION })}</div>
+      <div>
+        <span>{t("appsettings.repo")}: </span>
+        <a href={REPO_URL} target="_blank" rel="noreferrer" style="color: var(--accent-primary)">{REPO_URL}</a>
+      </div>
+    </div>
+  </section>
+
 </div>
