@@ -340,5 +340,13 @@
   "shell.addProject": "添加项目",
   "shell.addProjectFailed": "添加项目失败",
   "shell.projectModeComing": "{path} 的项目视图正在 Stage 3 中构建。",
-  "shell.projectModeSelectHint": "选择一个项目（左侧）查看详情，Stage 3 启用所有功能。"
+  "shell.projectModeSelectHint": "选择一个项目（左侧）查看详情，Stage 3 启用所有功能。",
+  "accountMode.overview": "概览",
+  "accountMode.settings": "设置",
+  "accountMode.plugins": "插件",
+  "accountMode.skills": "技能",
+  "accountMode.claudemd": "CLAUDE.md",
+  "accountMode.memory": "记忆",
+  "accountMode.mcp": "MCP",
+  "accountMode.selectAccountHint": "请从左侧选择一个账号"
 }

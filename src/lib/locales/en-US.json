@@ -340,5 +340,13 @@
   "shell.addProject": "Add project",
   "shell.addProjectFailed": "Add project failed",
   "shell.projectModeComing": "Project view for {path} is being built in Stage 3.",
-  "shell.projectModeSelectHint": "Select a project on the left. Full Project mode lands in Stage 3."
+  "shell.projectModeSelectHint": "Select a project on the left. Full Project mode lands in Stage 3.",
+  "accountMode.overview": "Overview",
+  "accountMode.settings": "Settings",
+  "accountMode.plugins": "Plugins",
+  "accountMode.skills": "Skills",
+  "accountMode.claudemd": "CLAUDE.md",
+  "accountMode.memory": "Memory",
+  "accountMode.mcp": "MCP",
+  "accountMode.selectAccountHint": "Select an account on the left"
 }

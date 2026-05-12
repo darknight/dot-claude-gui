@@ -340,5 +340,13 @@
   "shell.addProject": "プロジェクト追加",
   "shell.addProjectFailed": "プロジェクト追加に失敗しました",
   "shell.projectModeComing": "{path} のプロジェクトビューは Stage 3 で構築中です。",
-  "shell.projectModeSelectHint": "左でプロジェクトを選択してください。Stage 3 で全機能が有効になります。"
+  "shell.projectModeSelectHint": "左でプロジェクトを選択してください。Stage 3 で全機能が有効になります。",
+  "accountMode.overview": "概要",
+  "accountMode.settings": "設定",
+  "accountMode.plugins": "プラグイン",
+  "accountMode.skills": "スキル",
+  "accountMode.claudemd": "CLAUDE.md",
+  "accountMode.memory": "メモリ",
+  "accountMode.mcp": "MCP",
+  "accountMode.selectAccountHint": "左側からアカウントを選択してください"
 }
