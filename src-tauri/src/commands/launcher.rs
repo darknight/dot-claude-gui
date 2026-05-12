@@ -11,6 +11,25 @@ use crate::state::AppState;
 // Other platforms: TODO — for now, returns an error.
 // ---------------------------------------------------------------------------
 
+pub(crate) fn build_launch_env(
+    home: &std::path::Path,
+    account: Option<&str>,
+    user_env: &std::collections::HashMap<String, String>,
+) -> std::collections::HashMap<String, String> {
+    let mut env = user_env.clone();
+    match account {
+        Some(name) if name != "default" && !env.contains_key("CLAUDE_CONFIG_DIR") => {
+            let dir = crate::app_config::account_dir(home, name);
+            env.insert(
+                "CLAUDE_CONFIG_DIR".to_string(),
+                dir.to_string_lossy().into_owned(),
+            );
+        }
+        _ => {}
+    }
+    env
+}
+
 pub(crate) fn launch_claude_logic(req: LaunchRequest) -> Result<serde_json::Value, String> {
     if let Some(p) = &req.project_path {
         if !std::path::PathBuf::from(p).exists() {
@@ -18,10 +37,13 @@ pub(crate) fn launch_claude_logic(req: LaunchRequest) -> Result<serde_json::Valu
         }
     }
 
+    let home = dirs_next::home_dir().ok_or("cannot determine home directory")?;
+    let resolved_env = build_launch_env(&home, req.account.as_deref(), &req.env);
+
     #[cfg(target_os = "macos")]
     {
         let terminal = req.preferred_terminal.as_deref().unwrap_or("terminal");
-        let osa_script = build_osa_script(terminal, req.project_path.as_deref(), &req.env, &req.args);
+        let osa_script = build_osa_script(terminal, req.project_path.as_deref(), &resolved_env, &req.args);
 
         let output = Command::new("osascript")
             .args(["-e", &osa_script])
@@ -47,6 +69,7 @@ pub(crate) fn launch_claude_logic(req: LaunchRequest) -> Result<serde_json::Valu
     #[cfg(not(target_os = "macos"))]
     {
         let _ = req;
+        let _ = resolved_env;
         Err("launch_unsupported: only macOS is supported for now".to_string())
     }
 }
@@ -137,6 +160,7 @@ mod tests {
             env: HashMap::new(),
             args: vec![],
             preferred_terminal: None,
+            account: None,
         };
         let err = launch_claude_logic(req).unwrap_err();
         assert!(err.starts_with("invalid_path:"));
@@ -223,5 +247,38 @@ mod tests {
         let script = build_osa_script("terminal", None, &env, &["/login".to_string()]);
         assert!(!script.contains("cd "));
         assert!(script.contains("CLAUDE_CONFIG_DIR='/foo' claude '/login'"));
+    }
+
+    #[test]
+    fn build_env_for_default_account_omits_claude_config_dir() {
+        let home = std::path::PathBuf::from("/home/u");
+        let env = build_launch_env(&home, Some("default"), &HashMap::new());
+        assert!(!env.contains_key("CLAUDE_CONFIG_DIR"));
+    }
+
+    #[test]
+    fn build_env_for_named_account_injects_claude_config_dir() {
+        let home = std::path::PathBuf::from("/home/u");
+        let env = build_launch_env(&home, Some("work"), &HashMap::new());
+        assert_eq!(
+            env.get("CLAUDE_CONFIG_DIR").map(String::as_str),
+            Some("/home/u/.dot-claude-gui/accounts/work")
+        );
+    }
+
+    #[test]
+    fn build_env_user_override_wins_for_claude_config_dir() {
+        let home = std::path::PathBuf::from("/home/u");
+        let mut user = HashMap::new();
+        user.insert("CLAUDE_CONFIG_DIR".to_string(), "/custom".to_string());
+        let env = build_launch_env(&home, Some("work"), &user);
+        assert_eq!(env.get("CLAUDE_CONFIG_DIR").map(String::as_str), Some("/custom"));
+    }
+
+    #[test]
+    fn build_env_nil_account_omits_injection() {
+        let home = std::path::PathBuf::from("/home/u");
+        let env = build_launch_env(&home, None, &HashMap::new());
+        assert!(!env.contains_key("CLAUDE_CONFIG_DIR"));
     }
 }

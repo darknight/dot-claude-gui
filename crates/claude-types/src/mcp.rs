@@ -55,4 +55,10 @@ pub struct LaunchRequest {
     /// Preferred terminal app: "terminal" (default), "iterm2", or None for default.
     #[serde(default)]
     pub preferred_terminal: Option<String>,
+    /// Account name from binding. None or "default" → no CLAUDE_CONFIG_DIR
+    /// injection (claude uses native ~/.claude/). Any other name → inject
+    /// CLAUDE_CONFIG_DIR=~/.dot-claude-gui/accounts/<name> unless user env
+    /// already sets it.
+    #[serde(default)]
+    pub account: Option<String>,
 }
