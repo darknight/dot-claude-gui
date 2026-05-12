@@ -232,6 +232,22 @@ pub fn migrate_from_v1(raw: serde_json::Value) -> Result<AppConfig, String> {
 
 pub const DEFAULT_ACCOUNT_NAME: &str = "default";
 
+/// Resolve the on-disk directory for an account name relative to `home`.
+///
+/// - `"default"` (or empty) → `<home>/.claude/` (the native Claude dir)
+/// - any other name → `<home>/.dot-claude-gui/accounts/<name>/`
+///
+/// This is the inverse of the convention used by `commands::launcher` when it
+/// injects `CLAUDE_CONFIG_DIR`. Pure function: does NOT check that the
+/// resulting path exists.
+pub fn account_dir(home: &Path, name: &str) -> PathBuf {
+    if name.is_empty() || name == DEFAULT_ACCOUNT_NAME {
+        home.join(".claude")
+    } else {
+        home.join(".dot-claude-gui").join("accounts").join(name)
+    }
+}
+
 /// If `native_exists` and no `default` account is in `cfg.accounts`, inserts
 /// one at index 0 with `isNative: true` and the given `created_at`.
 pub fn ensure_default_account(cfg: &mut AppConfig, native_exists: bool, created_at: &str) {
@@ -702,5 +718,26 @@ mod tests {
         let second_report = migrate_at_startup(&copy, native_exists).unwrap();
         assert!(!second_report.migrated, "second run should be no-op for migration");
         assert!(second_report.bak_path.is_none(), "no new bak on idempotent run");
+    }
+
+    #[test]
+    fn account_dir_default_returns_native_home() {
+        let home = std::path::Path::new("/u/eric");
+        assert_eq!(account_dir(home, "default"), home.join(".claude"));
+    }
+
+    #[test]
+    fn account_dir_named_returns_gui_account_subdir() {
+        let home = std::path::Path::new("/u/eric");
+        assert_eq!(
+            account_dir(home, "work"),
+            home.join(".dot-claude-gui").join("accounts").join("work")
+        );
+    }
+
+    #[test]
+    fn account_dir_treats_empty_name_as_default() {
+        let home = std::path::Path::new("/u/eric");
+        assert_eq!(account_dir(home, ""), home.join(".claude"));
     }
 }
