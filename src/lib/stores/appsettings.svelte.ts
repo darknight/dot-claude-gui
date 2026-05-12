@@ -8,7 +8,7 @@ class AppSettingsStore {
     theme: "system",
     language: "zh-CN",
     fontSize: 14,
-    sidebarWidth: 140,
+    sidebarWidth: 240,
     preferredTerminal: "terminal",
     accounts: [],
     projects: {},
