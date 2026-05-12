@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::process::Command;
 use tauri::{AppHandle, State};
 
@@ -76,9 +77,10 @@ fn parse_mcp_list(output: &str) -> Vec<McpServerInfo> {
 // list_mcp_servers — SYNC, full implementation
 // ---------------------------------------------------------------------------
 
-pub(crate) fn list_mcp_servers_logic() -> Vec<McpServerInfo> {
+pub(crate) fn list_mcp_servers_logic(claude_config_dir: &Path) -> Vec<McpServerInfo> {
     let output = Command::new("claude")
         .args(["mcp", "list"])
+        .env("CLAUDE_CONFIG_DIR", claude_config_dir)
         .output();
 
     match output {
@@ -91,8 +93,9 @@ pub(crate) fn list_mcp_servers_logic() -> Vec<McpServerInfo> {
 }
 
 #[tauri::command]
-pub fn list_mcp_servers(_state: State<'_, AppState>) -> Result<Vec<McpServerInfo>, String> {
-    Ok(list_mcp_servers_logic())
+pub async fn list_mcp_servers(state: State<'_, AppState>) -> Result<Vec<McpServerInfo>, String> {
+    let dir = state.current_dir().await;
+    Ok(list_mcp_servers_logic(&dir))
 }
 
 // ---------------------------------------------------------------------------
@@ -102,11 +105,17 @@ pub fn list_mcp_servers(_state: State<'_, AppState>) -> Result<Vec<McpServerInfo
 #[tauri::command]
 pub async fn add_mcp_server(
     app: AppHandle,
-    _state: State<'_, AppState>,
+    state: State<'_, AppState>,
     req: AddMcpServerRequest,
 ) -> Result<CommandRequest, String> {
     let args = build_mcp_add_args(&req);
-    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    let mut env = std::collections::HashMap::new();
+    let dir = state.current_dir().await;
+    env.insert(
+        "CLAUDE_CONFIG_DIR".to_string(),
+        dir.to_string_lossy().to_string(),
+    );
+    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -153,7 +162,7 @@ fn build_mcp_add_args(req: &AddMcpServerRequest) -> Vec<String> {
 #[tauri::command]
 pub async fn remove_mcp_server(
     app: AppHandle,
-    _state: State<'_, AppState>,
+    state: State<'_, AppState>,
     name: String,
     scope: Option<String>,
 ) -> Result<CommandRequest, String> {
@@ -166,7 +175,13 @@ pub async fn remove_mcp_server(
         scope_val,
         name,
     ];
-    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    let mut env = std::collections::HashMap::new();
+    let dir = state.current_dir().await;
+    env.insert(
+        "CLAUDE_CONFIG_DIR".to_string(),
+        dir.to_string_lossy().to_string(),
+    );
+    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
     Ok(CommandRequest { request_id })
 }
 

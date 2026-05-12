@@ -295,7 +295,7 @@ pub async fn toggle_plugin(
 #[tauri::command]
 pub async fn install_plugin(
     app: AppHandle,
-    _state: State<'_, AppState>,
+    state: State<'_, AppState>,
     name: String,
     marketplace: String,
 ) -> Result<CommandRequest, String> {
@@ -306,7 +306,13 @@ pub async fn install_plugin(
         "install".to_string(),
         plugin_spec,
     ];
-    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    let mut env = std::collections::HashMap::new();
+    let dir = state.current_dir().await;
+    env.insert(
+        "CLAUDE_CONFIG_DIR".to_string(),
+        dir.to_string_lossy().to_string(),
+    );
+    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -317,12 +323,18 @@ pub async fn install_plugin(
 #[tauri::command]
 pub async fn uninstall_plugin(
     app: AppHandle,
-    _state: State<'_, AppState>,
+    state: State<'_, AppState>,
     id: String,
 ) -> Result<CommandRequest, String> {
     // Mirror daemon: claude plugin uninstall <id>
     let args = vec!["plugin".to_string(), "uninstall".to_string(), id];
-    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    let mut env = std::collections::HashMap::new();
+    let dir = state.current_dir().await;
+    env.insert(
+        "CLAUDE_CONFIG_DIR".to_string(),
+        dir.to_string_lossy().to_string(),
+    );
+    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -333,7 +345,7 @@ pub async fn uninstall_plugin(
 #[tauri::command]
 pub async fn add_marketplace(
     app: AppHandle,
-    _state: State<'_, AppState>,
+    state: State<'_, AppState>,
     repo: String,
 ) -> Result<CommandRequest, String> {
     // claude plugin marketplace add <source>
@@ -346,7 +358,13 @@ pub async fn add_marketplace(
         "add".to_string(),
         repo,
     ];
-    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    let mut env = std::collections::HashMap::new();
+    let dir = state.current_dir().await;
+    env.insert(
+        "CLAUDE_CONFIG_DIR".to_string(),
+        dir.to_string_lossy().to_string(),
+    );
+    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -357,7 +375,7 @@ pub async fn add_marketplace(
 #[tauri::command]
 pub async fn remove_marketplace(
     app: AppHandle,
-    _state: State<'_, AppState>,
+    state: State<'_, AppState>,
     id: String,
 ) -> Result<CommandRequest, String> {
     // Mirror daemon: claude plugin marketplace remove <id>
@@ -367,7 +385,13 @@ pub async fn remove_marketplace(
         "remove".to_string(),
         id,
     ];
-    let request_id = crate::executor::spawn_streaming(app, "claude", args)?;
+    let mut env = std::collections::HashMap::new();
+    let dir = state.current_dir().await;
+    env.insert(
+        "CLAUDE_CONFIG_DIR".to_string(),
+        dir.to_string_lossy().to_string(),
+    );
+    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
     Ok(CommandRequest { request_id })
 }
 

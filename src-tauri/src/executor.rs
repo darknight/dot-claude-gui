@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::process::Stdio;
 
 use claude_types::CommandStream;
@@ -17,15 +18,34 @@ use crate::events::{
 ///
 /// Guarantees: `command-completed` is ALWAYS the last event for a given
 /// `command_id` — both reader tasks drain their pipes before the exit event fires.
+///
+/// Convenience wrapper around `spawn_streaming_with_env` with no extra env vars.
+#[allow(dead_code)]
 pub fn spawn_streaming(
     app: AppHandle,
     program: &str,
     args: Vec<String>,
 ) -> Result<String, String> {
+    spawn_streaming_with_env(app, program, args, HashMap::new())
+}
+
+/// Spawn `<program> <args...>` with extra env vars (merged into the inherited
+/// environment), streaming each stdout/stderr line as a `command-output` Tauri
+/// event. Emits `command-completed` when the process exits.
+///
+/// Used by callers that need to inject `CLAUDE_CONFIG_DIR=<account-dir>` so the
+/// `claude` CLI targets a non-default account.
+pub fn spawn_streaming_with_env(
+    app: AppHandle,
+    program: &str,
+    args: Vec<String>,
+    env: HashMap<String, String>,
+) -> Result<String, String> {
     let command_id = Uuid::new_v4().to_string();
 
     let mut child = Command::new(program)
         .args(&args)
+        .envs(env)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
