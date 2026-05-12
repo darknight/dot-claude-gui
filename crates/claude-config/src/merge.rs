@@ -35,8 +35,12 @@ pub struct MergedConfig {
 /// - `permissions.allow/deny/ask`: CONCATENATE across layers.
 /// - `permissions.defaultMode`: later layer overrides.
 /// - `hooks`: merge by event-type key; later layer replaces the entire event-type entry.
-/// - `enabledPlugins`: concatenate (Vec append, later layer appended last).
-/// - `extraKnownMarketplaces`: concatenate (Vec append).
+/// - `enabledPlugins`: key-by-key overlay on `HashMap<String, bool>`. Later
+///   layers overwrite earlier layers per key; keys absent from the later
+///   layer are preserved. Tri-state semantics (true / false / absent) are
+///   intentional — see project-mode plugin override.
+/// - `extraKnownMarketplaces`: key-by-key overlay on
+///   `HashMap<String, MarketplaceEntry>`. Same semantics as `enabledPlugins`.
 /// - `extra` (unknown fields): key-by-key merge, later layer wins.
 pub fn merge_layers(layers: &[ConfigLayer]) -> MergedConfig {
     let mut settings = Settings::default();
