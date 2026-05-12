@@ -365,5 +365,19 @@
   "accountMode.delete": "アカウント削除",
   "accountMode.deleteConfirm": "アカウント {name} を削除しますか？",
   "accountMode.deleteSuccess": "削除しました",
-  "accountMode.deleteFailed": "削除失敗"
+  "accountMode.deleteFailed": "削除失敗",
+  "projectMode.selectProject": "サイドバーからプロジェクトを選択してください",
+  "projectMode.stalePathBlocked": "プロジェクトパスが見つかりません",
+  "projectMode.staleBanner": "パスが見つかりません: {path}",
+  "projectMode.staleConfirmRemove": "既知プロジェクトから削除しますか?",
+  "projectMode.staleRemoveBtn": "削除",
+  "projectMode.unboundHint": "プロジェクトはアカウントにバインドされていません",
+  "projectMode.goToBinding": "Binding タブでアカウントを選択",
+  "projectMode.facet.binding": "Binding",
+  "projectMode.facet.launch": "Launch",
+  "projectMode.facet.plugins": "Plugins ↓",
+  "projectMode.facet.settings": "Settings",
+  "projectMode.facet.memory": "Memory",
+  "projectMode.facet.claudemd": "CLAUDE.md",
+  "projectMode.facet.effective": "Effective"
 }

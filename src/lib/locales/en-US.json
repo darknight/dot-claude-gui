@@ -365,5 +365,19 @@
   "accountMode.delete": "Delete account",
   "accountMode.deleteConfirm": "Delete account {name}?",
   "accountMode.deleteSuccess": "Deleted",
-  "accountMode.deleteFailed": "Delete failed"
+  "accountMode.deleteFailed": "Delete failed",
+  "projectMode.selectProject": "Select a project in the sidebar",
+  "projectMode.stalePathBlocked": "Project path missing — use the Binding tab to Remove",
+  "projectMode.staleBanner": "Path not found: {path}",
+  "projectMode.staleConfirmRemove": "Remove from known projects?",
+  "projectMode.staleRemoveBtn": "Remove",
+  "projectMode.unboundHint": "Project is not bound to an account",
+  "projectMode.goToBinding": "Bind an account",
+  "projectMode.facet.binding": "Binding",
+  "projectMode.facet.launch": "Launch",
+  "projectMode.facet.plugins": "Plugins ↓",
+  "projectMode.facet.settings": "Settings",
+  "projectMode.facet.memory": "Memory",
+  "projectMode.facet.claudemd": "CLAUDE.md",
+  "projectMode.facet.effective": "Effective"
 }

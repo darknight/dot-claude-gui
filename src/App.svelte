@@ -17,7 +17,7 @@
   import AccountSidebar from "$lib/components/shell/AccountSidebar.svelte";
   import ProjectSidebar from "$lib/components/shell/ProjectSidebar.svelte";
   import AccountModeView from "$lib/components/account-mode/AccountModeView.svelte";
-  import ProjectModePlaceholder from "$lib/components/project-mode/ProjectModePlaceholder.svelte";
+  import ProjectModeView from "$lib/components/project-mode/ProjectModeView.svelte";
   import ResizeHandle from "$lib/components/shared/ResizeHandle.svelte";
   import Toast from "$lib/components/shared/Toast.svelte";
 
@@ -112,7 +112,7 @@
         {#if modeStore.mode === "account"}
           <AccountModeView />
         {:else}
-          <ProjectModePlaceholder />
+          <ProjectModeView />
         {/if}
       </main>
     </div>
