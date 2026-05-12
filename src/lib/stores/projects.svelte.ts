@@ -25,12 +25,6 @@ class ProjectsStore {
 
   currentLaunch = $derived<LaunchConfig | null>(this.currentBinding?.launch ?? null);
 
-  // ── Deprecated aliases — kept so Stage-2 components compile.
-  //    Will be cleaned up in Stage 3 once consumers are rewritten.
-  get projects(): ProjectEntry[] { return this.entries; }
-  get activeProjectId(): string | null { return this.selectedPath; }
-  get activeProject(): ProjectEntry | null { return this.selected; }
-
   selectProject(path: string | null): void {
     this.selectedPath = path;
   }
@@ -68,14 +62,6 @@ class ProjectsStore {
     await this.loadProjects();
   }
 
-  // ── Deprecated compat methods (Stage-2 components call these names).
-  async registerProject(path: string): Promise<void> {
-    await this.add(path);
-  }
-
-  async unregisterProject(path: string): Promise<void> {
-    await this.remove(path);
-  }
 }
 
 export const projectsStore = new ProjectsStore();

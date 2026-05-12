@@ -8,7 +8,7 @@
   // If the active project has no memory, clear the selection so the user
   // sees an explicit "no memory" state instead of stale files from another project.
   $effect(() => {
-    const activeProject = projectsStore.activeProject;
+    const activeProject = projectsStore.selected;
     if (!activeProject) return;
     const match = memoryStore.projects.find(
       (p) => p.projectPath === activeProject.path,
@@ -27,9 +27,9 @@
 
   // Whether the active scope project has no memory directory.
   const activeProjectHasNoMemory = $derived(
-    projectsStore.activeProject != null &&
+    projectsStore.selected != null &&
       !memoryStore.projects.some(
-        (p) => p.projectPath === projectsStore.activeProject?.path,
+        (p) => p.projectPath === projectsStore.selected?.path,
       ),
   );
 
@@ -82,7 +82,7 @@
     {:else if activeProjectHasNoMemory}
       <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">
         {t("memory.noFilesYet", {
-          name: projectsStore.activeProject?.path.replace(/^.*\//, "") ?? "",
+          name: projectsStore.selected?.path.replace(/^.*\//, "") ?? "",
         })}
       </li>
     {:else if !memoryStore.activeProjectId}
