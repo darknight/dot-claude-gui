@@ -12,6 +12,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "audit:i18n": "tsx scripts/audit-i18n.ts",
     "extract:schema": "tsx scripts/extract-claude-schema.ts --out docs/claude-schema-snapshot.json",
     "check:schema": "tsx scripts/check-claude-schema.ts"
   },

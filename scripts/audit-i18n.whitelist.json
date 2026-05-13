@@ -1,0 +1,9 @@
+{
+  "keys": [],
+  "keySuffixes": [".cmd", ".shortcut", ".url", ".code", ".identifier"],
+  "valuePatterns": [
+    "^https?://",
+    "^[A-Z][A-Z0-9_]*$",
+    "^v?\\d+(\\.\\d+)*$"
+  ]
+}
