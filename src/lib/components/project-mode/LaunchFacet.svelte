@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { t } from "$lib/i18n";
   import { projectsStore } from "$lib/stores/projects.svelte";
+  import { appSettingsStore } from "$lib/stores/appsettings.svelte.js";
   import { ipcClient } from "$lib/ipc/client";
   import { toastStore } from "$lib/stores/toast.svelte";
   import { parseClaudeHelp, type ClaudeArg } from "$lib/data/parseClaudeHelp";
@@ -79,6 +80,7 @@
         env: packed.env,
         args: packed.args,
         account,
+        preferredTerminal: appSettingsStore.preferences.preferredTerminal,
       });
     } catch (e) {
       toastStore.error(String(e));
