@@ -198,5 +198,10 @@
   "projectMode.binding.unboundHint": "",
   "projectMode.staleUpdatePathBtn": "",
   "projectMode.staleUpdatePathDialogTitle": "",
-  "projectMode.stalePathUpdated": ""
+  "projectMode.stalePathUpdated": "",
+  "projectMode.settings.notObject": "",
+  "projectMode.settings.section.advanced": "",
+  "projectMode.settings.section.hooks": "",
+  "projectMode.settings.section.hooksHint": "",
+  "projectMode.settings.section.runtimeHint": ""
 }
