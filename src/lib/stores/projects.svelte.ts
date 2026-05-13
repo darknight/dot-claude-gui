@@ -1,11 +1,13 @@
 import { ipcClient } from "$lib/ipc/client";
+import { modeStore } from "./mode.svelte";
 import type { LaunchConfig, ProjectEntry } from "$lib/api/types";
 
 class ProjectsStore {
   /** Full list from backend; one entry per path in knownProjects. */
   entries = $state<ProjectEntry[]>([]);
-  /** Path of the currently focused project (Stage 2 wires UI to this). */
-  selectedPath = $state<string | null>(null);
+
+  /** Currently focused project path. Derives from modeStore (persisted single source of truth). */
+  selectedPath = $derived(modeStore.selectedProject);
 
   selected = $derived(
     this.entries.find((e) => e.path === this.selectedPath) ?? null,
@@ -24,10 +26,6 @@ class ProjectsStore {
   currentAccount = $derived<string | null>(this.currentBinding?.account ?? null);
 
   currentLaunch = $derived<LaunchConfig | null>(this.currentBinding?.launch ?? null);
-
-  selectProject(path: string | null): void {
-    this.selectedPath = path;
-  }
 
   async loadProjects(): Promise<void> {
     try {
