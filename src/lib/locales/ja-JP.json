@@ -448,5 +448,8 @@
   "projectMode.effective.source": "ソース",
   "projectMode.effective.noOverrides": "オーバーライドなし",
   "migration.toastSuccess": "v2 設定に移行しました。旧ファイルのバックアップ: {backup}",
-  "projectMode.binding.unboundHint": "このプロジェクトはまだアカウントにバインドされていません。下のドロップダウンでアカウントを選び「バインド」をクリックすると他の機能が有効になります。"
+  "projectMode.binding.unboundHint": "このプロジェクトはまだアカウントにバインドされていません。下のドロップダウンでアカウントを選び「バインド」をクリックすると他の機能が有効になります。",
+  "projectMode.staleUpdatePathBtn": "パスを更新…",
+  "projectMode.staleUpdatePathDialogTitle": "新しいプロジェクトディレクトリを選択",
+  "projectMode.stalePathUpdated": "プロジェクトパスを更新しました。"
 }

@@ -448,5 +448,8 @@
   "projectMode.effective.source": "Source",
   "projectMode.effective.noOverrides": "No field overrides",
   "migration.toastSuccess": "Migrated to v2 config. Old file backed up to {backup}",
-  "projectMode.binding.unboundHint": "This project is not yet bound to an account. Select an account and click Bind below to enable the other facets."
+  "projectMode.binding.unboundHint": "This project is not yet bound to an account. Select an account and click Bind below to enable the other facets.",
+  "projectMode.staleUpdatePathBtn": "Update path…",
+  "projectMode.staleUpdatePathDialogTitle": "Select the new project directory",
+  "projectMode.stalePathUpdated": "Project path updated."
 }

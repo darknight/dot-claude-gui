@@ -195,5 +195,8 @@
   "settings.statusLinePadding": "",
   "settings.hooksEmptyDirtyHint": "",
   "migration.toastSuccess": "",
-  "projectMode.binding.unboundHint": ""
+  "projectMode.binding.unboundHint": "",
+  "projectMode.staleUpdatePathBtn": "",
+  "projectMode.staleUpdatePathDialogTitle": "",
+  "projectMode.stalePathUpdated": ""
 }

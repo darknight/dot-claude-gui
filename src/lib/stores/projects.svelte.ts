@@ -60,6 +60,11 @@ class ProjectsStore {
     await this.loadProjects();
   }
 
+  async updatePath(oldPath: string, newPath: string): Promise<void> {
+    await ipcClient.updateProjectPath(oldPath, newPath);
+    await this.loadProjects();
+  }
+
 }
 
 export const projectsStore = new ProjectsStore();

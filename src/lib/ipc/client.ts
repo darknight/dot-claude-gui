@@ -121,6 +121,10 @@ export class IpcClient {
     return call("update_project_launch", { req: { path, launch } });
   }
 
+  async updateProjectPath(oldPath: string, newPath: string): Promise<void> {
+    await call("update_project_path", { req: { oldPath, newPath } });
+  }
+
   // --- plugins (8) ---
 
   async listPlugins(): Promise<PluginInfo[]> {
