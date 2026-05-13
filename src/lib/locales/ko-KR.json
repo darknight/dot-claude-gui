@@ -200,6 +200,8 @@
   "projectMode.staleUpdatePathDialogTitle": "",
   "projectMode.stalePathUpdated": "",
   "projectMode.settings.notObject": "",
+  "projectMode.settings.section.runtime": "",
+  "projectMode.settings.section.environment": "",
   "projectMode.settings.section.advanced": "",
   "projectMode.settings.section.hooks": "",
   "projectMode.settings.section.hooksHint": "",
