@@ -86,45 +86,72 @@ Rationale: these settings are nonsensical or never read at project layer per Cla
 
 ### A2 — Stale-binding "Update path" action
 
-**Status quo:**
-- `BindingFacet.svelte` exposes `Open Terminal`, `Unbind`, `Remove` for a bound project.
-- No stale detection. Path-no-longer-exists state silently leaves user with a broken binding; only escape is Remove.
+**Status quo (corrected during plan-writing — spec original had outdated assumptions):**
+- `ProjectEntry` already carries a `stale: bool` field (see `src-tauri/src/commands/gui_projects.rs:46-53`), computed by `gui_list_projects` as `!std::path::Path::new(path).exists()`.
+- Frontend `projectsStore.currentStale` (`src/lib/stores/projects.svelte.ts:24`) derives from it.
+- `StalePathBanner.svelte` already exists with a single `Remove` button. It is rendered by `ProjectModeView.svelte:42` whenever the focused project is stale; in stale state all facet tabs are disabled (line 31: `if (isStale) return true`) and a `stalePathBlocked` empty state replaces facet content (line 57).
+- Missing piece: an `Update path…` action alongside Remove, plus the backend IPC to perform the rename.
 
-**Approach:** detection in `list_gui_projects`, Update action via Tauri folder picker.
+**Approach:** extend the existing `StalePathBanner` with an Update button and a Tauri folder picker; add a single new IPC.
 
 **Backend changes (`src-tauri/src/commands/gui_projects.rs`):**
 
-1. Extend the `GuiProjectEntry` response struct with an `exists: bool` field. Compute it as `std::path::Path::new(&entry.path).is_dir()` (use `is_dir` rather than `exists` — symlinked file at project path is not a usable project).
+New IPC command `update_project_path`:
+```rust
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateProjectPathRequest {
+    pub old_path: String,
+    pub new_path: String,
+}
 
-2. New IPC command `update_project_path`:
-   ```rust
-   #[tauri::command]
-   pub async fn update_project_path(
-       state: tauri::State<'_, AppState>,
-       old_path: String,
-       new_path: String,
-   ) -> Result<(), String>
-   ```
-   - Validates: `new_path` exists on disk (`is_dir`), `new_path` not already a bound project, `old_path` currently is a bound project.
-   - Atomic write to `~/.dot-claude-gui/config.json`: in the `gui_projects` map, remove entry at `old_path`, insert under `new_path` with the same `account` value. Reuses the existing temp-file-then-rename pattern in `claude-config`.
-   - On success, file watcher will emit `config-changed`; frontend reloads.
+#[tauri::command]
+pub fn update_project_path(req: UpdateProjectPathRequest) -> Result<(), String>
+```
+
+Behavior:
+- Validate `new_path` is a directory that exists: `std::path::Path::new(&req.new_path).is_dir()`, else return `invalid_path: <new_path>`.
+- Canonicalize `new_path` (existing `canonicalize_path` helper) and `old_path`.
+- Validate `new_path` (canonical form) is not already in `cfg.known_projects` — return `path_already_known: <new_path>` if so.
+- Inside `mutate`:
+  - Locate `old_path` (canonical) in `known_projects` — return `unknown_path: <old_path>` if not found.
+  - In `known_projects`: replace the entry in-place (preserve list ordering).
+  - In `projects` HashMap: if old entry exists, `remove` it and `insert` under the new canonical path with the same `ProjectBinding` value.
+- Atomic write via existing `mutate` / `write_config` pattern.
+
+Register the command in `src-tauri/src/lib.rs` (the invoke handler list at lines 60-65 currently lists the other `gui_projects::*` commands).
 
 **Frontend changes:**
 
-1. `src/lib/api/types.ts` — extend `GuiProjectEntry` with `exists: boolean`.
-2. `src/lib/ipc/client.ts` — add `updateProjectPath(oldPath: string, newPath: string)` wrapper.
-3. `src/lib/stores/projects.svelte.ts` — entries carry `exists`; expose `updatePath(oldPath, newPath)` method.
-4. `src/lib/components/project-mode/BindingFacet.svelte`:
-   - When `binding && !binding.exists`, render `.stale-banner` (above the existing unbound-banner code path, separate styling).
-   - Stale-banner shows two buttons: `Update path…` (primary) and the existing `Remove`.
-   - `Update path…` handler: call `@tauri-apps/plugin-dialog`'s `open({ directory: true, multiple: false, defaultPath: <parent dir of old_path or HOME> })`. On a non-null result, call `projectsStore.updatePath(old, picked)`. On null (cancel), no-op.
-   - After successful update, also update `modeStore.selectedPath` so the user stays on the renamed project. Toast confirms `pathUpdated`.
+1. `src/lib/ipc/client.ts` — add wrapper:
+   ```ts
+   async updateProjectPath(oldPath: string, newPath: string): Promise<void> {
+     await invoke("update_project_path", { req: { oldPath, newPath } });
+   }
+   ```
+   Place adjacent to `updateProjectLaunch` (currently at line 120) for consistency.
 
-**i18n keys to add:**
-- `projectMode.binding.stalePath` — banner body text
-- `projectMode.binding.updatePathBtn`
-- `projectMode.binding.updatePathDialogTitle` — passed to the Tauri dialog as `title`
-- `projectMode.binding.pathUpdated` — toast text
+2. `src/lib/stores/projects.svelte.ts` — add method:
+   ```ts
+   async updatePath(oldPath: string, newPath: string): Promise<void> {
+     await ipcClient.updateProjectPath(oldPath, newPath);
+     await this.loadProjects();
+   }
+   ```
+   Plus: after a successful rename, the consumer (`StalePathBanner`) must also update `modeStore.selectedProject` to the new path so the focused project follows the rename. The store method itself stays unaware of `modeStore` (no cross-store coupling); the caller orchestrates.
+
+3. `src/lib/components/project-mode/StalePathBanner.svelte` — add an `Update path…` button (primary, before the existing Remove):
+   - Handler calls `@tauri-apps/plugin-dialog`'s `open({ directory: true, multiple: false, title: t("projectMode.staleUpdatePathDialogTitle"), defaultPath: <parent dir of old path or HOME fallback> })`.
+   - On non-null string result: call `projectsStore.updatePath(path, picked)`, then `modeStore.selectedProject = picked`, then `toastStore.success(t("projectMode.stalePathUpdated"))`.
+   - On null (cancel): no-op.
+   - On thrown error: `toastStore.error(String(e))`.
+
+   Keep the existing Remove button untouched.
+
+**i18n keys to add** (under existing `projectMode.stale*` family):
+- `projectMode.staleUpdatePathBtn` — button label, e.g. `Update path…` / `更新路径…` / `パスを更新…`
+- `projectMode.staleUpdatePathDialogTitle` — passed to the Tauri folder picker as `title`
+- `projectMode.stalePathUpdated` — toast on success, e.g. `Project path updated.`
 
 ## Cluster B — E2E gap fixes
 
@@ -284,10 +311,11 @@ Before running the plugin tri-state E2E in the Verification flow below, complete
 
 **A2 — Stale-path Update action:**
 1. Bind a project to an account → no behavior change vs Stage 4
-2. From shell: `mv <project> <project>-renamed` while GUI is open → file watcher fires → BindingFacet shows stale-banner with `Update path…` + `Remove` buttons (existing tabs greyed where applicable)
-3. Click `Update path…` → native folder picker opens with default at parent dir → pick `<project>-renamed` → toast confirms update → stale-banner gone → `~/.dot-claude-gui/config.json` reflects new path under `gui_projects`
-4. `selectedPath` follows: user remains on the (now-renamed) project in the sidebar
+2. From shell: `mv <project> <project>-renamed` while GUI is open → file watcher fires → `StalePathBanner` (already rendered for stale paths) now shows `Update path…` + `Remove` buttons; facet tabs remain disabled with `stalePathBlocked` empty state (existing behavior preserved)
+3. Click `Update path…` → native folder picker opens with default at parent dir → pick `<project>-renamed` → toast confirms update → stale banner gone → `~/.dot-claude-gui/config.json` reflects new path in `known_projects` and `projects` map → previously-bound account preserved
+4. `modeStore.selectedProject` follows: user remains on the (now-renamed) project in the sidebar
 5. Cancel the folder picker → no IPC call, no state change
+6. Negative path: `update_project_path` rejects (a) non-existent `new_path`, (b) `new_path` already in `known_projects`, (c) `old_path` not in `known_projects`. Each surfaces as a toast error.
 
 **B1 — i18n audit:**
 1. `pnpm run audit:i18n` on Stage 5 HEAD exits 0 with empty report
