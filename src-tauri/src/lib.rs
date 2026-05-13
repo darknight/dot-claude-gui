@@ -63,6 +63,7 @@ pub fn run() {
             commands::gui_projects::unbind_project,
             commands::gui_projects::remove_project,
             commands::gui_projects::update_project_launch,
+            commands::gui_projects::update_project_path,
             commands::skills::list_skills,
             commands::skills::get_skill_content,
             commands::claudemd::list_claudemd_files,

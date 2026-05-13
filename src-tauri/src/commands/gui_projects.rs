@@ -147,6 +147,54 @@ pub fn remove_project(req: UnbindProjectRequest) -> Result<(), String> {
     Ok(())
 }
 
+// ── Update path (rename a known project) ────────────────────────────────
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateProjectPathRequest {
+    pub old_path: String,
+    pub new_path: String,
+}
+
+#[tauri::command]
+pub fn update_project_path(req: UpdateProjectPathRequest) -> Result<(), String> {
+    let new_p = std::path::Path::new(&req.new_path);
+    if !new_p.is_dir() {
+        return Err(format!("invalid_path: {}", req.new_path));
+    }
+    let new_canonical = new_p
+        .canonicalize()
+        .map_err(|e| format!("canonicalize path: {e}"))?
+        .to_string_lossy()
+        .to_string();
+    let old_canonical = canonicalize_path(&req.old_path);
+
+    if old_canonical == new_canonical {
+        return Ok(());
+    }
+
+    mutate(|cfg| {
+        if !cfg.known_projects.contains(&old_canonical) {
+            return Err(format!("unknown_path: {}", req.old_path));
+        }
+        if cfg.known_projects.contains(&new_canonical) {
+            return Err(format!("path_already_known: {}", req.new_path));
+        }
+        // Replace in known_projects (preserve list ordering).
+        for entry in cfg.known_projects.iter_mut() {
+            if entry == &old_canonical {
+                *entry = new_canonical.clone();
+            }
+        }
+        // Move binding (if any) to the new key.
+        if let Some(binding) = cfg.projects.remove(&old_canonical) {
+            cfg.projects.insert(new_canonical.clone(), binding);
+        }
+        Ok(())
+    })?;
+    Ok(())
+}
+
 // ── Update launch ───────────────────────────────────────────────────────
 
 #[derive(Debug, Deserialize)]
@@ -281,5 +329,86 @@ mod tests {
         let list = gui_list_projects().unwrap();
         let entry = list.iter().find(|p| p.path == "/definitely/does/not/exist/12345").unwrap();
         assert!(entry.stale);
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn update_path_moves_known_and_bound_entry() {
+        let _g = isolated();
+        let cfg_path = config_path().unwrap();
+        let mut cfg = AppConfig::default();
+        cfg.accounts.push(Account {
+            name: "work".into(), display_name: "work".into(),
+            is_native: false, created_at: "x".into(),
+        });
+        write_config(&cfg_path, &cfg).unwrap();
+
+        // Bind a real directory (use HOME so we have a guaranteed-existing canonicalizable path).
+        let real = std::env::current_dir().unwrap().to_string_lossy().to_string();
+        add_project(AddProjectRequest { path: real.clone() }).unwrap();
+        bind_project(BindProjectRequest { path: real.clone(), account: "work".into() }).unwrap();
+
+        // Prepare a different real path to move TO.
+        let dir = tempfile::tempdir().unwrap();
+        let new_path = dir.path().to_string_lossy().to_string();
+
+        update_project_path(UpdateProjectPathRequest {
+            old_path: real.clone(),
+            new_path: new_path.clone(),
+        }).unwrap();
+
+        let list = gui_list_projects().unwrap();
+        // Old path gone.
+        assert!(list.iter().all(|p| p.path != real),
+            "old path should be removed from known_projects");
+        // New path present and still bound to "work".
+        let new_canonical = std::path::Path::new(&new_path)
+            .canonicalize().unwrap().to_string_lossy().to_string();
+        let moved = list.iter().find(|p| p.path == new_canonical)
+            .expect("new path present");
+        assert_eq!(moved.account.as_deref(), Some("work"));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn update_path_rejects_nonexistent_new_path() {
+        let _g = isolated();
+        let real = std::env::current_dir().unwrap().to_string_lossy().to_string();
+        add_project(AddProjectRequest { path: real.clone() }).unwrap();
+        let res = update_project_path(UpdateProjectPathRequest {
+            old_path: real,
+            new_path: "/definitely/does/not/exist/abc123".into(),
+        });
+        assert!(res.is_err(), "non-existent new_path must be rejected");
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn update_path_rejects_unknown_old_path() {
+        let _g = isolated();
+        let dir = tempfile::tempdir().unwrap();
+        let new_path = dir.path().to_string_lossy().to_string();
+        let res = update_project_path(UpdateProjectPathRequest {
+            old_path: "/never/added/path".into(),
+            new_path,
+        });
+        assert!(res.is_err(), "unknown old_path must be rejected");
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn update_path_rejects_new_path_already_known() {
+        let _g = isolated();
+        let dir_a = tempfile::tempdir().unwrap();
+        let dir_b = tempfile::tempdir().unwrap();
+        let a = dir_a.path().to_string_lossy().to_string();
+        let b = dir_b.path().to_string_lossy().to_string();
+        add_project(AddProjectRequest { path: a.clone() }).unwrap();
+        add_project(AddProjectRequest { path: b.clone() }).unwrap();
+        let res = update_project_path(UpdateProjectPathRequest {
+            old_path: a,
+            new_path: b,
+        });
+        assert!(res.is_err(), "new_path already known must be rejected");
     }
 }
