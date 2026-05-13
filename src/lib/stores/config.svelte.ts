@@ -9,9 +9,6 @@ class ConfigStore {
   error = $state<string>("");
   isDirty = $state(false);
 
-  /** Kept for compatibility with sub-editors that read this. Always user. */
-  readonly activeScope = "user" as const;
-
   /** The settings being edited. */
   get activeSettings(): Settings {
     return this.userSettings;
