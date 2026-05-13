@@ -12,7 +12,6 @@
   "appsettings.language": "语言",
   "appsettings.terminal": "终端",
   "appsettings.about": "关于",
-  "appsettings.appName": "dot-claude-gui",
   "appsettings.version": "版本 {version}",
   "appsettings.repo": "仓库",
   "appsettings.preferredTerminal": "首选终端",

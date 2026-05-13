@@ -12,7 +12,6 @@
   "appsettings.language": "言語",
   "appsettings.terminal": "ターミナル",
   "appsettings.about": "このアプリについて",
-  "appsettings.appName": "dot-claude-gui",
   "appsettings.version": "バージョン {version}",
   "appsettings.repo": "リポジトリ",
   "appsettings.preferredTerminal": "優先ターミナル",

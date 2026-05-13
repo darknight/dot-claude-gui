@@ -7,6 +7,7 @@
   const REPO_URL = (pkg as { repository: { url: string } }).repository.url
     .replace(/^git\+/, "")
     .replace(/\.git$/, "");
+  const APP_NAME = (pkg as { name: string }).name;
 </script>
 
 <div class="p-6 space-y-8">
@@ -80,7 +81,7 @@
   <section class="space-y-4">
     <h2 class="text-lg font-medium" style="color: var(--text-primary)">{t("appsettings.about")}</h2>
     <div class="space-y-1 text-sm" style="color: var(--text-muted)">
-      <div>{t("appsettings.appName")}</div>
+      <div>{APP_NAME}</div>
       <div>{t("appsettings.version", { version: APP_VERSION })}</div>
       <div>
         <span>{t("appsettings.repo")}: </span>

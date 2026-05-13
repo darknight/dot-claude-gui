@@ -12,7 +12,6 @@
   "appsettings.language": "Language",
   "appsettings.terminal": "Terminal",
   "appsettings.about": "About",
-  "appsettings.appName": "dot-claude-gui",
   "appsettings.version": "Version {version}",
   "appsettings.repo": "Repository",
   "appsettings.preferredTerminal": "Preferred Terminal",
