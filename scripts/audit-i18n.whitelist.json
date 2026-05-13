@@ -1,6 +1,20 @@
 {
-  "keys": [],
-  "keySuffixes": [".cmd", ".shortcut", ".url", ".code", ".identifier"],
+  "keys": [
+    "appsettings.terminalIterm2",
+    "settings.hooks",
+    "settings.hooksLabel",
+    "settings.fields.fastMode.label",
+    "accountMode.claudemd",
+    "projectMode.facet.claudemd"
+  ],
+  "keySuffixes": [
+    ".cmd",
+    ".shortcut",
+    ".url",
+    ".code",
+    ".identifier",
+    "Placeholder"
+  ],
   "valuePatterns": [
     "^https?://",
     "^[A-Z][A-Z0-9_]*$",
