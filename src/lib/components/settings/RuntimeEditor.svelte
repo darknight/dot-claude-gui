@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Settings } from "$lib/api/types";
   import { configStore } from "$lib/stores/config.svelte";
   import DirtyDot from "$lib/components/shared/DirtyDot.svelte";
   import JsonPreview from "./JsonPreview.svelte";
@@ -135,7 +136,7 @@
     fastModePerSessionOptIn,
     showTurnDuration,
     terminalProgressBarEnabled,
-    teammateMode: teammateMode || undefined,
+    teammateMode: (teammateMode || undefined) as "auto" | "in-process" | "tmux" | undefined,
     useAutoModeDuringPlan,
     voiceEnabled,
     wslInheritsWindowsSettings,
@@ -144,7 +145,7 @@
     autoCompactWindow: parsedWindow(),
     showClearContextOnPlanAccept,
     promptSuggestionEnabled,
-  });
+  } satisfies Partial<Settings>);
 
   function save() {
     configStore.save({
