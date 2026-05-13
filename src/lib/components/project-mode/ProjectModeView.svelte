@@ -10,7 +10,6 @@
   import ProjectClaudeMdFacet from "./ProjectClaudeMdFacet.svelte";
   import EffectiveFacet from "./EffectiveFacet.svelte";
   import StalePathBanner from "./StalePathBanner.svelte";
-  import UnboundHint from "./UnboundHint.svelte";
 
   const FACETS: Array<{ key: ProjectFacetKey; labelKey: MessageKey }> = [
     { key: "binding",   labelKey: "projectMode.facet.binding" },
@@ -55,8 +54,6 @@
     <div class="facet">
       {#if isStale}
         <div class="empty">{t("projectMode.stalePathBlocked")}</div>
-      {:else if !isBound && activeFacet !== "binding"}
-        <UnboundHint />
       {:else if activeFacet === "binding"}
         <BindingFacet path={selected.path} />
       {:else if activeFacet === "launch"}
