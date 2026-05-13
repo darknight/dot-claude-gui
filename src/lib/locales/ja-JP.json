@@ -448,5 +448,6 @@
   "projectMode.effective.field": "フィールド",
   "projectMode.effective.source": "ソース",
   "projectMode.effective.noOverrides": "オーバーライドなし",
-  "migration.toastSuccess": "v2 設定に移行しました。旧ファイルのバックアップ: {backup}"
+  "migration.toastSuccess": "v2 設定に移行しました。旧ファイルのバックアップ: {backup}",
+  "projectMode.binding.unboundHint": "このプロジェクトはまだアカウントにバインドされていません。下のドロップダウンでアカウントを選び「バインド」をクリックすると他の機能が有効になります。"
 }

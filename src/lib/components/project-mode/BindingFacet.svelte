@@ -64,6 +64,12 @@
 <section class="binding-facet">
   <h2>{t("projectMode.binding.title")}</h2>
 
+  {#if !binding?.account}
+    <div class="unbound-banner" role="note">
+      {t("projectMode.binding.unboundHint")}
+    </div>
+  {/if}
+
   <dl>
     <dt>{t("projectMode.binding.pathLabel")}</dt>
     <dd><code>{path}</code></dd>
@@ -105,6 +111,17 @@
     margin: 0 0 16px 0;
     font-size: 16px;
     font-weight: 600;
+  }
+  .unbound-banner {
+    margin: 0 0 16px 0;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-primary);
+    border-radius: 4px;
+    background: var(--bg-secondary, transparent);
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.5;
   }
   dl {
     display: grid;

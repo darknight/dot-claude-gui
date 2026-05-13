@@ -195,5 +195,6 @@
   "settings.statusLineType": "",
   "settings.statusLinePadding": "",
   "settings.hooksEmptyDirtyHint": "",
-  "migration.toastSuccess": ""
+  "migration.toastSuccess": "",
+  "projectMode.binding.unboundHint": ""
 }

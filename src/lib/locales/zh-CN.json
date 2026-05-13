@@ -448,5 +448,6 @@
   "projectMode.effective.field": "字段",
   "projectMode.effective.source": "来源",
   "projectMode.effective.noOverrides": "没有字段覆写",
-  "migration.toastSuccess": "已迁移到 v2 配置，旧文件备份至 {backup}"
+  "migration.toastSuccess": "已迁移到 v2 配置，旧文件备份至 {backup}",
+  "projectMode.binding.unboundHint": "此项目尚未绑定账号。请在下方选择账号并点击「绑定」以启用其他功能。"
 }
