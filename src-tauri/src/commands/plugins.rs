@@ -115,6 +115,8 @@ pub(crate) fn list_plugins_in_dir(
         }
     }
 
+    // HashMap iteration order is non-deterministic; sort by id for stable UI.
+    result.sort_by(|a, b| a.id.cmp(&b.id));
     result
 }
 
