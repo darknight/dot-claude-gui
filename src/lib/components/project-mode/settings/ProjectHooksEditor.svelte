@@ -5,15 +5,19 @@
   let {
     settings,
     onPatch,
+    onError,
   }: {
     settings: Settings;
     onPatch: (partial: Partial<Settings>) => void;
     error: string | null;
+    onError?: (err: string | null) => void;
   } = $props();
 
   let raw = $state(JSON.stringify(settings.hooks ?? {}, null, 2));
   let lastSettingsKey = $state("");
   let localError = $state<string | null>(null);
+
+  $effect(() => { onError?.(localError); });
 
   $effect(() => {
     const key = JSON.stringify(settings.hooks);

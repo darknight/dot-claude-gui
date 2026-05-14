@@ -17,6 +17,7 @@
   let error = $state<string | null>(null);
   let loading = $state(true);
   let saving = $state(false);
+  let sectionError = $state<string | null>(null);
 
   let isDirty = $derived(JSON.stringify(current) !== JSON.stringify(original));
 
@@ -42,6 +43,7 @@
   }
 
   $effect(() => { void path; load(); });
+  $effect(() => { void activeSection; sectionError = null; });
 
   function onPatch(partial: Partial<Settings>) {
     current = { ...current, ...partial };
@@ -87,9 +89,9 @@
         {:else if section === "environment"}
           <ProjectEnvVarEditor settings={current} onPatch={onPatch} {error} />
         {:else if section === "hooks"}
-          <ProjectHooksEditor settings={current} onPatch={onPatch} {error} />
+          <ProjectHooksEditor settings={current} onPatch={onPatch} {error} onError={(e) => sectionError = e} />
         {:else}
-          <ProjectAdvancedJsonEditor settings={current} {onReplace} {error} />
+          <ProjectAdvancedJsonEditor settings={current} {onReplace} {error} onError={(e) => sectionError = e} />
         {/if}
       {/snippet}
     </SectionedSettings>
@@ -98,7 +100,7 @@
       <button
         type="button"
         onclick={save}
-        disabled={!isDirty || saving || error !== null}
+        disabled={!isDirty || saving || error !== null || sectionError !== null}
         class="primary"
       >{t("projectMode.settings.saveBtn")}</button>
       <button type="button" onclick={revert} disabled={!isDirty}>

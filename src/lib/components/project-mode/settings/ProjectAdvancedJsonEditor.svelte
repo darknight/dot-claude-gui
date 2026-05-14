@@ -6,10 +6,12 @@
     settings,
     onReplace,
     error,
+    onError,
   }: {
     settings: Settings;
     onReplace: (next: Partial<Settings>) => void;
     error: string | null;
+    onError?: (err: string | null) => void;
   } = $props();
 
   let raw = $state(JSON.stringify(settings, null, 2));
@@ -24,6 +26,8 @@
   });
 
   let localError = $state<string | null>(null);
+
+  $effect(() => { onError?.(localError); });
 
   function onChange(e: Event) {
     raw = (e.target as HTMLTextAreaElement).value;
