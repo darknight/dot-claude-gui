@@ -106,7 +106,7 @@ fn build_osa_script(
     let shell_cmd = if env_prefix.is_empty() {
         format!("{}claude{}", cd_prefix, args_suffix)
     } else {
-        format!("{}{} claude{}", cd_prefix, env_prefix, args_suffix)
+        format!("{}export {} && claude{}", cd_prefix, env_prefix, args_suffix)
     };
 
     // AppleScript needs `\` and `"` inside string literals escaped.
@@ -202,7 +202,7 @@ mod tests {
         env.insert("FOO".to_string(), "bar".to_string());
         let script = build_osa_script("iterm2", Some("/tmp"), &env, &[]);
         assert!(script.contains("FOO='bar'"));
-        assert!(script.contains("FOO='bar' claude"));
+        assert!(script.contains("export FOO='bar' && claude"));
     }
 
     #[cfg(target_os = "macos")]
@@ -246,7 +246,7 @@ mod tests {
         env.insert("CLAUDE_CONFIG_DIR".to_string(), "/foo".to_string());
         let script = build_osa_script("terminal", None, &env, &["/login".to_string()]);
         assert!(!script.contains("cd "));
-        assert!(script.contains("CLAUDE_CONFIG_DIR='/foo' claude '/login'"));
+        assert!(script.contains("export CLAUDE_CONFIG_DIR='/foo' && claude '/login'"));
     }
 
     #[test]
