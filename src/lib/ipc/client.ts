@@ -47,6 +47,10 @@ export class IpcError extends Error {
     super(message);
     this.name = "IpcError";
   }
+
+  toString(): string {
+    return `${this.kind}: ${this.message}`;
+  }
 }
 
 function parseError(e: unknown): IpcError {
