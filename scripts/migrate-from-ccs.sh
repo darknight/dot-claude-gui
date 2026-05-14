@@ -64,8 +64,10 @@ if (( DRY_RUN )); then
   echo "[dry-run] would tar.gz $GUI_MYSELF -> $MYSELF_BACKUP"
   echo "[dry-run] would cp     $GUI_CONFIG -> $CONFIG_BACKUP"
 else
-  tar -czf "$WORK_BACKUP"   -C "$HOME/.dot-claude-gui/accounts" work
-  tar -czf "$MYSELF_BACKUP" -C "$HOME/.dot-claude-gui/accounts" myself
+  tar -czf "$WORK_BACKUP" -C "$HOME/.dot-claude-gui/accounts" work \
+    || { rm -f "$WORK_BACKUP"; abort "tar failed for work backup (disk full?). Aborted before rsync."; }
+  tar -czf "$MYSELF_BACKUP" -C "$HOME/.dot-claude-gui/accounts" myself \
+    || { rm -f "$MYSELF_BACKUP"; abort "tar failed for myself backup (disk full?). Aborted before rsync."; }
   cp "$GUI_CONFIG" "$CONFIG_BACKUP"
   echo "Backed up:"
   echo "  $WORK_BACKUP"
