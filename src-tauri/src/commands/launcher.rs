@@ -134,7 +134,7 @@ pub fn launch_claude(
 
 #[tauri::command]
 pub fn get_claude_args() -> Result<String, String> {
-    let output = Command::new("claude")
+    let output = Command::new(crate::claude_cli::program())
         .arg("--help")
         .output()
         .map_err(|e| format!("spawn_claude: {e}"))?;

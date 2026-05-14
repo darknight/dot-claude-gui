@@ -1,5 +1,13 @@
-import { ipcClient } from "$lib/ipc/client.js";
+import { ipcClient, IpcError } from "$lib/ipc/client.js";
 import type { PluginInfo, MarketplaceInfo, AvailablePlugin } from "$lib/api/types";
+
+// Preserve the "kind: details" prefix that IpcError carries. Vanilla Error
+// has no useful toString, so we fall back to .message.
+function errMsg(e: unknown, fallback: string): string {
+  if (e instanceof IpcError) return e.toString();
+  if (e instanceof Error) return e.message;
+  return fallback;
+}
 
 class PluginsStore {
   plugins = $state<PluginInfo[]>([]);
@@ -13,7 +21,7 @@ class PluginsStore {
     try {
       this.plugins = await ipcClient.listPlugins();
     } catch (e) {
-      this.error = e instanceof Error ? e.message : "Failed to load plugins";
+      this.error = errMsg(e, "Failed to load plugins");
     } finally {
       this.loading = false;
     }
@@ -23,7 +31,7 @@ class PluginsStore {
     try {
       this.marketplaces = await ipcClient.listMarketplaces();
     } catch (e) {
-      this.error = e instanceof Error ? e.message : "Failed to load marketplaces";
+      this.error = errMsg(e, "Failed to load marketplaces");
     }
   }
 
@@ -31,7 +39,7 @@ class PluginsStore {
     try {
       this.availablePlugins = await ipcClient.getMarketplacePlugins(marketplaceId);
     } catch (e) {
-      this.error = e instanceof Error ? e.message : "Failed";
+      this.error = errMsg(e, "Failed");
     }
   }
 
@@ -41,7 +49,7 @@ class PluginsStore {
       // Update local state
       this.plugins = this.plugins.map(p => p.id === id ? { ...p, enabled } : p);
     } catch (e) {
-      this.error = e instanceof Error ? e.message : "Failed";
+      this.error = errMsg(e, "Failed");
     }
   }
 
@@ -49,7 +57,7 @@ class PluginsStore {
     try {
       return await ipcClient.installPlugin(name, marketplace);
     } catch (e) {
-      this.error = e instanceof Error ? e.message : "Failed";
+      this.error = errMsg(e, "Failed");
     }
   }
 
@@ -57,7 +65,7 @@ class PluginsStore {
     try {
       return await ipcClient.uninstallPlugin(id);
     } catch (e) {
-      this.error = e instanceof Error ? e.message : "Failed";
+      this.error = errMsg(e, "Failed");
     }
   }
 
@@ -65,7 +73,7 @@ class PluginsStore {
     try {
       return await ipcClient.addMarketplace(repo);
     } catch (e) {
-      this.error = e instanceof Error ? e.message : "Failed to add marketplace";
+      this.error = errMsg(e, "Failed to add marketplace");
     }
   }
 
@@ -73,7 +81,7 @@ class PluginsStore {
     try {
       return await ipcClient.removeMarketplace(id);
     } catch (e) {
-      this.error = e instanceof Error ? e.message : "Failed to remove marketplace";
+      this.error = errMsg(e, "Failed to remove marketplace");
     }
   }
 

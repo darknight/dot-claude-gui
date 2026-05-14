@@ -89,6 +89,19 @@
         // Migration IPC failure is non-fatal — don't break startup.
         console.warn("take_migration_report failed", e);
       }
+
+      // Pre-flight: production .app launched from Finder inherits a minimal
+      // PATH and won't find `claude` (commonly at /opt/homebrew/bin). Surface
+      // this once with a sticky toast so plugin/mcp commands don't appear to
+      // "silently do nothing" when the CLI can't be spawned.
+      try {
+        const status = await ipcClient.checkClaudeCli();
+        if (!status.resolved) {
+          toastStore.error(t("preflight.claudeNotFound"), 0);
+        }
+      } catch (e) {
+        console.warn("check_claude_cli failed", e);
+      }
     })();
 
     return () => {

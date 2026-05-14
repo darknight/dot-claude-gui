@@ -1,4 +1,5 @@
 mod app_config;
+mod claude_cli;
 mod commands;
 mod events;
 mod executor;
@@ -105,6 +106,7 @@ pub fn run() {
             commands::project_facets::project_list_plugins,
             commands::project_facets::project_read_effective,
             commands::migration::take_migration_report,
+            claude_cli::check_claude_cli,
         ])
         .setup(|app| {
             // One-shot migration v1 → v2 (idempotent for v2).

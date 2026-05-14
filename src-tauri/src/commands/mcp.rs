@@ -78,7 +78,7 @@ fn parse_mcp_list(output: &str) -> Vec<McpServerInfo> {
 // ---------------------------------------------------------------------------
 
 pub(crate) fn list_mcp_servers_logic(claude_config_dir: &Path) -> Vec<McpServerInfo> {
-    let output = Command::new("claude")
+    let output = Command::new(crate::claude_cli::program())
         .args(["mcp", "list"])
         .env("CLAUDE_CONFIG_DIR", claude_config_dir)
         .output();
@@ -115,7 +115,8 @@ pub async fn add_mcp_server(
         "CLAUDE_CONFIG_DIR".to_string(),
         dir.to_string_lossy().to_string(),
     );
-    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
+    let request_id =
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -181,7 +182,8 @@ pub async fn remove_mcp_server(
         "CLAUDE_CONFIG_DIR".to_string(),
         dir.to_string_lossy().to_string(),
     );
-    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
+    let request_id =
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
     Ok(CommandRequest { request_id })
 }
 

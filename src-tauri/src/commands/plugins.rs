@@ -325,7 +325,8 @@ pub async fn install_plugin(
         "CLAUDE_CONFIG_DIR".to_string(),
         dir.to_string_lossy().to_string(),
     );
-    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
+    let request_id =
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -347,7 +348,8 @@ pub async fn uninstall_plugin(
         "CLAUDE_CONFIG_DIR".to_string(),
         dir.to_string_lossy().to_string(),
     );
-    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
+    let request_id =
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -377,7 +379,8 @@ pub async fn add_marketplace(
         "CLAUDE_CONFIG_DIR".to_string(),
         dir.to_string_lossy().to_string(),
     );
-    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
+    let request_id =
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -404,7 +407,8 @@ pub async fn remove_marketplace(
         "CLAUDE_CONFIG_DIR".to_string(),
         dir.to_string_lossy().to_string(),
     );
-    let request_id = crate::executor::spawn_streaming_with_env(app, "claude", args, env)?;
+    let request_id =
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
     Ok(CommandRequest { request_id })
 }
 

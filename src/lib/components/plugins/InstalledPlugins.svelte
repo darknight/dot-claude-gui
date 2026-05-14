@@ -26,11 +26,21 @@
   }
 
   async function handleUninstall(id: string) {
+    // Reset prior failure output so a new attempt starts clean.
+    outputLines = [];
+
     const result = await pluginsStore.uninstallPlugin(id);
-    if (!result?.requestId) return;
+    if (!result?.requestId) {
+      // IPC itself failed (e.g. `claude` CLI not on PATH). The store has
+      // already populated pluginsStore.error; surface it as a toast so the
+      // user actually sees it instead of just the small alert at the top.
+      toastStore.error(
+        t("plugins.uninstallError", { msg: pluginsStore.error || "unknown" }),
+      );
+      return;
+    }
 
     pendingId = id;
-    outputLines = [];
 
     const unlistenOutput = await onCommandOutput((p: CommandOutputPayload) => {
       if (p.commandId === result.requestId) {
@@ -43,12 +53,14 @@
       unlistenOutput();
       unlistenCompleted();
       pendingId = null;
-      outputLines = [];
 
       if (p.exitCode === 0) {
         toastStore.success(t("plugins.uninstallSuccess"));
+        outputLines = [];
       } else {
         toastStore.error(t("plugins.uninstallFailed", { exitCode: p.exitCode }));
+        // Retain outputLines on failure so the user can see why it failed
+        // (the toast only shows the exit code). Cleared on next attempt.
       }
       await pluginsStore.loadPlugins();
     });
@@ -135,7 +147,7 @@
     </div>
   {/if}
 
-  {#if pendingId !== null && outputLines.length > 0}
+  {#if outputLines.length > 0}
     <pre class="code-block mt-4 max-h-32 overflow-auto">{outputLines.join("\n")}</pre>
   {/if}
 </div>

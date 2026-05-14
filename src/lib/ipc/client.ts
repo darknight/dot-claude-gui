@@ -10,6 +10,7 @@ import type {
   AddMcpServerRequest,
   AppMigrationReport,
   AvailablePlugin,
+  ClaudeCliStatus,
   ClaudeMdFile,
   ClaudeMdFileDetail,
   ConfigResponse,
@@ -85,6 +86,12 @@ export class IpcClient {
 
   async health(): Promise<HealthResponse> {
     return call("health");
+  }
+
+  // --- claude CLI pre-flight (1) ---
+
+  async checkClaudeCli(): Promise<ClaudeCliStatus> {
+    return call("check_claude_cli");
   }
 
   // --- config (2) ---

@@ -545,3 +545,12 @@ export interface AppMigrationReport {
   bakPath?: string | null;
   defaultInjected: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Claude CLI pre-flight status
+// ---------------------------------------------------------------------------
+
+export interface ClaudeCliStatus {
+  resolved: boolean;
+  path: string;
+}
