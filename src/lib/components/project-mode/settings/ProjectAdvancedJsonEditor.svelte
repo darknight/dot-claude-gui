@@ -4,11 +4,11 @@
 
   let {
     settings,
-    onPatch,
+    onReplace,
     error,
   }: {
     settings: Settings;
-    onPatch: (partial: Partial<Settings>) => void;
+    onReplace: (next: Partial<Settings>) => void;
     error: string | null;
   } = $props();
 
@@ -34,7 +34,7 @@
         return;
       }
       localError = null;
-      onPatch(parsed as Partial<Settings>);
+      onReplace(parsed as Partial<Settings>);
     } catch (e) {
       localError = (e as Error).message;
     }

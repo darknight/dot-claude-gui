@@ -89,7 +89,7 @@
         {:else if section === "hooks"}
           <ProjectHooksEditor settings={current} onPatch={onPatch} {error} />
         {:else}
-          <ProjectAdvancedJsonEditor settings={current} onPatch={onReplace} {error} />
+          <ProjectAdvancedJsonEditor settings={current} {onReplace} {error} />
         {/if}
       {/snippet}
     </SectionedSettings>
