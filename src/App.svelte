@@ -61,6 +61,9 @@
   let settingsModalOpen = $state(false);
 
   onMount(() => {
+    const onWindowFocus = () => { void projectsStore.loadProjects(); };
+    window.addEventListener("focus", onWindowFocus);
+
     void (async () => {
       await appSettingsStore.load();
       await Promise.all([
@@ -89,6 +92,7 @@
     })();
 
     return () => {
+      window.removeEventListener("focus", onWindowFocus);
       unlistenConfigChanged?.();
     };
   });
