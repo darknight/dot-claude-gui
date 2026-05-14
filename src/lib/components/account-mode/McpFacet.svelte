@@ -27,7 +27,7 @@
     {/each}
   </nav>
 
-  <div class="flex-1 overflow-hidden">
+  <div class="flex-1 flex flex-col overflow-hidden">
     <McpModule activeSection={active} />
   </div>
 </div>

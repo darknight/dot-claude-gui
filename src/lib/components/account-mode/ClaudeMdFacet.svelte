@@ -10,7 +10,7 @@
   >
     <ClaudeMdList />
   </aside>
-  <div class="flex-1 overflow-hidden">
+  <div class="flex-1 flex flex-col overflow-hidden">
     <ClaudeMdModule />
   </div>
 </div>
