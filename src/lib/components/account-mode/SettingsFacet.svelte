@@ -36,7 +36,7 @@
     {/each}
   </nav>
 
-  <div class="flex-1 overflow-hidden">
+  <div class="flex-1 flex flex-col overflow-hidden">
     {#if configStore.loading}
       <div class="p-6">
         <p class="text-sm" style="color: var(--text-muted)">{t("nav.loadingConfig")}</p>
