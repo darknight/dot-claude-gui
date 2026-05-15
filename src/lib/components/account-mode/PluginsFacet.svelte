@@ -1,6 +1,7 @@
 <script lang="ts">
   import PluginsModule from "$lib/components/plugins/PluginsModule.svelte";
   import { t, type MessageKey } from "$lib/i18n";
+  import { modeStore } from "$lib/stores/mode.svelte";
 
   const sections = [
     { id: "installed", labelKey: "plugins.installed" },
@@ -8,7 +9,9 @@
     { id: "manage-marketplaces", labelKey: "plugins.manageMarketplaces" },
   ] satisfies { id: string; labelKey: MessageKey }[];
 
-  let active = $state("installed");
+  const active = $derived(
+    modeStore.accountSubsection(modeStore.selectedAccount, "pluginsSection") ?? "installed",
+  );
 </script>
 
 <div class="flex flex-col flex-1 overflow-hidden">
@@ -21,7 +24,11 @@
         type="button"
         class="px-2.5 py-1 text-xs rounded transition-colors whitespace-nowrap {active === section.id ? '' : 'hover:bg-[var(--bg-card-hover)]'}"
         style="background-color: {active === section.id ? 'var(--accent-bg)' : 'transparent'}; color: {active === section.id ? 'var(--accent-text)' : 'var(--text-secondary)'}"
-        onclick={() => { active = section.id; }}
+        onclick={() => {
+          if (modeStore.selectedAccount) {
+            modeStore.setAccountSubsection(modeStore.selectedAccount, "pluginsSection", section.id);
+          }
+        }}
       >
         {t(section.labelKey)}
       </button>
