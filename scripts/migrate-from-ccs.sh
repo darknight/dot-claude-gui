@@ -77,7 +77,14 @@ fi
 
 section "rsync ccs work -> GUI work"
 
-RSYNC_OPTS=(-av --delete)
+# -L (--copy-links): dereference symlinks during transfer. ccs sets up
+# {agents,commands,skills,settings.json} as symlinks into ~/.ccs/shared/;
+# without -L those symlinks land in the GUI account dirs verbatim and the
+# accounts stay tied to ccs (delete ~/.ccs and everything dangles, change
+# one account's skill and the other account sees it too). With -L the
+# rsync transfer materializes real files/dirs and each GUI account owns
+# its own copy.
+RSYNC_OPTS=(-avL --delete)
 if (( DRY_RUN )); then
   RSYNC_OPTS+=(--dry-run)
 fi
