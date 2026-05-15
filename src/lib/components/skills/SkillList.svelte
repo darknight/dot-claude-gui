@@ -95,7 +95,15 @@
                   style="background-color: var(--accent-bg); color: var(--text-primary)"
                   onclick={() => skillsStore.selectSkill(skill.id)}
                 >
-                  <span class="truncate">{skill.name}</span>
+                  <span class="flex min-w-0 items-center gap-1.5 truncate">
+                    <span class="truncate">{skill.name}</span>
+                    {#if skill.externalTarget}
+                      <span
+                        class="flex-shrink-0 cursor-help badge badge-warning"
+                        title={t("skills.externalTitle", { target: skill.externalTarget })}
+                      >{t("skills.externalBadge")}</span>
+                    {/if}
+                  </span>
                   {#if skill.valid}
                     <span class="flex-shrink-0 text-xs" style="color: var(--status-success-text)">✓</span>
                   {:else}
@@ -112,7 +120,15 @@
                   style="color: var(--text-secondary)"
                   onclick={() => skillsStore.selectSkill(skill.id)}
                 >
-                  <span class="truncate">{skill.name}</span>
+                  <span class="flex min-w-0 items-center gap-1.5 truncate">
+                    <span class="truncate">{skill.name}</span>
+                    {#if skill.externalTarget}
+                      <span
+                        class="flex-shrink-0 cursor-help badge badge-warning"
+                        title={t("skills.externalTitle", { target: skill.externalTarget })}
+                      >{t("skills.externalBadge")}</span>
+                    {/if}
+                  </span>
                   {#if skill.valid}
                     <span class="flex-shrink-0 text-xs" style="color: var(--status-success-text)">✓</span>
                   {:else}

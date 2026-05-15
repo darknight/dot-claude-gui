@@ -114,6 +114,14 @@ fn read_installed_plugins(plugins_dir: &Path) -> InstalledPluginsFile {
 /// `source` is the string that will be placed in `SkillInfo::source`
 /// (e.g. `"user"` or `"plugin:myplugin@marketplace"`).
 fn scan_skills_dir(skills_dir: &Path, source: &str) -> Vec<SkillInfo> {
+    // The skills/ dir itself may be a symlink (ccs's shared pool routes
+    // accounts/*/skills → ~/.ccs/shared/skills). When it is, every entry
+    // below it is effectively external even though the per-entry lstat
+    // looks like a plain dir.
+    let dir_is_symlink = std::fs::symlink_metadata(skills_dir)
+        .map(|m| m.file_type().is_symlink())
+        .unwrap_or(false);
+
     let read_dir = match std::fs::read_dir(skills_dir) {
         Ok(rd) => rd,
         Err(_) => return vec![],
@@ -159,6 +167,20 @@ fn scan_skills_dir(skills_dir: &Path, source: &str) -> Vec<SkillInfo> {
                 }
             };
 
+        // Mark external if either the parent skills/ dir or this skill's
+        // own dir is a symlink. canonicalize() dereferences to the real
+        // location so the UI can show users where it actually lives.
+        let entry_is_symlink = std::fs::symlink_metadata(&entry_path)
+            .map(|m| m.file_type().is_symlink())
+            .unwrap_or(false);
+        let external_target = if dir_is_symlink || entry_is_symlink {
+            std::fs::canonicalize(&entry_path)
+                .ok()
+                .map(|p| p.to_string_lossy().into_owned())
+        } else {
+            None
+        };
+
         skills.push(SkillInfo {
             id,
             name,
@@ -167,6 +189,7 @@ fn scan_skills_dir(skills_dir: &Path, source: &str) -> Vec<SkillInfo> {
             path: path_str,
             valid,
             validation_error,
+            external_target,
         });
     }
 
@@ -302,6 +325,48 @@ mod tests {
         assert_eq!(skill.source, "user");
         assert!(skill.valid);
         assert!(skill.validation_error.is_none());
+        assert!(
+            skill.external_target.is_none(),
+            "plain dir should not be marked external"
+        );
+    }
+
+    /// When the whole `skills/` dir is a symlink (the ccs-shared-pool case),
+    /// every entry under it must be flagged with the real target path so the
+    /// UI can surface that these skills are not account-local.
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn list_skills_flags_external_when_skills_dir_is_symlink() {
+        let dir = tempdir().unwrap();
+        // Real skills pool elsewhere
+        let real_pool = dir.path().join("real-pool");
+        let real_skill_dir = real_pool.join("shared-skill");
+        std::fs::create_dir_all(&real_skill_dir).unwrap();
+        std::fs::write(
+            real_skill_dir.join("SKILL.md"),
+            "---\nname: Shared Skill\ndescription: lives in shared pool\n---\n",
+        )
+        .unwrap();
+
+        // claude_home/skills → real-pool
+        let claude_home = dir.path().join("home");
+        std::fs::create_dir_all(&claude_home).unwrap();
+        std::os::unix::fs::symlink(&real_pool, claude_home.join("skills")).unwrap();
+
+        let result = list_skills_logic(&claude_home);
+
+        assert_eq!(result.len(), 1);
+        let skill = &result[0];
+        assert_eq!(skill.id, "shared-skill");
+        let target = skill
+            .external_target
+            .as_deref()
+            .expect("external_target should be set when skills/ is a symlink");
+        assert!(
+            target.contains("real-pool"),
+            "external_target should point at real pool, got: {}",
+            target
+        );
     }
 
     #[tokio::test]

@@ -56,6 +56,8 @@
   "skills.userGroup": "User Skills",
   "skills.noSkills": "No skills found",
   "skills.invalid": "Invalid",
+  "skills.externalBadge": "shared",
+  "skills.externalTitle": "This skill lives at an external location (not owned by this account): {target}",
   "common.save": "Save",
   "common.saving": "Saving...",
   "common.delete": "Delete",

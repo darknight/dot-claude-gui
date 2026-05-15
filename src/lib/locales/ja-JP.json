@@ -56,6 +56,8 @@
   "skills.userGroup": "ユーザースキル",
   "skills.noSkills": "スキルが見つかりません",
   "skills.invalid": "無効",
+  "skills.externalBadge": "共有",
+  "skills.externalTitle": "このスキルは外部の場所にあります（このアカウント専有ではありません）：{target}",
   "common.save": "保存",
   "common.saving": "保存中...",
   "common.delete": "削除",

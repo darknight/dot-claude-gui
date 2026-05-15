@@ -317,6 +317,10 @@ export interface SkillInfo {
   path: string;
   valid: boolean;
   validationError?: string;
+  /** Set when the skill dir (or its parent skills/ dir) is a symlink —
+   *  value is the real filesystem path. Used to badge shared/external
+   *  skills (e.g. ones still pointing at the ccs shared pool). */
+  externalTarget?: string;
 }
 
 export interface SkillContentResponse {

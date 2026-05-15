@@ -56,6 +56,8 @@
   "skills.userGroup": "用户技能",
   "skills.noSkills": "未找到技能",
   "skills.invalid": "无效",
+  "skills.externalBadge": "共享",
+  "skills.externalTitle": "此技能位于外部位置（非本账号独有）：{target}",
   "common.save": "保存",
   "common.saving": "保存中...",
   "common.delete": "删除",

@@ -17,6 +17,12 @@ pub struct SkillInfo {
     pub valid: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub validation_error: Option<String>,
+    /// Real filesystem path if this skill's directory (or the file itself)
+    /// is reached through a symlink — i.e. the canonical target is not under
+    /// the account's own dir. UI uses this to badge shared/external skills
+    /// (e.g. ccs-shared) so users know the source isn't account-local.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub external_target: Option<String>,
 }
 
 /// Response for GET /api/v1/skills/{id}/content
