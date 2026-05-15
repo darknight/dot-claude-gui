@@ -67,6 +67,7 @@ pub fn run() {
             commands::gui_projects::update_project_path,
             commands::skills::list_skills,
             commands::skills::get_skill_content,
+            commands::skills::delete_user_skill,
             commands::claudemd::list_claudemd_files,
             commands::claudemd::get_claudemd_file,
             commands::claudemd::update_claudemd_file,

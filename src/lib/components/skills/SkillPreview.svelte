@@ -1,6 +1,14 @@
 <script lang="ts">
   import { skillsStore } from "$lib/stores/skills.svelte";
   import { t } from "$lib/i18n";
+
+  async function handleDelete(id: string, name: string, externalTarget?: string) {
+    const msg = externalTarget
+      ? t("skills.deleteConfirmExternal", { name, target: externalTarget })
+      : t("skills.deleteConfirm", { name });
+    if (!confirm(msg)) return;
+    await skillsStore.deleteUserSkill(id);
+  }
 </script>
 
 <div class="flex flex-1 flex-col overflow-hidden">
@@ -20,19 +28,42 @@
               <p class="mt-1 text-sm" style="color: var(--text-secondary)">{skill.description}</p>
             {/if}
           </div>
-          <!-- Validation status badge -->
-          {#if skill.valid}
-            <span class="badge badge-success flex-shrink-0">
-              ✓ Valid
-            </span>
-          {:else}
-            <span
-              class="badge badge-error flex-shrink-0"
-              title={skill.validationError}
-            >
-              ✗ Invalid
-            </span>
-          {/if}
+          <div class="flex flex-shrink-0 items-center gap-2">
+            <!-- Validation status badge -->
+            {#if skill.valid}
+              <span class="badge badge-success">
+                ✓ Valid
+              </span>
+            {:else}
+              <span
+                class="badge badge-error"
+                title={skill.validationError}
+              >
+                ✗ Invalid
+              </span>
+            {/if}
+            <!-- Delete: enabled only for user-level skills.
+                 Plugin-owned skills must be removed by uninstalling
+                 the owning plugin. -->
+            {#if skill.source === "user"}
+              <button
+                type="button"
+                class="btn-danger"
+                onclick={() => handleDelete(skill.id, skill.name, skill.externalTarget)}
+              >
+                {t("skills.delete")}
+              </button>
+            {:else}
+              <button
+                type="button"
+                class="btn-danger"
+                disabled
+                title={t("skills.deletePluginHint")}
+              >
+                {t("skills.delete")}
+              </button>
+            {/if}
+          </div>
         </div>
 
         <!-- Metadata fields -->

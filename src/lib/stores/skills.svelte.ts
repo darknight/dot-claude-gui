@@ -47,6 +47,22 @@ class SkillsStore {
     }
   }
 
+  async deleteUserSkill(id: string): Promise<boolean> {
+    try {
+      await ipcClient.deleteUserSkill(id);
+      if (this.selectedSkillId === id) {
+        this.selectedSkillId = null;
+        this.skillContent = null;
+      }
+      await this.loadSkills();
+      return true;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to delete skill";
+      toastStore.error(msg);
+      return false;
+    }
+  }
+
   reset(): void {
     this.skills = [];
     this.selectedSkillId = null;

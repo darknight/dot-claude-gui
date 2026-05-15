@@ -265,6 +265,43 @@ pub(crate) fn get_skill_content_logic(
     Ok(SkillContentResponse { id, content })
 }
 
+/// Delete a user-level skill (`<claude_home>/skills/<id>/`). Plugin-owned
+/// skills are not removable through this path — the caller must uninstall
+/// the owning plugin instead. If the entry is a symlink (e.g. a
+/// ccs-shared pool that survived ccs-migration), only the symlink is
+/// removed; the target is left intact.
+pub(crate) fn delete_user_skill_logic(claude_home: &Path, id: &str) -> Result<(), String> {
+    // Reject path traversal / nested ids — only a plain directory name.
+    if id.is_empty() || id.contains('/') || id.contains('\\') || id == "." || id == ".." {
+        return Err(format!("invalid_id: '{}' is not a valid skill id", id));
+    }
+
+    let skill_dir = claude_home.join("skills").join(id);
+    let meta = match std::fs::symlink_metadata(&skill_dir) {
+        Ok(m) => m,
+        Err(_) => {
+            return Err(format!(
+                "not_found: User skill '{}' not found at {}",
+                id,
+                skill_dir.display()
+            ));
+        }
+    };
+
+    if meta.file_type().is_symlink() {
+        std::fs::remove_file(&skill_dir)
+            .map_err(|e| format!("delete_failed: {}: {}", skill_dir.display(), e))
+    } else if meta.is_dir() {
+        std::fs::remove_dir_all(&skill_dir)
+            .map_err(|e| format!("delete_failed: {}: {}", skill_dir.display(), e))
+    } else {
+        Err(format!(
+            "unexpected_kind: {} is neither a directory nor a symlink",
+            skill_dir.display()
+        ))
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Tauri command shims
 // ---------------------------------------------------------------------------
@@ -282,6 +319,12 @@ pub async fn get_skill_content(
 ) -> Result<SkillContentResponse, String> {
     let claude_home = state.current_dir().await;
     get_skill_content_logic(&claude_home, id)
+}
+
+#[tauri::command]
+pub async fn delete_user_skill(state: State<'_, AppState>, id: String) -> Result<(), String> {
+    let claude_home = state.current_dir().await;
+    delete_user_skill_logic(&claude_home, &id)
 }
 
 // ---------------------------------------------------------------------------
@@ -367,6 +410,71 @@ mod tests {
             "external_target should point at real pool, got: {}",
             target
         );
+    }
+
+    #[tokio::test]
+    async fn delete_user_skill_removes_real_dir() {
+        let dir = tempdir().unwrap();
+        let skill_dir = dir.path().join("skills").join("my-skill");
+        std::fs::create_dir_all(&skill_dir).unwrap();
+        std::fs::write(
+            skill_dir.join("SKILL.md"),
+            "---\nname: My Skill\ndescription: x\n---\n",
+        )
+        .unwrap();
+
+        delete_user_skill_logic(dir.path(), "my-skill").unwrap();
+        assert!(!skill_dir.exists(), "skill dir should be removed");
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn delete_user_skill_removes_symlink_but_not_target() {
+        let dir = tempdir().unwrap();
+        // Real skill lives outside the account
+        let real_dir = dir.path().join("real-pool").join("shared");
+        std::fs::create_dir_all(&real_dir).unwrap();
+        std::fs::write(real_dir.join("SKILL.md"), "---\nname: Shared\n---\n").unwrap();
+
+        // skills/shared → real-pool/shared
+        let skills_dir = dir.path().join("skills");
+        std::fs::create_dir_all(&skills_dir).unwrap();
+        std::os::unix::fs::symlink(&real_dir, skills_dir.join("shared")).unwrap();
+
+        delete_user_skill_logic(dir.path(), "shared").unwrap();
+        assert!(
+            !skills_dir.join("shared").exists(),
+            "symlink itself should be gone"
+        );
+        assert!(
+            real_dir.join("SKILL.md").exists(),
+            "symlink target must NOT be touched"
+        );
+    }
+
+    #[tokio::test]
+    async fn delete_user_skill_returns_not_found_for_unknown_id() {
+        let dir = tempdir().unwrap();
+        let err = delete_user_skill_logic(dir.path(), "missing-skill").unwrap_err();
+        assert!(
+            err.starts_with("not_found:"),
+            "expected not_found error, got: {}",
+            err
+        );
+    }
+
+    #[tokio::test]
+    async fn delete_user_skill_rejects_path_traversal() {
+        let dir = tempdir().unwrap();
+        for bad in ["..", ".", "../escape", "foo/bar", ""] {
+            let err = delete_user_skill_logic(dir.path(), bad).unwrap_err();
+            assert!(
+                err.starts_with("invalid_id:") || err.starts_with("not_found:"),
+                "expected invalid_id for '{}', got: {}",
+                bad,
+                err
+            );
+        }
     }
 
     #[tokio::test]

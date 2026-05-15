@@ -42,6 +42,8 @@
   /* ── Status: Error ── */
   --status-error-bg: #fef2f2;
   --status-error-text: #dc2626;
+  --status-error-solid: #dc2626;
+  --status-error-solid-hover: #b91c1c;
 
   /* ── Status: Warning ── */
   --status-warning-bg: #fffbeb;
@@ -106,6 +108,8 @@
   /* ── Status: Error ── */
   --status-error-bg: rgba(239, 68, 68, 0.15);
   --status-error-text: #f87171;
+  --status-error-solid: #ef4444;
+  --status-error-solid-hover: #dc2626;
 
   /* ── Status: Warning ── */
   --status-warning-bg: rgba(245, 158, 11, 0.15);
@@ -216,6 +220,24 @@ textarea::placeholder {
   background-color: var(--status-success-solid-hover);
 }
 .btn-success:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background-color: var(--status-error-solid);
+  color: var(--text-on-accent);
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  transition: background-color 150ms;
+  cursor: pointer;
+}
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--status-error-solid-hover);
+}
+.btn-danger:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }

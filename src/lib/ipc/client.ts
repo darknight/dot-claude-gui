@@ -204,6 +204,11 @@ export class IpcClient {
     return call("get_skill_content", { id });
   }
 
+  async deleteUserSkill(id: string): Promise<void> {
+    // Rust: delete_user_skill(id: String)
+    return call("delete_user_skill", { id });
+  }
+
   // --- claudemd (4) ---
 
   async listClaudeMdFiles(): Promise<ClaudeMdFile[]> {
