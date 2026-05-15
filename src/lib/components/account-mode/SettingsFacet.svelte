@@ -2,6 +2,7 @@
   import SettingsEditor from "$lib/components/settings/SettingsEditor.svelte";
   import { configStore } from "$lib/stores/config.svelte";
   import { t, type MessageKey } from "$lib/i18n";
+  import { modeStore } from "$lib/stores/mode.svelte";
 
   const sections = [
     { id: "general", labelKey: "settings.general" },
@@ -16,7 +17,9 @@
     { id: "advanced", labelKey: "settings.advanced" },
   ] satisfies { id: string; labelKey: MessageKey }[];
 
-  let active = $state("general");
+  const active = $derived(
+    modeStore.accountSubsection(modeStore.selectedAccount, "settingsSection") ?? "general",
+  );
 </script>
 
 <div class="flex flex-col flex-1 overflow-hidden">
@@ -29,7 +32,11 @@
         type="button"
         class="px-2.5 py-1 text-xs rounded transition-colors whitespace-nowrap {active === section.id ? '' : 'hover:bg-[var(--bg-card-hover)]'}"
         style="background-color: {active === section.id ? 'var(--accent-bg)' : 'transparent'}; color: {active === section.id ? 'var(--accent-text)' : 'var(--text-secondary)'}"
-        onclick={() => { active = section.id; }}
+        onclick={() => {
+          if (modeStore.selectedAccount) {
+            modeStore.setAccountSubsection(modeStore.selectedAccount, "settingsSection", section.id);
+          }
+        }}
       >
         {t(section.labelKey)}
       </button>
