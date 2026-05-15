@@ -93,14 +93,16 @@ function loadPersisted(): PersistedModeV2 {
     const raw = localStorage.getItem(STORAGE_KEY_V1);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return {
-        version: 2,
-        mode: parsed.mode === "project" ? "project" : "account",
-        selectedAccount: typeof parsed.selectedAccount === "string" ? parsed.selectedAccount : null,
-        selectedProject: typeof parsed.selectedProject === "string" ? parsed.selectedProject : null,
-        accounts: {},
-        projects: {},
-      };
+      if (parsed && typeof parsed === "object") {
+        return {
+          version: 2,
+          mode: parsed.mode === "project" ? "project" : "account",
+          selectedAccount: typeof parsed.selectedAccount === "string" ? parsed.selectedAccount : null,
+          selectedProject: typeof parsed.selectedProject === "string" ? parsed.selectedProject : null,
+          accounts: {},
+          projects: {},
+        };
+      }
     }
   } catch {
     // fall through
