@@ -76,6 +76,10 @@
         claudeMdStore.loadFiles(),
         accountsStore.loadAccounts(),
       ]);
+      modeStore.pruneStale(
+        new Set(accountsStore.accounts.map((a) => a.name)),
+        new Set(projectsStore.entries.map((p) => p.path)),
+      );
       unlistenConfigChanged = await onConfigChanged((payload) => {
         configStore.setUserConfig(payload.settings);
       });
