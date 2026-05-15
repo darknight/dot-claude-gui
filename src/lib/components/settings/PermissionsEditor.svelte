@@ -25,18 +25,20 @@
     initialized = true;
   });
 
-  // Mark dirty when list contents change (after initial sync)
-  $effect(() => {
-    void allow.length;
-    void deny.length;
-    void ask.length;
-    if (initialized) configStore.markDirty();
-  });
-
   const allowDirty = $derived(!arraysEqual(allow, perms?.allow));
   const denyDirty = $derived(!arraysEqual(deny, perms?.deny));
   const askDirty = $derived(!arraysEqual(ask, perms?.ask));
   const modeDirty = $derived(defaultMode !== (perms?.defaultMode ?? "default"));
+
+  // Mark dirty only when local state actually diverges from the store.
+  // Watching list.length alone fires on mount (store-sync re-creates the
+  // arrays), which falsely flagged dirty just for switching into this tab.
+  $effect(() => {
+    if (!initialized) return;
+    if (allowDirty || denyDirty || askDirty) {
+      configStore.markDirty();
+    }
+  });
 
   const previewData = $derived({
     permissions: { allow, deny, ask, defaultMode },

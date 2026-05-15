@@ -29,15 +29,6 @@
     initialized = true;
   });
 
-  // Mark dirty when list contents change (after initial sync)
-  $effect(() => {
-    void allowRead.length;
-    void denyRead.length;
-    void allowWrite.length;
-    void excludedCommands.length;
-    if (initialized) configStore.markDirty();
-  });
-
   const allowReadDirty = $derived(!arraysEqual(allowRead, sandbox?.allowRead));
   const denyReadDirty = $derived(!arraysEqual(denyRead, sandbox?.denyRead));
   const allowWriteDirty = $derived(
@@ -53,6 +44,21 @@
     enableWeakerNetworkIsolation !==
       (sandbox?.enableWeakerNetworkIsolation ?? false),
   );
+
+  // Mark dirty only when local state actually diverges from the store.
+  // Watching list.length alone fires on mount (store-sync re-creates the
+  // arrays), which falsely flagged dirty just for switching into this tab.
+  $effect(() => {
+    if (!initialized) return;
+    if (
+      allowReadDirty ||
+      denyReadDirty ||
+      allowWriteDirty ||
+      excludedCommandsDirty
+    ) {
+      configStore.markDirty();
+    }
+  });
 
   const previewData = $derived({
     sandbox: {
