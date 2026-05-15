@@ -6,13 +6,15 @@
 
   let {
     sections,
-    activeSection = $bindable(),
+    activeSection,
+    onChange,
     isDirty,
     error,
     content,
   }: {
     sections: Section[];
     activeSection: string;
+    onChange: (id: string) => void;
     isDirty: boolean;
     error: string | null;
     content: Snippet<[string]>;
@@ -26,7 +28,7 @@
         type="button"
         class="section-link"
         class:active={section.id === activeSection}
-        onclick={() => (activeSection = section.id)}
+        onclick={() => onChange(section.id)}
       >{section.label}</button>
     {/each}
   </nav>

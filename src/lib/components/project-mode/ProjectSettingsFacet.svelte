@@ -82,7 +82,13 @@
   {#if loading}
     <div class="empty">{t("projectMode.settings.loading")}</div>
   {:else}
-    <SectionedSettings {sections} bind:activeSection {isDirty} {error}>
+    <SectionedSettings
+      {sections}
+      {activeSection}
+      onChange={(id) => (activeSection = id)}
+      {isDirty}
+      {error}
+    >
       {#snippet content(section)}
         {#if section === "runtime"}
           <ProjectRuntimeEditor settings={current} onPatch={onPatch} {error} />
