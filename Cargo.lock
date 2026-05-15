@@ -316,7 +316,7 @@ dependencies = [
 
 [[package]]
 name = "claude-config"
-version = "1.0.0-alpha.4"
+version = "1.0.0-alpha.5"
 dependencies = [
  "anyhow",
  "claude-types",
@@ -332,7 +332,7 @@ dependencies = [
 
 [[package]]
 name = "claude-types"
-version = "1.0.0-alpha.4"
+version = "1.0.0-alpha.5"
 dependencies = [
  "chrono",
  "serde",
@@ -692,7 +692,7 @@ dependencies = [
 
 [[package]]
 name = "dot-claude-gui"
-version = "1.0.0-alpha.4"
+version = "1.0.0-alpha.5"
 dependencies = [
  "anyhow",
  "claude-config",
