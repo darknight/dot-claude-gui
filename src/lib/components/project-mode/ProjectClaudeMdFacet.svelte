@@ -46,7 +46,7 @@
 
 <section class="claudemd-facet">
   <h2>{t("projectMode.claudemd.title")}</h2>
-  <p class="hint">{t("projectMode.claudemd.hint", { path: `${path}/.claude/CLAUDE.md` })}</p>
+  <p class="hint">{t("projectMode.claudemd.hint", { path: `${path}/CLAUDE.md` })}</p>
 
   {#if loading}
     <div class="empty">{t("projectMode.claudemd.loading")}</div>

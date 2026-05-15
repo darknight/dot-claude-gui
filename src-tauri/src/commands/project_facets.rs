@@ -116,9 +116,14 @@ pub struct WriteProjectClaudeMdRequest {
 // ProjectClaudeMd pure helpers
 // ---------------------------------------------------------------------------
 
-/// Returns `<project_path>/.claude/CLAUDE.md`.
+/// Returns `<project_path>/CLAUDE.md`.
+///
+/// Claude Code reads project memory from the project root, NOT from
+/// `.claude/CLAUDE.md`. Earlier revisions of this GUI wrote to the wrong
+/// path; users with content stranded under `.claude/` need to move it
+/// up one level by hand.
 pub(crate) fn project_claudemd_path(project_path: &str) -> PathBuf {
-    PathBuf::from(project_path).join(".claude").join("CLAUDE.md")
+    PathBuf::from(project_path).join("CLAUDE.md")
 }
 
 /// Read the CLAUDE.md for a given project path.
@@ -145,9 +150,10 @@ pub(crate) fn read_claudemd_for_path(project_path: &str) -> Result<ProjectClaude
     })
 }
 
-/// Write CLAUDE.md atomically to `<project_path>/.claude/CLAUDE.md`.
+/// Write CLAUDE.md atomically to `<project_path>/CLAUDE.md`.
 ///
-/// Creates `.claude/` if it does not exist. Uses tempfile → rename for atomicity.
+/// Uses tempfile → rename for atomicity. The parent directory is the project
+/// root, which is assumed to exist (it has to, the project is bound).
 pub(crate) fn write_claudemd_for_path(
     project_path: &str,
     content: &str,
@@ -500,10 +506,10 @@ mod tests {
     }
 
     #[test]
-    fn project_claudemd_path_resolves_under_dot_claude() {
+    fn project_claudemd_path_resolves_to_project_root() {
         let proj = tempdir().unwrap();
         let p = project_claudemd_path(proj.path().to_str().unwrap());
-        assert_eq!(p, proj.path().join(".claude").join("CLAUDE.md"));
+        assert_eq!(p, proj.path().join("CLAUDE.md"));
     }
 
     #[test]
@@ -524,11 +530,11 @@ mod tests {
     }
 
     #[test]
-    fn write_claudemd_creates_dot_claude_dir_if_missing() {
+    fn write_claudemd_writes_to_project_root() {
         let proj = tempdir().unwrap();
-        assert!(!proj.path().join(".claude").exists());
         write_claudemd_for_path(proj.path().to_str().unwrap(), "x").unwrap();
-        assert!(proj.path().join(".claude").join("CLAUDE.md").exists());
+        assert!(proj.path().join("CLAUDE.md").exists());
+        assert!(!proj.path().join(".claude").join("CLAUDE.md").exists());
     }
 
     #[test]
