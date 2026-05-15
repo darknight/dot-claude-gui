@@ -24,7 +24,7 @@
   const selected = $derived(projectsStore.currentBinding);
   const isStale = $derived(projectsStore.currentStale);
   const isBound = $derived(projectsStore.currentBound);
-  const activeFacet = $derived(modeStore.selectedProjectFacet);
+  const activeFacet = $derived(modeStore.projectFacet(modeStore.selectedProject));
 
   function tabDisabled(key: ProjectFacetKey): boolean {
     if (isStale) return true;          // stale: all disabled, banner only
@@ -47,7 +47,11 @@
           aria-selected={activeFacet === f.key}
           disabled={tabDisabled(f.key)}
           class:active={activeFacet === f.key}
-          onclick={() => modeStore.setSelectedProjectFacet(f.key)}
+          onclick={() => {
+              if (modeStore.selectedProject) {
+                modeStore.setProjectFacet(modeStore.selectedProject, f.key);
+              }
+            }}
         >{t(f.labelKey)}</button>
       {/each}
     </nav>
