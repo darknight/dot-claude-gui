@@ -31,7 +31,9 @@
     { id: "mcp", labelKey: "accountMode.mcp" },
   ] satisfies { id: Facet; labelKey: MessageKey }[];
 
-  let activeFacet = $state<Facet>("overview");
+  const activeFacet = $derived<Facet>(
+    modeStore.accountFacet(modeStore.selectedAccount) as Facet,
+  );
 
   // Default-selection: if no account is selected and we have accounts, pick the first.
   $effect(() => {
@@ -79,7 +81,11 @@
         <button
           class="px-3 py-2 text-sm rounded-t-md transition-colors {activeFacet === f.id ? '' : 'hover:bg-[var(--bg-card-hover)]'}"
           style="background-color: {activeFacet === f.id ? 'var(--bg-primary)' : 'transparent'}; color: {activeFacet === f.id ? 'var(--text-primary)' : 'var(--text-secondary)'}; border: 1px solid {activeFacet === f.id ? 'var(--border-color)' : 'transparent'}; border-bottom: none"
-          onclick={() => { activeFacet = f.id; }}
+          onclick={() => {
+            if (modeStore.selectedAccount) {
+              modeStore.setAccountFacet(modeStore.selectedAccount, f.id);
+            }
+          }}
         >
           {t(f.labelKey)}
         </button>
