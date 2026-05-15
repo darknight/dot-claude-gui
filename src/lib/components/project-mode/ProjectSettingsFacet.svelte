@@ -4,6 +4,7 @@
   import { toastStore } from "$lib/stores/toast.svelte";
   import type { Settings } from "$lib/api/types";
   import SectionedSettings from "$lib/components/shared/SectionedSettings.svelte";
+  import { modeStore } from "$lib/stores/mode.svelte";
   import ProjectRuntimeEditor from "./settings/ProjectRuntimeEditor.svelte";
   import ProjectEnvVarEditor from "./settings/ProjectEnvVarEditor.svelte";
   import ProjectHooksEditor from "./settings/ProjectHooksEditor.svelte";
@@ -13,7 +14,9 @@
 
   let original = $state<Settings>({});
   let current = $state<Settings>({});
-  let activeSection = $state("runtime");
+  const activeSection = $derived(
+    modeStore.projectSubsection(path, "settingsSection") ?? "runtime",
+  );
   let error = $state<string | null>(null);
   let loading = $state(true);
   let saving = $state(false);
@@ -85,7 +88,7 @@
     <SectionedSettings
       {sections}
       {activeSection}
-      onChange={(id) => (activeSection = id)}
+      onChange={(id) => modeStore.setProjectSubsection(path, "settingsSection", id)}
       {isDirty}
       {error}
     >
