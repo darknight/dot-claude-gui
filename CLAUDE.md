@@ -78,7 +78,7 @@ These caused multi-round debugging sessions. Check here FIRST when UI doesn't up
 
 5. **Open Tauri DevTools (`Cmd+Option+I`) before debugging UI bugs.** The Console almost always has the real error — Svelte lifecycle errors, each-key duplicates, null IPC params. Grepping source is slower than reading one error line.
 
-6. **Project path decoding is ambiguous.** Claude Code encodes `/` as `-` in `~/.claude/projects/<dirname>`, so `whoishiring-insight` and `whoishiring/insight` encode to the same string. When you need the real path, read `cwd` from any session `.jsonl` file inside the directory (see `src-tauri/src/commands/memory.rs::read_cwd_from_sessions`).
+6. **Project path encoding/decoding is ambiguous — and `.` counts too.** Claude Code encodes BOTH `/` and `.` as `-` in `~/.claude/projects/<dirname>`, so `/Users/eric.yao/...` lands on disk as `-Users-eric-yao-...`. Collisions: `whoishiring-insight` vs `whoishiring/insight`, and `eric.yao` vs `eric-yao`. When you need the real path, read `cwd` from any session `.jsonl` file inside the directory (see `src-tauri/src/commands/memory.rs::read_cwd_from_sessions`). Two gotchas hit in practice: (a) recent Claude Code writes a summary/index header as the **first** jsonl line with no `cwd` — scan every line, don't bail on line 1; (b) when encoding path → dirname, replace `.` along with `/` (see `encode_project_path` in `commands/project_facets.rs`). `project_path.replace('/', "-")` alone is wrong.
 
 7. **Validation lists drift from Claude Code's schema.** Hook event names, settings keys, etc. Source of truth is `https://json.schemastore.org/claude-code-settings.json`. If a save fails with "unknown X", check the schema before assuming the user's config is wrong.
 

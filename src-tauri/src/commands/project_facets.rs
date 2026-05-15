@@ -221,14 +221,23 @@ use claude_types::memory::MemoryFile;
 
 /// Resolve `<account_dir>/projects/<encoded_path>/memory/` for a project path.
 ///
-/// `encoded_path` = `project_path.replace('/', "-")` (Claude Code's convention).
+/// Claude Code's convention: both `/` and `.` in the absolute path are
+/// replaced with `-` to form the directory name. The `.` substitution is
+/// easy to miss — e.g. `/Users/eric.yao/...` → `-Users-eric-yao-...`.
 pub(crate) async fn project_memory_dir(
     state: &AppState,
     project_path: &str,
 ) -> Result<PathBuf, String> {
     let account_dir = state.resolve_project_account_dir(project_path).await?;
-    let encoded = project_path.replace('/', "-");
+    let encoded = encode_project_path(project_path);
     Ok(account_dir.join("projects").join(encoded).join("memory"))
+}
+
+fn encode_project_path(project_path: &str) -> String {
+    project_path
+        .chars()
+        .map(|c| if c == '/' || c == '.' { '-' } else { c })
+        .collect()
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -427,17 +436,26 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
 
-    /// Assert that the encoded-path rule (slashes → dashes) is applied correctly
-    /// when building the memory dir. We test the pure path construction rule
-    /// without needing to spin up a full AppState backed by $HOME.
+    /// Assert that the encoded-path rule (slashes and dots → dashes) is
+    /// applied correctly when building the memory dir.
     #[test]
     fn project_memory_dir_encodes_slashes_as_dashes() {
         let account_dir = std::path::PathBuf::from("/home/u/.dot-claude-gui/accounts/work");
-        let encoded = "/Users/eric/code/foo".replace('/', "-");
+        let encoded = encode_project_path("/Users/eric/code/foo");
         let expected = account_dir.join("projects").join(encoded).join("memory");
         assert_eq!(
             expected.to_string_lossy(),
             "/home/u/.dot-claude-gui/accounts/work/projects/-Users-eric-code-foo/memory"
+        );
+    }
+
+    /// Claude Code encodes `.` to `-` as well — e.g. an email-style path
+    /// component like `eric.yao` becomes `eric-yao` on disk.
+    #[test]
+    fn encode_project_path_replaces_dots_with_dashes() {
+        assert_eq!(
+            encode_project_path("/Users/eric.yao/workspace/darknight/dot-claude-gui"),
+            "-Users-eric-yao-workspace-darknight-dot-claude-gui"
         );
     }
 

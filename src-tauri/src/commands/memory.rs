@@ -72,9 +72,10 @@ fn decode_project_path(project_id: &str, project_dir: &std::path::Path) -> Strin
     project_id.replace('-', "/")
 }
 
-/// Search the project directory for any JSONL session file and extract the
-/// `cwd` field from its first line. Returns `None` if no JSONL file with a
-/// parseable `cwd` is found.
+/// Search the project directory for any JSONL session file and extract a
+/// `cwd` field. Recent Claude Code writes a summary/index object as the first
+/// line (no `cwd`), so we scan every line until we find one. Returns `None` if
+/// no JSONL file with a parseable `cwd` is found.
 fn read_cwd_from_sessions(project_dir: &std::path::Path) -> Option<String> {
     // Walk up to 2 levels deep looking for any .jsonl file
     fn find_jsonl(dir: &std::path::Path, depth: usize) -> Option<std::path::PathBuf> {
@@ -102,11 +103,20 @@ fn read_cwd_from_sessions(project_dir: &std::path::Path) -> Option<String> {
         None
     }
 
+    use std::io::BufRead;
     let jsonl_path = find_jsonl(project_dir, 0)?;
-    let contents = std::fs::read_to_string(&jsonl_path).ok()?;
-    let first_line = contents.lines().next()?;
-    let json: serde_json::Value = serde_json::from_str(first_line).ok()?;
-    json.get("cwd")?.as_str().map(|s| s.to_string())
+    let file = std::fs::File::open(&jsonl_path).ok()?;
+    let reader = std::io::BufReader::new(file);
+    for line in reader.lines().map_while(Result::ok) {
+        let json: serde_json::Value = match serde_json::from_str(&line) {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        if let Some(cwd) = json.get("cwd").and_then(|v| v.as_str()) {
+            return Some(cwd.to_string());
+        }
+    }
+    None
 }
 
 // ---------------------------------------------------------------------------
@@ -394,6 +404,32 @@ mod tests {
         // Falls back to naive decoding when no jsonl session file exists
         assert_eq!(result[0].project_path, "/Users/test/proj");
         assert_eq!(result[0].file_count, 1);
+    }
+
+    // Recent Claude Code writes a summary/index header as the first jsonl line
+    // (no `cwd`). cwd-decoding must scan every line, not just the first.
+    #[tokio::test]
+    async fn list_memory_projects_reads_cwd_from_later_jsonl_line() {
+        let dir = tempdir().unwrap();
+        let project_id = "-Users-eric-yao-workspace-darknight-dot-claude-gui";
+        let project_dir = dir.path().join("projects").join(project_id);
+        let memory_dir = project_dir.join("memory");
+        std::fs::create_dir_all(&memory_dir).unwrap();
+        std::fs::write(memory_dir.join("notes.md"), "# Notes\n").unwrap();
+
+        let real_path = "/Users/eric.yao/workspace/darknight/dot-claude-gui";
+        let jsonl = format!(
+            "{{\"type\":\"summary\",\"leafUuid\":\"x\",\"sessionId\":\"s\"}}\n\
+             {{\"type\":\"user\",\"cwd\":\"{}\"}}\n",
+            real_path
+        );
+        std::fs::write(project_dir.join("session.jsonl"), jsonl).unwrap();
+
+        let state = AppState::new(dir.path().to_path_buf());
+        let result = list_memory_projects_logic(&state).await;
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].project_path, real_path);
     }
 
     // Verify the cwd-based decoding resolves ambiguous dashes

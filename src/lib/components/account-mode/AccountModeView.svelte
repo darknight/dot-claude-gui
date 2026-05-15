@@ -42,22 +42,45 @@
     }
   });
 
-  // When selectedAccount changes, switch the active account on the backend and
-  // reload all caches that depend on the user-layer dir.
+  // When selectedAccount changes, switch the active account on the backend
+  // and reload caches. Two paths:
+  //
+  //  - Warm: memory's project list is already cached for this account.
+  //    `switchAccount` paints the dropdown from cache instantly, and we
+  //    restore the prior project as soon as the backend dir flips.
+  //    `loadProjects` does NOT re-run — the user perceives a zero-IO switch.
+  //  - Cold: no cache. Must wait for `loadProjects` before restoring the
+  //    selection (the dropdown also has nothing to show until then).
+  //
+  // Why this matters: `listMemoryProjects` is the most expensive load in
+  // the switch (15+ project dirs, jsonl scans), so skipping it on warm
+  // re-entry is the difference between "instant" and "laggy".
   $effect(() => {
     const name = modeStore.selectedAccount;
     if (!name) return;
+    const memoryWarm = memoryStore.hasProjectsCached(name);
+    memoryStore.switchAccount(name);
     void (async () => {
       try {
         await ipcClient.setActiveAccount(name);
-        await Promise.all([
+
+        if (memoryWarm) {
+          memoryStore.restoreSelection();
+        }
+
+        const loads: Promise<unknown>[] = [
           configStore.loadUserConfig(),
           pluginsStore.loadPlugins(),
           skillsStore.loadSkills(),
-          memoryStore.loadProjects(),
           mcpStore.loadServers(),
           claudeMdStore.loadFiles(),
-        ]);
+        ];
+        if (!memoryWarm) {
+          loads.push(
+            memoryStore.loadProjects().then(() => memoryStore.restoreSelection()),
+          );
+        }
+        await Promise.all(loads);
       } catch (e) {
         toastStore.error(t("shell.switchAccountFailed"));
         console.error("account switch reload failed", e);

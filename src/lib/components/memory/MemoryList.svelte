@@ -1,37 +1,6 @@
 <script lang="ts">
   import { memoryStore } from "$lib/stores/memory.svelte";
-  import { projectsStore } from "$lib/stores/projects.svelte";
   import { t } from "$lib/i18n";
-
-  // Auto-sync with the active project:
-  // when the active project has a memory dir, show its memory files.
-  // If the active project has no memory, clear the selection so the user
-  // sees an explicit "no memory" state instead of stale files from another project.
-  $effect(() => {
-    const activeProject = projectsStore.selected;
-    if (!activeProject) return;
-    const match = memoryStore.projects.find(
-      (p) => p.projectPath === activeProject.path,
-    );
-    if (match) {
-      if (memoryStore.activeProjectId !== match.id) {
-        memoryStore.selectProject(match.id);
-      }
-    } else {
-      // Clear selection — this project has no memory directory yet.
-      if (memoryStore.activeProjectId !== null) {
-        memoryStore.clearSelection();
-      }
-    }
-  });
-
-  // Whether the active scope project has no memory directory.
-  const activeProjectHasNoMemory = $derived(
-    projectsStore.selected != null &&
-      !memoryStore.projects.some(
-        (p) => p.projectPath === projectsStore.selected?.path,
-      ),
-  );
 
   // Auto-select MEMORY.md (or first file) once files are loaded.
   $effect(() => {
@@ -79,12 +48,6 @@
   <ul class="flex-1 overflow-y-auto py-2">
     {#if memoryStore.loading && memoryStore.activeProjectId && memoryStore.files.length === 0}
       <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("common.loading")}</li>
-    {:else if activeProjectHasNoMemory}
-      <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">
-        {t("memory.noFilesYet", {
-          name: projectsStore.selected?.path.replace(/^.*\//, "") ?? "",
-        })}
-      </li>
     {:else if !memoryStore.activeProjectId}
       <li class="px-4 py-2 text-xs" style="color: var(--text-muted)">{t("memory.selectProjectAbove")}</li>
     {:else if memoryStore.files.length === 0}
