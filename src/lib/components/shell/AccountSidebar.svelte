@@ -70,7 +70,7 @@
 
   <form class="px-3 py-3 flex gap-2" style="border-top: 1px solid var(--border-color)" onsubmit={addAccount}>
     <input
-      class="flex-1 px-2 py-1 text-sm rounded border"
+      class="min-w-0 flex-1 px-2 py-1 text-sm rounded border"
       style="background-color: var(--bg-primary); border-color: var(--border-color); color: var(--text-primary)"
       bind:value={addingName}
       placeholder={t("shell.newAccountPlaceholder")}
@@ -78,7 +78,7 @@
     />
     <button
       type="submit"
-      class="px-3 py-1 text-sm rounded transition-colors"
+      class="shrink-0 px-3 py-1 text-sm rounded transition-colors"
       style="background-color: var(--accent-bg); color: var(--accent-text)"
       disabled={creating || !addingName.trim()}
     >
