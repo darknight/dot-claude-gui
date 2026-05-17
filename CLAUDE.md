@@ -50,6 +50,10 @@ pnpm tauri build                          # Build production .app and .dmg
 `~/.dot-claude-gui/` stores application-level state (not Claude Code config):
 - `config.json` — GUI preferences (theme, language, font size, panel widths)
 
+## Workflow Preferences
+
+- **Prefer feature branches over git worktrees.** For new work, create a normal branch off `main` and develop in-place; do NOT spin up `.claude/worktrees/*`. Reasons hit in practice: (a) each worktree needs its own `node_modules`, so `pnpm install` runs again — slow and error-prone (esbuild build-script approval prompt blocks the install non-interactively); (b) running `pnpm tauri dev` from the wrong directory silently serves stale code without any error, which has wasted multiple debugging cycles. Worktrees are still fine for genuinely parallel sessions where the main checkout must stay clean — but that's the exception, not the default.
+
 ## Key Conventions
 
 - **Svelte 5 runes only** — no legacy `$:` reactive statements, use `$state`, `$effect`, `$derived`
