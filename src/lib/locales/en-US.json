@@ -381,7 +381,7 @@
   "accountMode.deleteSuccess": "Deleted",
   "accountMode.deleteFailed": "Delete failed",
   "projectMode.selectProject": "Select a project in the sidebar",
-  "projectMode.stalePathBlocked": "Project path missing — use the Binding tab to Remove",
+  "projectMode.stalePathBlocked": "Project path missing — use the banner above to update or remove this project.",
   "projectMode.staleBanner": "Path not found: {path}",
   "projectMode.staleConfirmRemove": "Remove from known projects?",
   "projectMode.staleRemoveBtn": "Remove",

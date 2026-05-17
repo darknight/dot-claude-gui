@@ -381,7 +381,7 @@
   "accountMode.deleteSuccess": "已删除",
   "accountMode.deleteFailed": "删除失败",
   "projectMode.selectProject": "请在左侧选择一个项目",
-  "projectMode.stalePathBlocked": "项目路径不存在，请在 Binding 标签内选择 Remove",
+  "projectMode.stalePathBlocked": "项目路径不存在，请使用上方横幅更新路径或移除项目。",
   "projectMode.staleBanner": "路径不存在: {path}",
   "projectMode.staleConfirmRemove": "确认从已知项目移除?",
   "projectMode.staleRemoveBtn": "移除",
