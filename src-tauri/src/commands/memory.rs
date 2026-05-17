@@ -1,19 +1,8 @@
 use claude_types::memory::{MemoryFile, MemoryFileDetail, MemoryProject};
-use std::path::PathBuf;
 use tauri::State;
 
-use crate::app_config::account_dir;
+use crate::commands::account_session::validated_account_dir;
 use crate::state::AppState;
-
-/// Resolve an account name to its on-disk dir. Used by destructive memory
-/// IPCs so the write target is determined by the caller-supplied account
-/// (captured client-side when the user clicked Save/Delete) rather than by
-/// `state.current_dir()`, which can race with `set_active_account`. Returns
-/// an error if the home dir can't be determined.
-fn resolve_account_dir(account_name: &str) -> Result<PathBuf, String> {
-    let home = dirs_next::home_dir().ok_or_else(|| "cannot determine home directory".to_string())?;
-    Ok(account_dir(&home, account_name))
-}
 
 // ---------------------------------------------------------------------------
 // Frontmatter parsing
@@ -363,7 +352,7 @@ pub async fn update_memory_file(
     filename: String,
     content: String,
 ) -> Result<(), String> {
-    let dir = resolve_account_dir(&account_name)?;
+    let dir = validated_account_dir(&account_name)?;
     update_memory_file_logic(&dir, &project_id, &filename, &content)
 }
 
@@ -374,7 +363,7 @@ pub async fn delete_memory_file(
     project_id: String,
     filename: String,
 ) -> Result<(), String> {
-    let dir = resolve_account_dir(&account_name)?;
+    let dir = validated_account_dir(&account_name)?;
     delete_memory_file_logic(&dir, &project_id, &filename)
 }
 

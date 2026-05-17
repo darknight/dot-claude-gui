@@ -17,6 +17,22 @@ fn config_path() -> Result<PathBuf, String> {
     Ok(dir.join("config.json"))
 }
 
+/// Validate `name` against `config.json.accounts` and return its on-disk dir.
+/// Returns `unknown_account` for anything not in the registry — this is the
+/// trust boundary for any backend IPC that accepts a caller-supplied account
+/// name (e.g. memory destructive writes that bypass `state.current_dir()` to
+/// avoid the account-switch race).
+pub(crate) fn validated_account_dir(name: &str) -> Result<PathBuf, String> {
+    let cfg = read_config(&config_path()?)?;
+    let known = name == DEFAULT_ACCOUNT_NAME
+        || cfg.accounts.iter().any(|a| a.name == name);
+    if !known {
+        return Err(format!("unknown_account: {name}"));
+    }
+    let home = dirs_next::home_dir().ok_or_else(|| "cannot determine home directory".to_string())?;
+    Ok(account_dir(&home, name))
+}
+
 /// Switch the active account. Validates `name` against `config.json.accounts`.
 /// On success, the new dir is `~/.claude/` (for `default`) or
 /// `~/.dot-claude-gui/accounts/<name>/`. Reloads the user-settings cache so
@@ -26,16 +42,7 @@ pub async fn set_active_account(
     name: String,
     state: State<'_, AppState>,
 ) -> Result<String, String> {
-    // Validate against config.json
-    let cfg = read_config(&config_path()?)?;
-    let known = name == DEFAULT_ACCOUNT_NAME
-        || cfg.accounts.iter().any(|a| a.name == name);
-    if !known {
-        return Err(format!("unknown_account: {name}"));
-    }
-
-    let home = dirs_next::home_dir().ok_or("cannot determine home directory")?;
-    let new_dir = account_dir(&home, &name);
+    let new_dir = validated_account_dir(&name)?;
 
     state.set_active_account_dir(new_dir.clone()).await;
 
