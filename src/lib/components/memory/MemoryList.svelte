@@ -30,8 +30,19 @@
     }
   }
 
-  function projectLabel(p: MemoryProject): string {
-    return p.projectPath || p.id;
+  // Project paths share long common prefixes (e.g. /Users/eric.yao/workspace/…),
+  // so end-truncation makes every header look identical. Split into basename
+  // (the differentiating last segment) + parent dir so the visible label is
+  // unique while the full path is still glance-able underneath.
+  function splitPath(path: string): { base: string; parent: string } {
+    const trimmed = path.replace(/\/+$/, "");
+    const idx = trimmed.lastIndexOf("/");
+    if (idx < 0) return { base: trimmed, parent: "" };
+    return { base: trimmed.slice(idx + 1), parent: trimmed.slice(0, idx) };
+  }
+
+  function projectDisplay(p: MemoryProject): { base: string; parent: string } {
+    return splitPath(p.projectPath || p.id);
   }
 </script>
 
@@ -47,17 +58,22 @@
       {#each visibleProjects as project, groupIndex (project.id)}
         {@const isExpanded = memoryStore.expanded[project.id] ?? false}
         {@const files = memoryStore.filesByProject[project.id]}
+        {@const display = projectDisplay(project)}
         <li class={groupIndex === 0 ? "" : "mt-1"}>
           <button
             type="button"
-            class="flex w-full items-center gap-1 px-3 py-1.5 text-left text-xs font-semibold tracking-wider hover:opacity-80"
-            style="color: var(--text-muted)"
+            class="flex w-full flex-col gap-0 px-3 py-1.5 text-left hover:opacity-80"
             onclick={() => void memoryStore.toggleProject(project.id)}
             title={project.projectPath}
           >
-            <span class="inline-block w-3 flex-shrink-0 text-center">{isExpanded ? "▾" : "▸"}</span>
-            <span class="truncate flex-1">{projectLabel(project)}</span>
-            <span class="flex-shrink-0" style="color: var(--text-muted)">({project.fileCount})</span>
+            <div class="flex w-full items-center gap-1 text-xs font-semibold" style="color: var(--text-primary)">
+              <span class="inline-block w-3 flex-shrink-0 text-center" style="color: var(--text-muted)">{isExpanded ? "▾" : "▸"}</span>
+              <span class="truncate flex-1">{display.base}</span>
+              <span class="flex-shrink-0" style="color: var(--text-muted)">({project.fileCount})</span>
+            </div>
+            {#if display.parent}
+              <span class="truncate pl-4 text-[10px] font-normal" style="color: var(--text-muted)">{display.parent}</span>
+            {/if}
           </button>
         </li>
         {#if isExpanded}
