@@ -1,7 +1,19 @@
 use claude_types::memory::{MemoryFile, MemoryFileDetail, MemoryProject};
+use std::path::PathBuf;
 use tauri::State;
 
+use crate::app_config::account_dir;
 use crate::state::AppState;
+
+/// Resolve an account name to its on-disk dir. Used by destructive memory
+/// IPCs so the write target is determined by the caller-supplied account
+/// (captured client-side when the user clicked Save/Delete) rather than by
+/// `state.current_dir()`, which can race with `set_active_account`. Returns
+/// an error if the home dir can't be determined.
+fn resolve_account_dir(account_name: &str) -> Result<PathBuf, String> {
+    let home = dirs_next::home_dir().ok_or_else(|| "cannot determine home directory".to_string())?;
+    Ok(account_dir(&home, account_name))
+}
 
 // ---------------------------------------------------------------------------
 // Frontmatter parsing
@@ -276,19 +288,17 @@ pub(crate) async fn get_memory_file_logic(
     })
 }
 
-pub(crate) async fn update_memory_file_logic(
-    state: &AppState,
-    project_id: String,
-    filename: String,
-    content: String,
+pub(crate) fn update_memory_file_logic(
+    account_dir: &std::path::Path,
+    project_id: &str,
+    filename: &str,
+    content: &str,
 ) -> Result<(), String> {
-    let file_path = state
-        .current_dir()
-        .await
+    let file_path = account_dir
         .join("projects")
-        .join(&project_id)
+        .join(project_id)
         .join("memory")
-        .join(&filename);
+        .join(filename);
 
     claude_config::write::atomic_write(&file_path, content.as_bytes())
         .map_err(|e| format!("write_error: Failed to write memory file: {}", e))?;
@@ -296,18 +306,16 @@ pub(crate) async fn update_memory_file_logic(
     Ok(())
 }
 
-pub(crate) async fn delete_memory_file_logic(
-    state: &AppState,
-    project_id: String,
-    filename: String,
+pub(crate) fn delete_memory_file_logic(
+    account_dir: &std::path::Path,
+    project_id: &str,
+    filename: &str,
 ) -> Result<(), String> {
-    let file_path = state
-        .current_dir()
-        .await
+    let file_path = account_dir
         .join("projects")
-        .join(&project_id)
+        .join(project_id)
         .join("memory")
-        .join(&filename);
+        .join(filename);
 
     std::fs::remove_file(&file_path).map_err(|_| {
         format!(
@@ -349,21 +357,25 @@ pub async fn get_memory_file(
 
 #[tauri::command]
 pub async fn update_memory_file(
-    state: State<'_, AppState>,
+    _state: State<'_, AppState>,
+    account_name: String,
     project_id: String,
     filename: String,
     content: String,
 ) -> Result<(), String> {
-    update_memory_file_logic(&state, project_id, filename, content).await
+    let dir = resolve_account_dir(&account_name)?;
+    update_memory_file_logic(&dir, &project_id, &filename, &content)
 }
 
 #[tauri::command]
 pub async fn delete_memory_file(
-    state: State<'_, AppState>,
+    _state: State<'_, AppState>,
+    account_name: String,
     project_id: String,
     filename: String,
 ) -> Result<(), String> {
-    delete_memory_file_logic(&state, project_id, filename).await
+    let dir = resolve_account_dir(&account_name)?;
+    delete_memory_file_logic(&dir, &project_id, &filename)
 }
 
 // ---------------------------------------------------------------------------
@@ -580,14 +592,12 @@ mod tests {
             .join("memory");
         std::fs::create_dir_all(&memory_dir).unwrap();
 
-        let state = AppState::new(dir.path().to_path_buf());
         update_memory_file_logic(
-            &state,
-            project_id.to_string(),
-            "new-file.md".to_string(),
-            "# Written by test\n".to_string(),
+            dir.path(),
+            project_id,
+            "new-file.md",
+            "# Written by test\n",
         )
-        .await
         .unwrap();
 
         let on_disk = std::fs::read_to_string(memory_dir.join("new-file.md")).unwrap();
@@ -609,14 +619,7 @@ mod tests {
         std::fs::write(&file_path, "delete me\n").unwrap();
         assert!(file_path.exists());
 
-        let state = AppState::new(dir.path().to_path_buf());
-        delete_memory_file_logic(
-            &state,
-            project_id.to_string(),
-            "to-delete.md".to_string(),
-        )
-        .await
-        .unwrap();
+        delete_memory_file_logic(dir.path(), project_id, "to-delete.md").unwrap();
 
         assert!(!file_path.exists(), "file should be deleted");
     }
@@ -633,14 +636,7 @@ mod tests {
             .join("memory");
         std::fs::create_dir_all(&memory_dir).unwrap();
 
-        let state = AppState::new(dir.path().to_path_buf());
-        let err = delete_memory_file_logic(
-            &state,
-            project_id.to_string(),
-            "nonexistent.md".to_string(),
-        )
-        .await
-        .unwrap_err();
+        let err = delete_memory_file_logic(dir.path(), project_id, "nonexistent.md").unwrap_err();
 
         assert!(
             err.starts_with("file_not_found:"),

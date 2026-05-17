@@ -167,10 +167,16 @@ class MemoryStore {
 
   async saveFile(projectId: string, filename: string, content: string) {
     const accountAtStart = this.currentAccount;
+    if (accountAtStart === null) {
+      // Defensive: should not happen in normal flow (saveFile is invoked
+      // from the editor which is only mounted under an active account).
+      this.error = "No active account";
+      return;
+    }
     this.saving = true;
     this.error = "";
     try {
-      await ipcClient.updateMemoryFile(projectId, filename, content);
+      await ipcClient.updateMemoryFile(accountAtStart, projectId, filename, content);
       if (this.currentAccount !== accountAtStart) return;
       if (this.activeFile && this.activeFile.filename === filename) {
         this.activeFile = { ...this.activeFile, content };
@@ -189,9 +195,13 @@ class MemoryStore {
 
   async deleteFile(projectId: string, filename: string) {
     const accountAtStart = this.currentAccount;
+    if (accountAtStart === null) {
+      this.error = "No active account";
+      return;
+    }
     this.error = "";
     try {
-      await ipcClient.deleteMemoryFile(projectId, filename);
+      await ipcClient.deleteMemoryFile(accountAtStart, projectId, filename);
       if (this.currentAccount !== accountAtStart) return;
       const list = this.filesByProject[projectId];
       if (list) {

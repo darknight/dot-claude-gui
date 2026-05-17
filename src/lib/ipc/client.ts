@@ -246,14 +246,15 @@ export class IpcClient {
     return call("get_memory_file", { projectId, filename });
   }
 
-  async updateMemoryFile(projectId: string, filename: string, content: string): Promise<void> {
-    // Rust: update_memory_file(project_id: String, filename: String, content: String)
-    return call("update_memory_file", { projectId, filename, content });
+  async updateMemoryFile(accountName: string, projectId: string, filename: string, content: string): Promise<void> {
+    // accountName is captured by the caller at click-time so the backend
+    // can resolve the write path without going through state.current_dir(),
+    // which can race with set_active_account.
+    return call("update_memory_file", { accountName, projectId, filename, content });
   }
 
-  async deleteMemoryFile(projectId: string, filename: string): Promise<void> {
-    // Rust: delete_memory_file(project_id: String, filename: String)
-    return call("delete_memory_file", { projectId, filename });
+  async deleteMemoryFile(accountName: string, projectId: string, filename: string): Promise<void> {
+    return call("delete_memory_file", { accountName, projectId, filename });
   }
 
   // --- launcher (2) ---
