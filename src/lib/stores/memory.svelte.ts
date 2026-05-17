@@ -4,8 +4,14 @@ import { toastStore } from "./toast.svelte";
 
 class MemoryStore {
   projects = $state<MemoryProject[]>([]);
+  // Lazy-loaded file lists, keyed by project id. Populated on first expand
+  // (toggleProject) and kept until switchAccount/reset.
+  filesByProject = $state<Record<string, MemoryFile[]>>({});
+  // UI collapse state per project. In-memory only, not persisted to disk.
+  expanded = $state<Record<string, boolean>>({});
+  // The project owning the file currently open in the editor. Tracked passively
+  // as a side effect of selectFile so save/delete know where to write.
   activeProjectId = $state<string | null>(null);
-  files = $state<MemoryFile[]>([]);
   activeFile = $state<MemoryFileDetail | null>(null);
   activeFileDirty = $state<boolean>(false);
   loading = $state(false);
@@ -13,9 +19,10 @@ class MemoryStore {
   error = $state<string>("");
 
   // Per-account caches so re-entering an account is instant:
-  //  - rememberedProjectByAccount: last picked project, restored on switch
-  //  - projectsByAccount: cached project list, lets the dropdown render
-  //    immediately without waiting for an IPC roundtrip
+  //  - rememberedProjectByAccount: last project a file was opened from; used
+  //    by restoreSelection() to auto-expand that group on re-entry
+  //  - projectsByAccount: cached project list so the sidebar paints before
+  //    the IPC roundtrip lands
   // Encoded project ids can collide across accounts (same path → same id),
   // so both MUST key on account name, not just id.
   // Session-scoped (not persisted across app restarts).
@@ -28,15 +35,16 @@ class MemoryStore {
   }
 
   /** Switch the per-account memory context. Wipes interaction state and
-   *  fills `projects` from the cached snapshot if any (so the dropdown
-   *  renders instantly on re-entry). Call before any IPC; pair with
+   *  fills `projects` from the cached snapshot if any (so the list renders
+   *  instantly on re-entry). Call before any IPC; pair with
    *  `restoreSelection()` once `active_account_dir` has been switched on
    *  the backend. */
   switchAccount(name: string): void {
     this.currentAccount = name;
     this.projects = this.projectsByAccount.get(name) ?? [];
+    this.filesByProject = {};
+    this.expanded = {};
     this.activeProjectId = null;
-    this.files = [];
     this.activeFile = null;
     this.activeFileDirty = false;
     this.loading = false;
@@ -44,13 +52,17 @@ class MemoryStore {
     this.error = "";
   }
 
-  /** Reapply the remembered selection for the current account, if it still
-   *  exists in `projects`. No-op when there's nothing remembered. */
-  restoreSelection(): void {
+  /** Auto-expand the project last interacted with for this account, so its
+   *  files render without a manual click. No-op when nothing's remembered or
+   *  the remembered project no longer exists. */
+  async restoreSelection(): Promise<void> {
     if (this.currentAccount === null) return;
     const remembered = this.rememberedProjectByAccount.get(this.currentAccount);
-    if (remembered && this.projects.some((p) => p.id === remembered)) {
-      this.selectProject(remembered);
+    if (!remembered) return;
+    if (!this.projects.some((p) => p.id === remembered)) return;
+    this.expanded = { ...this.expanded, [remembered]: true };
+    if (!this.filesByProject[remembered]) {
+      await this.loadFilesFor(remembered);
     }
   }
 
@@ -63,13 +75,15 @@ class MemoryStore {
       if (this.currentAccount !== null) {
         this.projectsByAccount.set(this.currentAccount, fresh);
       }
-      // Drop the prior selection if it isn't in the refreshed list (e.g. the
-      // project's memory dir was deleted out from under us).
+      // Drop a stale active selection if its project vanished (e.g. its
+      // memory dir was deleted out from under us).
       if (
         this.activeProjectId !== null &&
         !fresh.some((p) => p.id === this.activeProjectId)
       ) {
-        this.clearSelection();
+        this.activeProjectId = null;
+        this.activeFile = null;
+        this.activeFileDirty = false;
       }
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load memory projects";
@@ -78,11 +92,12 @@ class MemoryStore {
     }
   }
 
-  async loadFiles(projectId: string) {
+  private async loadFilesFor(projectId: string) {
     this.loading = true;
     this.error = "";
     try {
-      this.files = await ipcClient.listMemoryFiles(projectId);
+      const files = await ipcClient.listMemoryFiles(projectId);
+      this.filesByProject = { ...this.filesByProject, [projectId]: files };
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load memory files";
     } finally {
@@ -90,7 +105,22 @@ class MemoryStore {
     }
   }
 
-  async loadFile(projectId: string, filename: string) {
+  /** Toggle a project's expanded state. On first expand, fetches its file
+   *  list (cached thereafter). On collapse, the cached list is kept so a
+   *  re-expand is instant. */
+  async toggleProject(id: string) {
+    const next = !this.expanded[id];
+    this.expanded = { ...this.expanded, [id]: next };
+    if (next && !this.filesByProject[id]) {
+      await this.loadFilesFor(id);
+    }
+  }
+
+  async selectFile(projectId: string, filename: string) {
+    if (this.currentAccount !== null) {
+      this.rememberedProjectByAccount.set(this.currentAccount, projectId);
+    }
+    this.activeProjectId = projectId;
     this.loading = true;
     this.error = "";
     try {
@@ -107,7 +137,6 @@ class MemoryStore {
     this.error = "";
     try {
       await ipcClient.updateMemoryFile(projectId, filename, content);
-      // Update activeFile content to reflect saved state
       if (this.activeFile && this.activeFile.filename === filename) {
         this.activeFile = { ...this.activeFile, content };
         toastStore.success("File saved");
@@ -124,7 +153,18 @@ class MemoryStore {
     this.error = "";
     try {
       await ipcClient.deleteMemoryFile(projectId, filename);
-      this.files = this.files.filter((f) => f.filename !== filename);
+      const list = this.filesByProject[projectId];
+      if (list) {
+        this.filesByProject = {
+          ...this.filesByProject,
+          [projectId]: list.filter((f) => f.filename !== filename),
+        };
+      }
+      // Keep MemoryProject.fileCount roughly in sync so the "hide empty
+      // projects" filter reacts when the last file in a project is deleted.
+      this.projects = this.projects.map((p) =>
+        p.id === projectId ? { ...p, fileCount: Math.max(0, p.fileCount - 1) } : p,
+      );
       if (this.activeFile?.filename === filename) {
         this.activeFile = null;
         toastStore.success("File deleted");
@@ -135,37 +175,11 @@ class MemoryStore {
     }
   }
 
-  selectProject(id: string) {
-    if (this.currentAccount !== null) {
-      this.rememberedProjectByAccount.set(this.currentAccount, id);
-    }
-    this.activeProjectId = id;
-    this.files = [];
-    this.activeFile = null;
-    this.activeFileDirty = false;
-    void this.loadFiles(id);
-  }
-
-  clearSelection() {
-    if (this.currentAccount !== null) {
-      this.rememberedProjectByAccount.delete(this.currentAccount);
-    }
-    this.activeProjectId = null;
-    this.files = [];
-    this.activeFile = null;
-    this.activeFileDirty = false;
-  }
-
-  selectFile(filename: string) {
-    if (this.activeProjectId) {
-      void this.loadFile(this.activeProjectId, filename);
-    }
-  }
-
   reset(): void {
     this.projects = [];
+    this.filesByProject = {};
+    this.expanded = {};
     this.activeProjectId = null;
-    this.files = [];
     this.activeFile = null;
     this.activeFileDirty = false;
     this.loading = false;
