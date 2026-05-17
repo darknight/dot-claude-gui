@@ -1,0 +1,74 @@
+name: Release
+
+# Builds an unsigned macOS universal2 .dmg via tauri-action.
+#
+# Triggers:
+#  - push of a tag matching v* → builds and publishes a GitHub Release as
+#    a draft prerelease, with the dmg attached. Promote to non-draft once
+#    you've smoke-tested the artifact.
+#  - workflow_dispatch → builds and uploads the dmg as a workflow-run
+#    artifact (downloadable from the Actions tab). Useful for ad-hoc
+#    builds without cutting a release.
+#
+# No signing / no notarization yet — first-time users will need to
+# right-click → Open or allow the app in Settings > Privacy & Security.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write  # required to create the GitHub Release
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install Rust targets for universal2
+        run: |
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
+
+      - name: Install frontend deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build with tauri-action
+        id: tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Empty tagName on manual dispatch → tauri-action only builds.
+          # On tag push, the tag name (e.g. v1.0.0-beta.1) becomes both the
+          # Release tag and the source for __VERSION__ in the release name.
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: "dot-claude-gui __VERSION__"
+          releaseDraft: true
+          prerelease: true
+          args: --target universal-apple-darwin
+
+      # On manual dispatch the tauri-action step skips release upload —
+      # attach the produced artifacts to the workflow run so they're still
+      # accessible from the Actions UI.
+      - name: Upload dmg as workflow artifact (dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dot-claude-gui-macos-universal2
+          path: |
+            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
