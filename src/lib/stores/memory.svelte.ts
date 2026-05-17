@@ -29,6 +29,12 @@ class MemoryStore {
   private currentAccount: string | null = null;
   private rememberedProjectByAccount: Map<string, string> = new Map();
   private projectsByAccount: Map<string, MemoryProject[]> = new Map();
+  // Monotonic counter to discard stale selectFile IPC responses. Bumped on
+  // each call; in the await callback we re-check it before committing state,
+  // so when the user clicks two files in quick succession only the latest
+  // result wins (and activeProjectId/activeFile can't drift out of sync —
+  // which is what would let save/delete write to the wrong project).
+  private selectSeq = 0;
 
   hasProjectsCached(name: string): boolean {
     return this.projectsByAccount.has(name);
@@ -50,6 +56,9 @@ class MemoryStore {
     this.loading = false;
     this.saving = false;
     this.error = "";
+    // Discard any in-flight selectFile from the prior account so its IPC
+    // response can't commit a stale file/project under the new account.
+    this.selectSeq++;
   }
 
   /** Auto-expand the project last interacted with for this account, so its
@@ -117,18 +126,26 @@ class MemoryStore {
   }
 
   async selectFile(projectId: string, filename: string) {
-    if (this.currentAccount !== null) {
-      this.rememberedProjectByAccount.set(this.currentAccount, projectId);
-    }
-    this.activeProjectId = projectId;
+    const seq = ++this.selectSeq;
     this.loading = true;
     this.error = "";
     try {
-      this.activeFile = await ipcClient.getMemoryFile(projectId, filename);
+      const detail = await ipcClient.getMemoryFile(projectId, filename);
+      // A newer selectFile started after us — discard our result so it
+      // doesn't clobber theirs (out-of-order IPC responses).
+      if (seq !== this.selectSeq) return;
+      if (this.currentAccount !== null) {
+        this.rememberedProjectByAccount.set(this.currentAccount, projectId);
+      }
+      this.activeProjectId = projectId;
+      this.activeFile = detail;
     } catch (e) {
+      if (seq !== this.selectSeq) return;
       this.error = e instanceof Error ? e.message : "Failed to load memory file";
     } finally {
-      this.loading = false;
+      if (seq === this.selectSeq) {
+        this.loading = false;
+      }
     }
   }
 
@@ -185,6 +202,7 @@ class MemoryStore {
     this.loading = false;
     this.saving = false;
     this.error = "";
+    this.selectSeq++;
   }
 }
 
