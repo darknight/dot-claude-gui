@@ -2,7 +2,6 @@
   import { t, type MessageKey } from "$lib/i18n";
   import { projectsStore } from "$lib/stores/projects.svelte";
   import { modeStore, type ProjectFacetKey } from "$lib/stores/mode.svelte";
-  import BindingFacet from "./BindingFacet.svelte";
   import LaunchFacet from "./LaunchFacet.svelte";
   import PluginsOverrideFacet from "./PluginsOverrideFacet.svelte";
   import ProjectSettingsFacet from "./ProjectSettingsFacet.svelte";
@@ -12,7 +11,6 @@
   import StalePathBanner from "./StalePathBanner.svelte";
 
   const FACETS: Array<{ key: ProjectFacetKey; labelKey: MessageKey }> = [
-    { key: "binding",   labelKey: "projectMode.facet.binding" },
     { key: "launch",    labelKey: "projectMode.facet.launch" },
     { key: "plugins",   labelKey: "projectMode.facet.plugins" },
     { key: "settings",  labelKey: "projectMode.facet.settings" },
@@ -26,9 +24,11 @@
   const isBound = $derived(projectsStore.currentBound);
   const activeFacet = $derived(modeStore.projectFacet(modeStore.selectedProject));
 
+  // Launch facet hosts the binding controls now, so it's the only tab
+  // usable in the unbound state. Stale paths disable everything (banner-only).
   function tabDisabled(key: ProjectFacetKey): boolean {
-    if (isStale) return true;          // stale: all disabled, banner only
-    if (!isBound && key !== "binding") return true; // unbound: only Binding
+    if (isStale) return true;
+    if (!isBound && key !== "launch") return true;
     return false;
   }
 </script>
@@ -58,8 +58,6 @@
     <div class="facet">
       {#if isStale}
         <div class="empty">{t("projectMode.stalePathBlocked")}</div>
-      {:else if activeFacet === "binding"}
-        <BindingFacet path={selected.path} />
       {:else if activeFacet === "launch"}
         <LaunchFacet path={selected.path} />
       {:else if activeFacet === "plugins"}

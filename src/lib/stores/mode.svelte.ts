@@ -4,7 +4,6 @@ const STORAGE_KEY_V1 = "dot-claude-gui-mode-v1";
 const STORAGE_KEY_V2 = "dot-claude-gui-mode-v2";
 
 export type ProjectFacetKey =
-  | "binding"
   | "launch"
   | "plugins"
   | "settings"
@@ -22,7 +21,7 @@ export type AccountFacetKey =
   | "mcp";
 
 const VALID_PROJECT_FACETS: readonly ProjectFacetKey[] = [
-  "binding", "launch", "plugins", "settings", "memory", "claudemd", "effective",
+  "launch", "plugins", "settings", "memory", "claudemd", "effective",
 ];
 
 const VALID_ACCOUNT_FACETS: readonly AccountFacetKey[] = [
@@ -30,7 +29,7 @@ const VALID_ACCOUNT_FACETS: readonly AccountFacetKey[] = [
 ];
 
 const DEFAULT_ACCOUNT_FACET: AccountFacetKey = "overview";
-const DEFAULT_PROJECT_FACET: ProjectFacetKey = "binding";
+const DEFAULT_PROJECT_FACET: ProjectFacetKey = "launch";
 
 export type AccountSubsectionKey = "settingsSection" | "pluginsSection";
 export type ProjectSubsectionKey = "settingsSection";
@@ -135,6 +134,8 @@ function sanitizeProjects(input: unknown): Record<string, PerProjectUi> {
   for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
     if (!v || typeof v !== "object") continue;
     const raw = v as Record<string, unknown>;
+    // Unknown / retired facet keys (e.g. legacy "binding" after it was merged
+    // into "launch") fall back to the default — no explicit migration table.
     const facet = typeof raw.facet === "string" && VALID_PROJECT_FACETS.includes(raw.facet as ProjectFacetKey)
       ? (raw.facet as ProjectFacetKey)
       : DEFAULT_PROJECT_FACET;
