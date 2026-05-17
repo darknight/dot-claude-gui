@@ -60,6 +60,8 @@
   "skills.externalTitle": "このスキルは外部の場所にあります（このアカウント専有ではありません）：{target}",
   "skills.delete": "削除",
   "skills.deletePluginHint": "プラグイン提供のスキルは、所属プラグインをアンインストールして削除してください。",
+  "skills.openOwningPlugin": "所属プラグインを開く",
+  "skills.openOwningPluginHint": "「インストール済みプラグイン」ビューに移動し、このスキルを提供するプラグインを表示します。",
   "skills.deleteConfirm": "スキル「{name}」を削除しますか？この操作は取り消せません。",
   "skills.deleteConfirmExternal": "スキル「{name}」は外部の場所を指しています：{target}\n\n削除はこのアカウントのリンクのみを取り除き、リンク先のファイルは変更しません。続行しますか？",
   "common.save": "保存",

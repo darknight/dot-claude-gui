@@ -60,6 +60,8 @@
   "skills.externalTitle": "This skill lives at an external location (not owned by this account): {target}",
   "skills.delete": "Delete",
   "skills.deletePluginHint": "Plugin-provided skills must be removed by uninstalling the owning plugin.",
+  "skills.openOwningPlugin": "Open owning plugin",
+  "skills.openOwningPluginHint": "Jump to the Installed Plugins view and reveal the plugin that ships this skill.",
   "skills.deleteConfirm": "Delete the skill \"{name}\"? This cannot be undone.",
   "skills.deleteConfirmExternal": "Skill \"{name}\" points at an external location: {target}\n\nDeleting only removes this account's link; the file at the target is untouched. Continue?",
   "common.save": "Save",

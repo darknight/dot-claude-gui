@@ -6,10 +6,15 @@
 
   import type { PluginInfo } from "$lib/api/types";
   import { t } from "$lib/i18n";
+  import { tick } from "svelte";
 
   let pendingId = $state<string | null>(null);
   let outputLines = $state<string[]>([]);
   let collapsed = $state<Record<string, boolean>>({});
+  // Locally mirrors pluginsStore.highlightedPluginId for the duration of the
+  // flash; cleared by a timer so re-entering the facet later doesn't replay.
+  let flashedPluginId = $state<string | null>(null);
+  let flashTimer: ReturnType<typeof setTimeout> | null = null;
 
   const groups = $derived.by(() => {
     const map = new Map<string, PluginInfo[]>();
@@ -21,9 +26,52 @@
     return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
   });
 
+  // Force-expand the marketplace group that contains a highlighted plugin —
+  // otherwise the target card isn't in the DOM and the scroll-into-view is a
+  // no-op.
+  const forceExpandGroup = $derived.by(() => {
+    if (!pluginsStore.highlightedPluginId) return null;
+    const target = pluginsStore.plugins.find(p => p.id === pluginsStore.highlightedPluginId);
+    return target?.marketplace ?? null;
+  });
+
+  function isCollapsedFor(name: string): boolean {
+    if (forceExpandGroup === name) return false;
+    return collapsed[name] ?? false;
+  }
+
   function toggleGroup(name: string) {
     collapsed = { ...collapsed, [name]: !collapsed[name] };
   }
+
+  // React to a jump request from elsewhere (e.g. SkillPreview's "open owning
+  // plugin"). Scroll the card into view, flash a ring for 1.5s, then clear.
+  $effect(() => {
+    const id = pluginsStore.highlightedPluginId;
+    if (!id) return;
+
+    (async () => {
+      await tick();
+      const el = document.querySelector(`[data-plugin-id="${CSS.escape(id)}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      flashedPluginId = id;
+      if (flashTimer !== null) clearTimeout(flashTimer);
+      flashTimer = setTimeout(() => {
+        flashedPluginId = null;
+        flashTimer = null;
+        if (pluginsStore.highlightedPluginId === id) {
+          pluginsStore.highlightPlugin(null);
+        }
+      }, 1500);
+    })();
+
+    return () => {
+      if (flashTimer !== null) {
+        clearTimeout(flashTimer);
+        flashTimer = null;
+      }
+    };
+  });
 
   async function handleUninstall(id: string) {
     // Reset prior failure output so a new attempt starts clean.
@@ -83,7 +131,7 @@
   {:else}
     <div class="space-y-1">
       {#each groups as [marketplaceName, plugins], groupIndex (marketplaceName)}
-        {@const isCollapsed = collapsed[marketplaceName] ?? false}
+        {@const isCollapsed = isCollapsedFor(marketplaceName)}
         <div class={groupIndex === 0 ? "" : "pt-3"}>
           <button
             type="button"
@@ -98,7 +146,10 @@
           {#if !isCollapsed}
             <div class="space-y-3 pl-5">
               {#each plugins as plugin (plugin.id)}
-                <div class="card group relative">
+                <div
+                  data-plugin-id={plugin.id}
+                  class="card group relative {flashedPluginId === plugin.id ? 'plugin-flash' : ''}"
+                >
                   <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0 flex-1">
                       <div class="flex items-center gap-2">

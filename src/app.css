@@ -257,6 +257,18 @@ textarea::placeholder {
   color: var(--status-error-text);
 }
 
+/* Brief ring on a target card after a jump-to navigation. Used by the
+   InstalledPlugins view when SkillPreview's "open owning plugin" triggers
+   a scroll-to-and-highlight. */
+@keyframes plugin-flash-anim {
+  0%   { box-shadow: 0 0 0 0 var(--focus-ring); }
+  20%  { box-shadow: 0 0 0 3px var(--focus-ring); }
+  100% { box-shadow: 0 0 0 0 var(--focus-ring); }
+}
+.plugin-flash {
+  animation: plugin-flash-anim 1.5s ease-out;
+}
+
 /* ── Form input base ── */
 .input-base {
   width: 100%;

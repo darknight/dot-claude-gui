@@ -1,5 +1,7 @@
 <script lang="ts">
   import { skillsStore } from "$lib/stores/skills.svelte";
+  import { pluginsStore } from "$lib/stores/plugins.svelte";
+  import { modeStore } from "$lib/stores/mode.svelte";
   import { t } from "$lib/i18n";
 
   async function handleDelete(id: string, name: string, externalTarget?: string) {
@@ -8,6 +10,22 @@
       : t("skills.deleteConfirm", { name });
     if (!confirm(msg)) return;
     await skillsStore.deleteUserSkill(id);
+  }
+
+  // skill.source for plugin-owned skills is "plugin:<name>@<marketplace>";
+  // PluginInfo.id is "<name>@<marketplace>" — strip the prefix to match.
+  function pluginIdFromSource(source: string): string | null {
+    return source.startsWith("plugin:") ? source.slice("plugin:".length) : null;
+  }
+
+  function openOwningPlugin(source: string) {
+    const account = modeStore.selectedAccount;
+    if (!account) return;
+    const pluginId = pluginIdFromSource(source);
+    if (!pluginId) return;
+    modeStore.setAccountSubsection(account, "pluginsSection", "installed");
+    modeStore.setAccountFacet(account, "plugins");
+    pluginsStore.highlightPlugin(pluginId);
   }
 </script>
 
@@ -42,9 +60,9 @@
                 ✗ Invalid
               </span>
             {/if}
-            <!-- Delete: enabled only for user-level skills.
-                 Plugin-owned skills must be removed by uninstalling
-                 the owning plugin. -->
+            <!-- User skills get a real Delete button. Plugin-owned skills
+                 can't be removed here — instead offer a jump to the owning
+                 plugin in the Installed Plugins view, where uninstall lives. -->
             {#if skill.source === "user"}
               <button
                 type="button"
@@ -56,11 +74,11 @@
             {:else}
               <button
                 type="button"
-                class="btn-danger"
-                disabled
-                title={t("skills.deletePluginHint")}
+                class="btn-secondary"
+                onclick={() => openOwningPlugin(skill.source)}
+                title={t("skills.openOwningPluginHint")}
               >
-                {t("skills.delete")}
+                {t("skills.openOwningPlugin")}
               </button>
             {/if}
           </div>

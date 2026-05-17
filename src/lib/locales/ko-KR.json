@@ -54,6 +54,8 @@
   "skills.externalTitle": "",
   "skills.delete": "",
   "skills.deletePluginHint": "",
+  "skills.openOwningPlugin": "",
+  "skills.openOwningPluginHint": "",
   "skills.deleteConfirm": "",
   "skills.deleteConfirmExternal": "",
   "common.save": "",
