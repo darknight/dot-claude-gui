@@ -76,13 +76,18 @@ class MemoryStore {
   }
 
   async loadProjects() {
+    // Capture the account context at call-time. If switchAccount lands
+    // before the IPC resolves, the snapshot won't match and we discard
+    // the result — it belongs to a stale account.
+    const accountAtStart = this.currentAccount;
     this.loading = true;
     this.error = "";
     try {
       const fresh = await ipcClient.listMemoryProjects();
+      if (this.currentAccount !== accountAtStart) return;
       this.projects = fresh;
-      if (this.currentAccount !== null) {
-        this.projectsByAccount.set(this.currentAccount, fresh);
+      if (accountAtStart !== null) {
+        this.projectsByAccount.set(accountAtStart, fresh);
       }
       // Drop a stale active selection if its project vanished (e.g. its
       // memory dir was deleted out from under us).
@@ -95,22 +100,33 @@ class MemoryStore {
         this.activeFileDirty = false;
       }
     } catch (e) {
+      if (this.currentAccount !== accountAtStart) return;
       this.error = e instanceof Error ? e.message : "Failed to load memory projects";
     } finally {
-      this.loading = false;
+      if (this.currentAccount === accountAtStart) {
+        this.loading = false;
+      }
     }
   }
 
   private async loadFilesFor(projectId: string) {
+    const accountAtStart = this.currentAccount;
     this.loading = true;
     this.error = "";
     try {
       const files = await ipcClient.listMemoryFiles(projectId);
+      // Discard if account flipped — these files belong to a different
+      // account's project dir and would corrupt filesByProject under the
+      // new account.
+      if (this.currentAccount !== accountAtStart) return;
       this.filesByProject = { ...this.filesByProject, [projectId]: files };
     } catch (e) {
+      if (this.currentAccount !== accountAtStart) return;
       this.error = e instanceof Error ? e.message : "Failed to load memory files";
     } finally {
-      this.loading = false;
+      if (this.currentAccount === accountAtStart) {
+        this.loading = false;
+      }
     }
   }
 
@@ -150,26 +166,33 @@ class MemoryStore {
   }
 
   async saveFile(projectId: string, filename: string, content: string) {
+    const accountAtStart = this.currentAccount;
     this.saving = true;
     this.error = "";
     try {
       await ipcClient.updateMemoryFile(projectId, filename, content);
+      if (this.currentAccount !== accountAtStart) return;
       if (this.activeFile && this.activeFile.filename === filename) {
         this.activeFile = { ...this.activeFile, content };
         toastStore.success("File saved");
       }
     } catch (e) {
+      if (this.currentAccount !== accountAtStart) return;
       this.error = e instanceof Error ? e.message : "Failed to save memory file";
       toastStore.error(this.error);
     } finally {
-      this.saving = false;
+      if (this.currentAccount === accountAtStart) {
+        this.saving = false;
+      }
     }
   }
 
   async deleteFile(projectId: string, filename: string) {
+    const accountAtStart = this.currentAccount;
     this.error = "";
     try {
       await ipcClient.deleteMemoryFile(projectId, filename);
+      if (this.currentAccount !== accountAtStart) return;
       const list = this.filesByProject[projectId];
       if (list) {
         this.filesByProject = {
@@ -187,6 +210,7 @@ class MemoryStore {
         toastStore.success("File deleted");
       }
     } catch (e) {
+      if (this.currentAccount !== accountAtStart) return;
       this.error = e instanceof Error ? e.message : "Failed to delete memory file";
       toastStore.error(this.error);
     }
