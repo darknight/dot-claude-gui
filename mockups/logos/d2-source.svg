@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- dot-claude-gui · v3b-bold · orange field + bolder ivory sunburst -->
+  <!-- sparkle params: rLong=100, rShort=58, rDip=30 (heavier than v3b: rShort 48→58, rDip 15→30) -->
+  <!-- scale 3.8 → ~75% width (vs v3b 3.5 = 68%) -->
+  <rect width="1024" height="1024" rx="224" ry="224" fill="#D97757"/>
+  <g transform="translate(512 512) scale(3.8)">
+    <path d="M 0,-100 L 11.5,-27.7 L 41,-41 L 27.7,-11.5 L 100,0 L 27.7,11.5 L 41,41 L 11.5,27.7 L 0,100 L -11.5,27.7 L -41,41 L -27.7,11.5 L -100,0 L -27.7,-11.5 L -41,-41 L -11.5,-27.7 Z"
+          fill="#FAF7F2"/>
+  </g>
+</svg>
