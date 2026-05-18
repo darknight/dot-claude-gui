@@ -1,0 +1,50 @@
+# git-cliff configuration for dot-claude-gui
+# Renders release notes from conventional-commit messages.
+# Used by .github/workflows/release.yml on tag push.
+# See https://git-cliff.org/docs/configuration
+
+[changelog]
+# GitHub Releases UI provides the title; leave header empty.
+header = ""
+
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+
+{% for commit in commits -%}
+- {{ commit.message | split(pat="\n") | first | trim }} ([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/darknight/dot-claude-gui/commit/{{ commit.id }}))
+{% endfor %}
+{% endfor %}
+{%- if previous and previous.version %}
+---
+
+**Full changelog:** [{{ previous.version }}...{{ version }}](https://github.com/darknight/dot-claude-gui/compare/{{ previous.version }}...{{ version }})
+{%- endif %}
+"""
+
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+
+# Order matters — first match wins.
+commit_parsers = [
+    { message = "^chore\\(version\\)", skip = true },
+    { message = "^chore\\(release\\)", skip = true },
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug Fixes" },
+    { message = "^perf", group = "Performance" },
+    { message = "^refactor", group = "Refactors" },
+    { message = "^docs", group = "Documentation" },
+    { message = "^test", group = "Tests" },
+    { message = "^ci", group = "CI" },
+    { message = "^build", group = "Build" },
+    { message = "^style", group = "Style" },
+    { message = "^chore", group = "Miscellaneous" },
+]
+
+filter_commits = true
+tag_pattern = "v[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.-]+)?"
+sort_commits = "oldest"

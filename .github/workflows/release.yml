@@ -26,16 +26,18 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # git-cliff needs full history to generate changelog
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install Rust targets for universal2
@@ -45,6 +47,16 @@ jobs:
 
       - name: Install frontend deps
         run: pnpm install --frozen-lockfile
+
+      # On tag push: render the release body from commit history via git-cliff.
+      # Skipped on manual dispatch (no tag → nothing meaningful to summarize).
+      - name: Generate changelog
+        id: changelog
+        if: github.ref_type == 'tag'
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip header
 
       - name: Build with tauri-action
         id: tauri
@@ -57,6 +69,7 @@ jobs:
           # Release tag and the source for __VERSION__ in the release name.
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           releaseName: "dot-claude-gui __VERSION__"
+          releaseBody: ${{ steps.changelog.outputs.content }}
           releaseDraft: true
           prerelease: true
           args: --target universal-apple-darwin
@@ -66,7 +79,7 @@ jobs:
       # accessible from the Actions UI.
       - name: Upload dmg as workflow artifact (dispatch only)
         if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dot-claude-gui-macos-universal2
           path: |
