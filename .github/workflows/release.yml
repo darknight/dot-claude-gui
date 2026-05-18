@@ -57,6 +57,11 @@ jobs:
         with:
           config: cliff.toml
           args: --latest --strip header
+        env:
+          # run.sh stat's $OUTPUT to size-check before writing the
+          # `content` step output. Unset → stat errors → step output is
+          # silently empty. Set it explicitly.
+          OUTPUT: CHANGELOG.md
 
       - name: Build with tauri-action
         id: tauri
