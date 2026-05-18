@@ -50,18 +50,26 @@ jobs:
 
       # On tag push: render the release body from commit history via git-cliff.
       # Skipped on manual dispatch (no tag → nothing meaningful to summarize).
+      # NOTE: We avoid orhun/git-cliff-action@v4 — its run.sh uses
+      # `stat -f %s` on macOS runners, but BSD stat's %s is atime (not
+      # size; size is %z). Result: stat errors with "bad format", the
+      # FILESIZE check fails, and the `content` step output is silently
+      # never written. We install git-cliff inline instead.
       - name: Generate changelog
         id: changelog
         if: github.ref_type == 'tag'
-        uses: orhun/git-cliff-action@v4
-        with:
-          config: cliff.toml
-          args: --latest --strip header
-        env:
-          # run.sh stat's $OUTPUT to size-check before writing the
-          # `content` step output. Unset → stat errors → step output is
-          # silently empty. Set it explicitly.
-          OUTPUT: CHANGELOG.md
+        run: |
+          set -euo pipefail
+          GC_VER=2.13.1
+          curl -sL "https://github.com/orhun/git-cliff/releases/download/v${GC_VER}/git-cliff-${GC_VER}-aarch64-apple-darwin.tar.gz" | tar xz -C /tmp
+          BODY="$(/tmp/git-cliff-${GC_VER}/git-cliff --config cliff.toml --latest --strip header)"
+          {
+            echo "content<<__GC_BODY_EOF__"
+            printf '%s\n' "$BODY"
+            echo "__GC_BODY_EOF__"
+          } >> "$GITHUB_OUTPUT"
+          echo "--- rendered body ---"
+          printf '%s\n' "$BODY"
 
       - name: Build with tauri-action
         id: tauri
