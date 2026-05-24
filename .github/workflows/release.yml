@@ -4,8 +4,9 @@ name: Release
 #
 # Triggers:
 #  - push of a tag matching v* → builds and publishes a GitHub Release as
-#    a draft prerelease, with the dmg attached. Promote to non-draft once
-#    you've smoke-tested the artifact.
+#    a (published) prerelease, with the dmg attached. The `prerelease`
+#    flag flags it as beta in the UI without requiring a manual promote
+#    step from drafts.
 #  - workflow_dispatch → builds and uploads the dmg as a workflow-run
 #    artifact (downloadable from the Actions tab). Useful for ad-hoc
 #    builds without cutting a release.
@@ -83,7 +84,7 @@ jobs:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           releaseName: "dot-claude-gui __VERSION__"
           releaseBody: ${{ steps.changelog.outputs.content }}
-          releaseDraft: true
+          releaseDraft: false
           prerelease: true
           args: --target universal-apple-darwin
 
