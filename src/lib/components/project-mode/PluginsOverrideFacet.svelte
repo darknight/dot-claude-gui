@@ -12,6 +12,9 @@
 
   let uninstallingId = $state<string | null>(null);
   let outputLines = $state<string[]>([]);
+  // Snapshotted at load time so a later in-session binding change can't
+  // misroute uninstall to a different account than the list came from.
+  let listedFromAccount = $state<string | undefined>(undefined);
 
   function accountLabel(name: string): string {
     const acc = accountsStore.accounts.find((a) => a.name === name);
@@ -29,6 +32,11 @@
   async function load() {
     loading = true;
     error = null;
+    // Snapshot the binding that produced this listing. handleUninstall
+    // reads the snapshot, never the live store value — a binding change
+    // mid-session would otherwise route the uninstall at the new account
+    // while the plugin row still belongs to the old one.
+    listedFromAccount = appSettingsStore.preferences.projects?.[path]?.account;
     try {
       const [list, settingsResp] = await Promise.all([
         ipcClient.projectListPlugins(path),
@@ -43,7 +51,13 @@
     }
   }
 
-  $effect(() => { void path; load(); });
+  // Also reload when the binding changes — otherwise the list stays from
+  // the previous account and only the snapshot saves us.
+  $effect(() => {
+    void path;
+    void appSettingsStore.preferences.projects?.[path]?.account;
+    load();
+  });
 
   function stateOf(id: string): Tri {
     const map = projectSettings.enabledPlugins;
@@ -51,19 +65,14 @@
     return map[id] ? "enable" : "disable";
   }
 
-  /// Bound account name for this project (from app config). Foreign rows
-  /// override this with their own foreignAccount; otherwise we route the
-  /// uninstall through the bound account so the CLI sees the same
-  /// installed_plugins.json the listing came from.
-  function boundAccount(): string | undefined {
-    return appSettingsStore.preferences.projects?.[path]?.account;
-  }
-
   async function handleUninstall(p: PluginInfo) {
     outputLines = [];
     uninstallingId = p.id;
 
-    const accountName = p.foreignAccount ?? boundAccount();
+    // Foreign rows carry their source account explicitly; non-foreign rows
+    // route through the account this listing was loaded from (snapshotted
+    // in load()). Never read the live binding here — it may have changed.
+    const accountName = p.foreignAccount ?? listedFromAccount;
     // Project-scope needs cwd (so the CLI is inside the owning project)
     // and `--scope project` (so it doesn't default to user scope and
     // reject with the misleading "enabled at project scope" error).
