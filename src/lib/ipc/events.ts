@@ -61,4 +61,83 @@ export function onCommandCompleted(
   return listen<CommandCompletedPayload>("command-completed", (e) => handler(e.payload));
 }
 
+/**
+ * Run a streaming subprocess IPC and route its output / completion events.
+ *
+ * Race-safe contract: listeners are attached BEFORE `startCommand()` runs, so
+ * even fast-failing commands (where stdout/stderr/exit fire microseconds
+ * after spawn) won't drop events. The helper buffers events that arrive
+ * before the requestId is known and replays the matching ones once it is.
+ *
+ * - `startCommand` is the IPC call that spawns the process and returns the
+ *   `{ requestId }` correlation id (or undefined / throws on IPC failure).
+ * - `onLine` is called for each stdout/stderr line.
+ * - `onComplete` is called exactly once with the exit code.
+ *
+ * Returns `false` if `startCommand` failed to produce a requestId (in which
+ * case `onComplete` is NOT called and the caller should surface the IPC
+ * error itself); `true` if the stream was attached and `onComplete` will
+ * fire when the process exits.
+ */
+export async function runStreamingCommand(
+  startCommand: () => Promise<{ requestId: string } | undefined>,
+  onLine: (line: string) => void,
+  onComplete: (exitCode: number) => void | Promise<void>,
+): Promise<boolean> {
+  let myReqId: string | null = null;
+  const earlyOutput: CommandOutputPayload[] = [];
+  // Boxed so TS doesn't narrow it to `null` after closure mutation —
+  // `let earlyComplete: ... | null = null` gets collapsed in callers.
+  const earlyComplete: { value: CommandCompletedPayload | null } = { value: null };
+  let finished = false;
+
+  const finish = async (c: CommandCompletedPayload) => {
+    if (finished) return;
+    finished = true;
+    unlistenOutput();
+    unlistenCompleted();
+    await onComplete(c.exitCode);
+  };
+
+  const unlistenOutput = await onCommandOutput((o) => {
+    if (myReqId === null) {
+      earlyOutput.push(o);
+    } else if (o.commandId === myReqId) {
+      onLine(o.line);
+    }
+  });
+  const unlistenCompleted = await onCommandCompleted(async (c) => {
+    if (myReqId === null) {
+      earlyComplete.value = c;
+      return;
+    }
+    if (c.commandId !== myReqId) return;
+    await finish(c);
+  });
+
+  let result: { requestId: string } | undefined;
+  try {
+    result = await startCommand();
+  } catch {
+    unlistenOutput();
+    unlistenCompleted();
+    return false;
+  }
+  if (!result?.requestId) {
+    unlistenOutput();
+    unlistenCompleted();
+    return false;
+  }
+  myReqId = result.requestId;
+
+  // Drain anything that arrived before we knew the requestId.
+  for (const o of earlyOutput) {
+    if (o.commandId === myReqId) onLine(o.line);
+  }
+  if (earlyComplete.value && earlyComplete.value.commandId === myReqId) {
+    await finish(earlyComplete.value);
+  }
+  return true;
+}
+
 

@@ -116,7 +116,7 @@ pub async fn add_mcp_server(
         dir.to_string_lossy().to_string(),
     );
     let request_id =
-        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env, None)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -183,7 +183,7 @@ pub async fn remove_mcp_server(
         dir.to_string_lossy().to_string(),
     );
     let request_id =
-        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env, None)?;
     Ok(CommandRequest { request_id })
 }
 

@@ -39,7 +39,7 @@ fn default_app_dir() -> Result<PathBuf, String> {
     home_dir().map(|h| h.join(".dot-claude-gui"))
 }
 
-fn validate_name(name: &str) -> Result<(), String> {
+pub(crate) fn validate_name(name: &str) -> Result<(), String> {
     if name.is_empty() {
         return Err("invalid_name: empty".into());
     }

@@ -70,9 +70,12 @@ class PluginsStore {
     }
   }
 
-  async uninstallPlugin(id: string) {
+  async uninstallPlugin(
+    id: string,
+    opts?: { accountName?: string; cwd?: string; scope?: string },
+  ) {
     try {
-      return await ipcClient.uninstallPlugin(id);
+      return await ipcClient.uninstallPlugin(id, opts);
     } catch (e) {
       this.error = errMsg(e, "Failed");
     }

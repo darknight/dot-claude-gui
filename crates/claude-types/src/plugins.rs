@@ -126,6 +126,14 @@ pub struct PluginInfo {
     /// Set when `scope == "project"`. The project this plugin belongs to.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub project_path: Option<String>,
+    /// Set when this entry was discovered in an account other than the
+    /// account that owns the current listing. Carries the account name
+    /// (`"default"` for native; otherwise the named account). Lets the
+    /// frontend explain why a plugin shows up even though the bound account
+    /// doesn't list it (e.g. a project-scope install made against native
+    /// while the project is bound to a non-native account in dot-claude-gui).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub foreign_account: Option<String>,
 }
 
 /// Summary of a known marketplace returned by the REST API.

@@ -320,28 +320,78 @@ pub async fn project_delete_memory_file(
 
 use claude_types::plugins::PluginInfo;
 
+/// Read `<account_dir>/settings.json` and return its `enabledPlugins` map
+/// (empty if missing/unparseable).
+fn read_enabled_map(account_dir: &std::path::Path) -> std::collections::HashMap<String, bool> {
+    let settings_path = account_dir.join("settings.json");
+    if !settings_path.exists() {
+        return std::collections::HashMap::new();
+    }
+    std::fs::read_to_string(&settings_path)
+        .ok()
+        .and_then(|raw| serde_json::from_str::<claude_types::Settings>(&raw).ok())
+        .and_then(|s| s.enabled_plugins)
+        .unwrap_or_default()
+}
+
+/// Enumerate every account known to dot-claude-gui as `(account_name, dir)`
+/// tuples. Reads `~/.dot-claude-gui/config.json::accounts` and resolves each
+/// name via `app_config::account_dir`. Used to find cross-account orphan
+/// plugin records that point at a project not owned by the listing account.
+pub(crate) fn list_all_account_dirs() -> Result<Vec<(String, PathBuf)>, String> {
+    let home = dirs_next::home_dir()
+        .ok_or_else(|| "cannot determine home directory".to_string())?;
+    let cfg_path = home.join(".dot-claude-gui").join("config.json");
+    let cfg = crate::app_config::read_config(&cfg_path)?;
+    Ok(cfg
+        .accounts
+        .iter()
+        .map(|a| (a.name.clone(), crate::app_config::account_dir(&home, &a.name)))
+        .collect())
+}
+
 pub(crate) async fn list_plugins_for_project(
     state: &AppState,
     project_path: &str,
 ) -> Result<Vec<PluginInfo>, String> {
-    let account_dir = state.resolve_project_account_dir(project_path).await?;
-    let plugins_dir = account_dir.join("plugins");
+    let bound_dir = state.resolve_project_account_dir(project_path).await?;
+    let bound_plugins_dir = bound_dir.join("plugins");
+    let bound_enabled = read_enabled_map(&bound_dir);
 
-    // Read bound account's user-layer settings.json directly to get its
-    // enabled_plugins map. Empty map if missing or unparseable — matches the
-    // behavior of the cached path in list_plugins_logic.
-    let settings_path = account_dir.join("settings.json");
-    let enabled_map = if settings_path.exists() {
-        std::fs::read_to_string(&settings_path)
-            .ok()
-            .and_then(|raw| serde_json::from_str::<claude_types::Settings>(&raw).ok())
-            .and_then(|s| s.enabled_plugins)
-            .unwrap_or_default()
-    } else {
-        std::collections::HashMap::new()
-    };
+    // Start with the bound account's full installed list (foreign_account = None).
+    let mut result =
+        crate::commands::plugins::list_plugins_in_dir(&bound_plugins_dir, &bound_enabled);
 
-    Ok(crate::commands::plugins::list_plugins_in_dir(&plugins_dir, &enabled_map))
+    // Add cross-account orphan installs: scan every OTHER account for
+    // project-scope entries whose projectPath matches this project. These
+    // happen when a user runs `claude plugin install` from this project's cwd
+    // with CLAUDE_CONFIG_DIR pointing at a different account from the GUI's
+    // current binding. Without this scan they'd be invisible in Project mode.
+    //
+    // We compare via canonicalize so the bound dir isn't double-counted under
+    // symlinks; if canonicalize fails (e.g. account dir not yet on disk), the
+    // raw path comparison is the fallback.
+    let bound_canon = std::fs::canonicalize(&bound_dir).unwrap_or_else(|_| bound_dir.clone());
+    for (account_name, account_dir) in list_all_account_dirs().unwrap_or_default() {
+        let acct_canon =
+            std::fs::canonicalize(&account_dir).unwrap_or_else(|_| account_dir.clone());
+        if acct_canon == bound_canon {
+            continue;
+        }
+        let acct_plugins_dir = account_dir.join("plugins");
+        let acct_enabled = read_enabled_map(&account_dir);
+        result.extend(
+            crate::commands::plugins::collect_foreign_project_plugins_in_dir(
+                &acct_plugins_dir,
+                &acct_enabled,
+                project_path,
+                &account_name,
+            ),
+        );
+    }
+
+    result.sort_by(|a, b| a.id.cmp(&b.id));
+    Ok(result)
 }
 
 #[tauri::command]
@@ -594,6 +644,52 @@ mod tests {
         assert_eq!(result[0].enabled, false);
         assert_eq!(result[0].scope, "user");
         assert!(result[0].project_path.is_none());
+    }
+
+    #[test]
+    fn collect_foreign_project_plugins_filters_by_project_and_tags_account() {
+        let dir = tempdir().unwrap();
+        let json = r#"{
+            "version": 2,
+            "plugins": {
+                "claude-mem@thedotmack": [{
+                    "version": "13.2.0",
+                    "installPath": "/tmp/nonexistent",
+                    "installedAt": "2026-05-21T07:30:20.585Z",
+                    "lastUpdated": "2026-05-21T07:30:20.585Z",
+                    "scope": "project",
+                    "projectPath": "/Users/me/work/instrument-generator"
+                }],
+                "other@market": [{
+                    "version": "1.0.0",
+                    "installPath": "/tmp/nonexistent",
+                    "installedAt": "2026-05-21T07:30:20.585Z",
+                    "lastUpdated": "2026-05-21T07:30:20.585Z",
+                    "scope": "project",
+                    "projectPath": "/Users/me/work/different-project"
+                }],
+                "user-scope@market": [{
+                    "version": "1.0.0",
+                    "installPath": "/tmp/nonexistent",
+                    "installedAt": "2026-05-21T07:30:20.585Z",
+                    "lastUpdated": "2026-05-21T07:30:20.585Z",
+                    "scope": "user"
+                }]
+            }
+        }"#;
+        std::fs::write(dir.path().join("installed_plugins.json"), json).unwrap();
+
+        let result = crate::commands::plugins::collect_foreign_project_plugins_in_dir(
+            dir.path(),
+            &std::collections::HashMap::new(),
+            "/Users/me/work/instrument-generator",
+            "default",
+        );
+        // Only the project-scope entry whose projectPath matches is included.
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].id, "claude-mem@thedotmack");
+        assert_eq!(result[0].scope, "project");
+        assert_eq!(result[0].foreign_account.as_deref(), Some("default"));
     }
 
     #[test]

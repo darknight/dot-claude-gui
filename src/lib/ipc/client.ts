@@ -153,9 +153,19 @@ export class IpcClient {
     return call("install_plugin", { name, marketplace });
   }
 
-  async uninstallPlugin(id: string): Promise<{ requestId: string }> {
-    // Rust: uninstall_plugin(id: String) -> CommandRequest
-    return call("uninstall_plugin", { id });
+  async uninstallPlugin(
+    id: string,
+    opts?: { accountName?: string; cwd?: string; scope?: string },
+  ): Promise<{ requestId: string }> {
+    // Rust: uninstall_plugin(id, accountName?, cwd?, scope?) -> CommandRequest
+    // `scope` becomes `--scope <user|project>` on the CLI; required for
+    // project-scope uninstalls (CLI defaults to user and rejects mismatch).
+    return call("uninstall_plugin", {
+      id,
+      accountName: opts?.accountName,
+      cwd: opts?.cwd,
+      scope: opts?.scope,
+    });
   }
 
   async listMarketplaces(): Promise<MarketplaceInfo[]> {

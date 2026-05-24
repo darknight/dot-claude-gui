@@ -290,6 +290,10 @@ export interface PluginInfo {
   scope: string;
   /** Owning project path when scope === "project". */
   projectPath?: string;
+  /** Set when this row was found in a different account from the listing's
+   *  primary account (cross-account orphan project install). The value is
+   *  the account name (`"default"` for native, otherwise the named account). */
+  foreignAccount?: string;
 }
 
 export interface MarketplaceInfo {

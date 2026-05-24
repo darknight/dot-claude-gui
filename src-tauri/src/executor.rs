@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::process::Stdio;
 
 use claude_types::CommandStream;
@@ -26,12 +27,17 @@ pub fn spawn_streaming(
     program: &str,
     args: Vec<String>,
 ) -> Result<String, String> {
-    spawn_streaming_with_env(app, program, args, HashMap::new())
+    spawn_streaming_with_env(app, program, args, HashMap::new(), None)
 }
 
 /// Spawn `<program> <args...>` with extra env vars (merged into the inherited
 /// environment), streaming each stdout/stderr line as a `command-output` Tauri
 /// event. Emits `command-completed` when the process exits.
+///
+/// `cwd` lets the caller set the child's working directory — required for
+/// commands that resolve project-scoped files (e.g. `claude plugin uninstall`
+/// touching the owning project's `.claude/settings.json`). `None` inherits
+/// the Tauri main process cwd.
 ///
 /// Used by callers that need to inject `CLAUDE_CONFIG_DIR=<account-dir>` so the
 /// `claude` CLI targets a non-default account.
@@ -40,18 +46,21 @@ pub fn spawn_streaming_with_env(
     program: &str,
     args: Vec<String>,
     env: HashMap<String, String>,
+    cwd: Option<PathBuf>,
 ) -> Result<String, String> {
     let command_id = Uuid::new_v4().to_string();
 
-    let mut child = Command::new(program)
-        .args(&args)
+    let mut cmd = Command::new(program);
+    cmd.args(&args)
         .envs(env)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .kill_on_drop(true) // ensure orphaned child is killed on error paths
-        .spawn()
-        .map_err(|e| format!("spawn: {e}"))?;
+        .kill_on_drop(true);
+    if let Some(dir) = cwd {
+        cmd.current_dir(dir);
+    }
+    let mut child = cmd.spawn().map_err(|e| format!("spawn: {e}"))?;
 
     let stdout = child.stdout.take().ok_or("no stdout")?;
     let stderr = child.stderr.take().ok_or("no stderr")?;

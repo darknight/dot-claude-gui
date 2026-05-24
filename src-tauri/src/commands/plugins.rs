@@ -113,11 +113,69 @@ pub(crate) fn list_plugins_in_dir(
                 description,
                 scope: plugin.scope.clone(),
                 project_path: plugin.project_path.clone(),
+                foreign_account: None,
             });
         }
     }
 
     // HashMap iteration order is non-deterministic; sort by id for stable UI.
+    result.sort_by(|a, b| a.id.cmp(&b.id));
+    result
+}
+
+/// Variant of `list_plugins_in_dir` for surfacing cross-account orphan
+/// installs in the Project facet. Filters `installed_plugins.json` to only
+/// entries with `scope == "project"` and `projectPath == project_path`, and
+/// tags each with `foreign_account` so the UI can label the source account.
+pub(crate) fn collect_foreign_project_plugins_in_dir(
+    plugins_dir: &std::path::Path,
+    enabled_map: &HashMap<String, bool>,
+    project_path: &str,
+    foreign_account: &str,
+) -> Vec<PluginInfo> {
+    let installed: InstalledPluginsFile =
+        read_json_file_opt(&plugins_dir.join("installed_plugins.json"))
+            .unwrap_or_else(|| InstalledPluginsFile {
+                version: 1,
+                plugins: HashMap::new(),
+            });
+
+    let blocklist_opt: Option<BlocklistFile> =
+        read_json_file_opt(&plugins_dir.join("blocklist.json"));
+    let blocked_ids: HashSet<String> = blocklist_opt
+        .map(|b| b.plugins.into_iter().map(|p| p.plugin).collect())
+        .unwrap_or_default();
+
+    let mut result = Vec::new();
+    for (plugin_key, plugins) in &installed.plugins {
+        for plugin in plugins {
+            if plugin.scope != "project" {
+                continue;
+            }
+            if plugin.project_path.as_deref() != Some(project_path) {
+                continue;
+            }
+            let id = plugin_key.clone();
+            let (name, marketplace) = split_plugin_id(&id);
+            let enabled = enabled_map.get(&id).copied().unwrap_or(true);
+            let blocked = blocked_ids.contains(&id);
+            let description = read_plugin_description(&plugin.install_path);
+
+            result.push(PluginInfo {
+                id,
+                name,
+                marketplace,
+                version: plugin.version.clone(),
+                enabled,
+                blocked,
+                installed_at: plugin.installed_at.clone(),
+                description,
+                scope: plugin.scope.clone(),
+                project_path: plugin.project_path.clone(),
+                foreign_account: Some(foreign_account.to_string()),
+            });
+        }
+    }
     result.sort_by(|a, b| a.id.cmp(&b.id));
     result
 }
@@ -328,7 +386,7 @@ pub async fn install_plugin(
         dir.to_string_lossy().to_string(),
     );
     let request_id =
-        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env, None)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -341,45 +399,119 @@ pub async fn uninstall_plugin(
     app: AppHandle,
     state: State<'_, AppState>,
     id: String,
+    account_name: Option<String>,
+    cwd: Option<String>,
+    scope: Option<String>,
 ) -> Result<CommandRequest, String> {
-    let dir = state.current_dir().await;
-
-    // Block when the plugin's only install records are project-scope. The
-    // Claude CLI refuses to uninstall a project-scope plugin from outside its
-    // owning project, and we'd otherwise spawn a process guaranteed to fail.
+    // Resolve CLAUDE_CONFIG_DIR: explicit `accountName` wins so callers can
+    // target the account that actually owns the install record (which may
+    // differ from the GUI's active account, e.g. a foreign project-scope
+    // entry). Falling back to the active account preserves prior behavior
+    // for user-scope uninstalls from the Native facet.
     //
-    // If any user-scope record also exists, let the CLI run — it can still
-    // uninstall the user-scope copy. The error string is serde-friendly so
-    // the frontend can surface a richer hint.
-    let installed: InstalledPluginsFile =
-        read_json_file_opt(&dir.join("plugins").join("installed_plugins.json"))
+    // Security: the caller is the renderer; treat `accountName` as untrusted
+    // and require it to match a name already in the AppConfig accounts
+    // registry. Otherwise a tampered renderer could feed us "../foo" and
+    // turn `claude plugin uninstall` into a write against an arbitrary dir.
+    let claude_config_dir = if let Some(name) = account_name {
+        // Defence-in-depth: enforce the character allowlist even if a name
+        // somehow got into cfg.accounts (e.g. via direct config edit), so the
+        // resulting `account_dir` cannot escape the accounts root.
+        crate::commands::accounts::validate_name(&name)?;
+        let home = dirs_next::home_dir()
+            .ok_or_else(|| "cannot determine home directory".to_string())?;
+        let cfg_path = home.join(".dot-claude-gui").join("config.json");
+        let cfg = crate::app_config::read_config(&cfg_path)?;
+        if !cfg.accounts.iter().any(|a| a.name == name) {
+            return Err(format!("unknown_account: {}", name));
+        }
+        crate::app_config::account_dir(&home, &name)
+    } else {
+        state.current_dir().await
+    };
+
+    // The CLI defaults to user scope and refuses to uninstall a project-scope
+    // install with a misleading "enabled at project scope" error. Pass
+    // `--scope <user|project>` explicitly when the caller knows it. Whitelist
+    // values to prevent renderer-supplied flag injection.
+    let scope_str = scope.as_deref();
+    if let Some(s) = scope_str {
+        if s != "project" && s != "user" {
+            return Err(format!("invalid_scope: {}", s));
+        }
+    }
+
+    // `cwd` only has meaning for `scope == "project"` (the CLI needs to sit
+    // in the owning project to update its `.claude/settings.json`). Reject
+    // any other combination so a tampered renderer can't drive the CLI into
+    // an arbitrary directory:
+    //   * scope=project requires cwd
+    //   * scope=user (or unset) rejects cwd
+    //   * project cwd must be absolute, exist, and match a real `projectPath`
+    //     recorded for this plugin in this account's installed_plugins.json
+    let cwd_path: Option<std::path::PathBuf> = match (scope_str, cwd) {
+        (Some("project"), Some(raw)) => {
+            let p = std::path::PathBuf::from(&raw);
+            if !p.is_absolute() {
+                return Err(format!("invalid_cwd: not absolute: {}", raw));
+            }
+            if !p.is_dir() {
+                return Err(format!("invalid_cwd: not an existing directory: {}", raw));
+            }
+            let installed: InstalledPluginsFile = read_json_file_opt(
+                &claude_config_dir.join("plugins").join("installed_plugins.json"),
+            )
             .unwrap_or_else(|| InstalledPluginsFile {
                 version: 1,
                 plugins: HashMap::new(),
             });
-    if let Some(entries) = installed.plugins.get(&id) {
-        let has_user_scope = entries.iter().any(|p| p.scope == "user");
-        if !has_user_scope {
-            if let Some(project_entry) = entries.iter().find(|p| p.scope == "project") {
-                let project_path = project_entry.project_path.as_deref().unwrap_or("");
+            let allowed = installed
+                .plugins
+                .get(&id)
+                .map(|entries| {
+                    entries.iter().any(|e| {
+                        e.scope == "project"
+                            && e.project_path.as_deref() == Some(p.to_string_lossy().as_ref())
+                    })
+                })
+                .unwrap_or(false);
+            if !allowed {
                 return Err(format!(
-                    "project_scope: Plugin '{}' is installed at project scope. \
-                     Open the bound project ({}) and uninstall from there.",
-                    id, project_path
+                    "cwd_not_owner: {} is not a recorded project for this plugin",
+                    raw
                 ));
             }
+            Some(p)
         }
-    }
+        (Some("project"), None) => {
+            return Err("missing_cwd: project-scope uninstall requires cwd".to_string());
+        }
+        (_, Some(raw)) => {
+            return Err(format!(
+                "cwd_only_for_project_scope: cwd `{}` provided without scope=project",
+                raw
+            ));
+        }
+        (_, None) => None,
+    };
 
-    // Mirror daemon: claude plugin uninstall <id>
-    let args = vec!["plugin".to_string(), "uninstall".to_string(), id];
+    let mut args = vec!["plugin".to_string(), "uninstall".to_string(), id];
+    if let Some(s) = scope_str {
+        args.push("--scope".to_string());
+        args.push(s.to_string());
+    }
     let mut env = std::collections::HashMap::new();
     env.insert(
         "CLAUDE_CONFIG_DIR".to_string(),
-        dir.to_string_lossy().to_string(),
+        claude_config_dir.to_string_lossy().to_string(),
     );
-    let request_id =
-        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
+    let request_id = crate::executor::spawn_streaming_with_env(
+        app,
+        crate::claude_cli::program(),
+        args,
+        env,
+        cwd_path,
+    )?;
     Ok(CommandRequest { request_id })
 }
 
@@ -410,7 +542,7 @@ pub async fn add_marketplace(
         dir.to_string_lossy().to_string(),
     );
     let request_id =
-        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env, None)?;
     Ok(CommandRequest { request_id })
 }
 
@@ -438,7 +570,7 @@ pub async fn remove_marketplace(
         dir.to_string_lossy().to_string(),
     );
     let request_id =
-        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env)?;
+        crate::executor::spawn_streaming_with_env(app, crate::claude_cli::program(), args, env, None)?;
     Ok(CommandRequest { request_id })
 }
 

@@ -1,8 +1,7 @@
 <script lang="ts">
   import { pluginsStore } from "$lib/stores/plugins.svelte";
   import { toastStore } from "$lib/stores/toast.svelte";
-  import { onCommandOutput, onCommandCompleted } from "$lib/ipc/events";
-  import type { CommandOutputPayload, CommandCompletedPayload } from "$lib/ipc/events";
+  import { runStreamingCommand } from "$lib/ipc/events";
 
   import type { PluginInfo } from "$lib/api/types";
   import { t } from "$lib/i18n";
@@ -73,45 +72,40 @@
     };
   });
 
-  async function handleUninstall(id: string) {
-    // Reset prior failure output so a new attempt starts clean.
+  async function handleUninstall(plugin: PluginInfo) {
     outputLines = [];
+    pendingId = plugin.id;
 
-    const result = await pluginsStore.uninstallPlugin(id);
-    if (!result?.requestId) {
-      // IPC itself failed (e.g. `claude` CLI not on PATH). The store has
-      // already populated pluginsStore.error; surface it as a toast so the
-      // user actually sees it instead of just the small alert at the top.
+    // Project-scope rows need the CLI to run with the owning project as cwd
+    // AND with `--scope project` — the CLI defaults to user scope and rejects
+    // the mismatch with a misleading "enabled at project scope" error
+    // otherwise. User-scope doesn't need either.
+    const opts =
+      plugin.scope === "project" && plugin.projectPath
+        ? { cwd: plugin.projectPath, scope: "project" }
+        : { scope: plugin.scope };
+
+    const ok = await runStreamingCommand(
+      () => pluginsStore.uninstallPlugin(plugin.id, opts),
+      (line) => { outputLines = [...outputLines, line]; },
+      async (exitCode) => {
+        pendingId = null;
+        if (exitCode === 0) {
+          toastStore.success(t("plugins.uninstallSuccess"));
+          outputLines = [];
+        } else {
+          toastStore.error(t("plugins.uninstallFailed", { exitCode }));
+          // Retain outputLines on failure so user can read CLI's reason.
+        }
+        await pluginsStore.loadPlugins();
+      },
+    );
+    if (!ok) {
+      pendingId = null;
       toastStore.error(
         t("plugins.uninstallError", { msg: pluginsStore.error || "unknown" }),
       );
-      return;
     }
-
-    pendingId = id;
-
-    const unlistenOutput = await onCommandOutput((p: CommandOutputPayload) => {
-      if (p.commandId === result.requestId) {
-        outputLines = [...outputLines, p.line];
-      }
-    });
-
-    const unlistenCompleted = await onCommandCompleted(async (p: CommandCompletedPayload) => {
-      if (p.commandId !== result.requestId) return;
-      unlistenOutput();
-      unlistenCompleted();
-      pendingId = null;
-
-      if (p.exitCode === 0) {
-        toastStore.success(t("plugins.uninstallSuccess"));
-        outputLines = [];
-      } else {
-        toastStore.error(t("plugins.uninstallFailed", { exitCode: p.exitCode }));
-        // Retain outputLines on failure so the user can see why it failed
-        // (the toast only shows the exit code). Cleared on next attempt.
-      }
-      await pluginsStore.loadPlugins();
-    });
   }
 </script>
 
@@ -182,9 +176,11 @@
                     <div class="flex items-center gap-3">
                       <button
                         class="btn-danger-ghost opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50"
-                        onclick={() => handleUninstall(plugin.id)}
-                        disabled={pendingId !== null || isProjectScope}
-                        title={isProjectScope ? t("plugins.uninstallProjectHint") : t("plugins.uninstall")}
+                        onclick={() => handleUninstall(plugin)}
+                        disabled={pendingId !== null}
+                        title={isProjectScope && plugin.projectPath
+                          ? t("plugins.uninstallProjectTitle", { path: plugin.projectPath })
+                          : t("plugins.uninstall")}
                       >
                         {pendingId === plugin.id ? t("plugins.uninstalling") : t("plugins.uninstall")}
                       </button>
