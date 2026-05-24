@@ -3,10 +3,10 @@ name: Release
 # Builds an unsigned macOS universal2 .dmg via tauri-action.
 #
 # Triggers:
-#  - push of a tag matching v* → builds and publishes a GitHub Release as
-#    a (published) prerelease, with the dmg attached. The `prerelease`
-#    flag flags it as beta in the UI without requiring a manual promote
-#    step from drafts.
+#  - push of a tag matching v* → builds and publishes a GitHub Release
+#    with the dmg attached. The prerelease flag is derived from the tag:
+#    SemVer prerelease identifier (e.g. `v1.0.0-beta.3`) → prerelease;
+#    plain `v1.0.0` → stable.
 #  - workflow_dispatch → builds and uploads the dmg as a workflow-run
 #    artifact (downloadable from the Actions tab). Useful for ad-hoc
 #    builds without cutting a release.
@@ -85,7 +85,10 @@ jobs:
           releaseName: "dot-claude-gui __VERSION__"
           releaseBody: ${{ steps.changelog.outputs.content }}
           releaseDraft: false
-          prerelease: true
+          # SemVer prerelease identifier present → mark as prerelease.
+          # Tags like `v1.0.0-beta.3` / `v1.0.0-rc.1` contain `-`; stable
+          # `v1.0.0` does not.
+          prerelease: ${{ contains(github.ref_name, '-') }}
           args: --target universal-apple-darwin
 
       # On manual dispatch the tauri-action step skips release upload —
