@@ -1,7 +1,7 @@
 {
   "productName": "dot-claude-gui",
   "identifier": "com.dotclaude.gui",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
