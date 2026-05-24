@@ -23,6 +23,10 @@ pub struct InstalledPlugin {
     pub last_updated: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub git_commit_sha: Option<String>,
+    /// Present when `scope == "project"`. Absolute path of the project the
+    /// plugin was installed against (Claude CLI writes this).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project_path: Option<String>,
 }
 
 /// Models an entry in `known_marketplaces.json`.
@@ -115,6 +119,13 @@ pub struct PluginInfo {
     pub installed_at: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// Install scope from `installed_plugins.json` (`"user"` or `"project"`).
+    /// Project-scope plugins cannot be uninstalled from the account-level UI —
+    /// the CLI requires running uninstall from inside the owning project.
+    pub scope: String,
+    /// Set when `scope == "project"`. The project this plugin belongs to.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub project_path: Option<String>,
 }
 
 /// Summary of a known marketplace returned by the REST API.

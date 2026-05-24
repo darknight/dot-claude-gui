@@ -592,6 +592,38 @@ mod tests {
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].id, "my-plugin@my-marketplace");
         assert_eq!(result[0].enabled, false);
+        assert_eq!(result[0].scope, "user");
+        assert!(result[0].project_path.is_none());
+    }
+
+    #[test]
+    fn list_plugins_in_dir_surfaces_project_scope_and_path() {
+        let dir = tempdir().unwrap();
+        let json = r#"{
+            "version": 2,
+            "plugins": {
+                "claude-mem@thedotmack": [{
+                    "version": "13.2.0",
+                    "installPath": "/tmp/nonexistent",
+                    "installedAt": "2026-05-21T07:30:20.585Z",
+                    "lastUpdated": "2026-05-21T07:30:20.585Z",
+                    "scope": "project",
+                    "projectPath": "/Users/me/work/some-project"
+                }]
+            }
+        }"#;
+        std::fs::write(dir.path().join("installed_plugins.json"), json).unwrap();
+
+        let result = crate::commands::plugins::list_plugins_in_dir(
+            dir.path(),
+            &std::collections::HashMap::new(),
+        );
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].scope, "project");
+        assert_eq!(
+            result[0].project_path.as_deref(),
+            Some("/Users/me/work/some-project")
+        );
     }
 
     // ── merge_project_layers tests ──────────────────────────────────────────

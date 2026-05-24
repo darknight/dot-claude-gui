@@ -111,6 +111,8 @@ pub(crate) fn list_plugins_in_dir(
                 blocked,
                 installed_at: plugin.installed_at.clone(),
                 description,
+                scope: plugin.scope.clone(),
+                project_path: plugin.project_path.clone(),
             });
         }
     }
@@ -340,10 +342,38 @@ pub async fn uninstall_plugin(
     state: State<'_, AppState>,
     id: String,
 ) -> Result<CommandRequest, String> {
+    let dir = state.current_dir().await;
+
+    // Block when the plugin's only install records are project-scope. The
+    // Claude CLI refuses to uninstall a project-scope plugin from outside its
+    // owning project, and we'd otherwise spawn a process guaranteed to fail.
+    //
+    // If any user-scope record also exists, let the CLI run — it can still
+    // uninstall the user-scope copy. The error string is serde-friendly so
+    // the frontend can surface a richer hint.
+    let installed: InstalledPluginsFile =
+        read_json_file_opt(&dir.join("plugins").join("installed_plugins.json"))
+            .unwrap_or_else(|| InstalledPluginsFile {
+                version: 1,
+                plugins: HashMap::new(),
+            });
+    if let Some(entries) = installed.plugins.get(&id) {
+        let has_user_scope = entries.iter().any(|p| p.scope == "user");
+        if !has_user_scope {
+            if let Some(project_entry) = entries.iter().find(|p| p.scope == "project") {
+                let project_path = project_entry.project_path.as_deref().unwrap_or("");
+                return Err(format!(
+                    "project_scope: Plugin '{}' is installed at project scope. \
+                     Open the bound project ({}) and uninstall from there.",
+                    id, project_path
+                ));
+            }
+        }
+    }
+
     // Mirror daemon: claude plugin uninstall <id>
     let args = vec!["plugin".to_string(), "uninstall".to_string(), id];
     let mut env = std::collections::HashMap::new();
-    let dir = state.current_dir().await;
     env.insert(
         "CLAUDE_CONFIG_DIR".to_string(),
         dir.to_string_lossy().to_string(),

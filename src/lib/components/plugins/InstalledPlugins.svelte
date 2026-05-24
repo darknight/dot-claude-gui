@@ -145,7 +145,8 @@
           </button>
           {#if !isCollapsed}
             <div class="space-y-3 pl-5">
-              {#each plugins as plugin (plugin.id)}
+              {#each plugins as plugin (plugin.id + ":" + plugin.scope + ":" + (plugin.projectPath ?? ""))}
+                {@const isProjectScope = plugin.scope === "project"}
                 <div
                   data-plugin-id={plugin.id}
                   class="card group relative {flashedPluginId === plugin.id ? 'plugin-flash' : ''}"
@@ -159,6 +160,11 @@
                             {t("plugins.blocked")}
                           </span>
                         {/if}
+                        {#if isProjectScope}
+                          <span class="badge badge-info" title={plugin.projectPath ?? ""}>
+                            {t("plugins.scopeProject")}
+                          </span>
+                        {/if}
                       </div>
                       <div class="mt-0.5 text-xs" style="color: var(--text-muted)">
                         v{plugin.version}
@@ -166,14 +172,19 @@
                       {#if plugin.description}
                         <p class="mt-1 text-xs" style="color: var(--text-secondary)">{plugin.description}</p>
                       {/if}
+                      {#if isProjectScope && plugin.projectPath}
+                        <p class="mt-1 truncate text-xs" style="color: var(--text-muted)">
+                          {t("plugins.installedFromProject", { path: plugin.projectPath })}
+                        </p>
+                      {/if}
                     </div>
 
                     <div class="flex items-center gap-3">
                       <button
                         class="btn-danger-ghost opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50"
                         onclick={() => handleUninstall(plugin.id)}
-                        disabled={pendingId !== null}
-                        title={t("plugins.uninstall")}
+                        disabled={pendingId !== null || isProjectScope}
+                        title={isProjectScope ? t("plugins.uninstallProjectHint") : t("plugins.uninstall")}
                       >
                         {pendingId === plugin.id ? t("plugins.uninstalling") : t("plugins.uninstall")}
                       </button>

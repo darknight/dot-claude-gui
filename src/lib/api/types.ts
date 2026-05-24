@@ -285,6 +285,11 @@ export interface PluginInfo {
   blocked: boolean;
   installedAt: string;
   description?: string;
+  /** "user" | "project". Project-scope plugins cannot be uninstalled from
+   *  the account-level UI — the CLI requires the owning project. */
+  scope: string;
+  /** Owning project path when scope === "project". */
+  projectPath?: string;
 }
 
 export interface MarketplaceInfo {
